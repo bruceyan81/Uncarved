@@ -1,0 +1,24 @@
+# Normalize text files to LF.
+* text=auto eol=lf
+
+# Windows batch scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.7z binary
+*.gz binary
+*.tar binary
+*.exe binary
+*.dll binary
+*.lib binary
+*.so binary
+*.dylib binary

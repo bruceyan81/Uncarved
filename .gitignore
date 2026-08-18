@@ -1,0 +1,56 @@
+# C/C++ build artifacts
+*.d
+
+*.slo
+*.lo
+*.o
+*.obj
+
+*.gch
+*.pch
+
+*.ilk
+*.pdb
+
+*.so
+*.so.*
+*.dylib
+*.dll
+
+*.lai
+*.la
+*.a
+*.lib
+
+*.exe
+*.out
+*.app
+
+*.dwo
+
+# Build directories
+/out/
+/build/
+/Build/
+/build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+Testing/
+CMakeUserPresets.json
+
+# Visual Studio
+.vs/
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+.cache/

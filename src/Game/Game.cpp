@@ -1,0 +1,333 @@
+#include "Game.h"
+
+#include "GameCommon.h"
+#include "Gameplay.h"
+
+#include "Content/DataDefinition.h"
+#include "Content/GameContentLoader.h"
+#include "Input/Input.h"
+#include "Object/Actor.h"
+
+#include <cstdlib>
+#include <utility>
+
+namespace Uncarved::GameSpace
+{
+    GameCore::GameCore(
+        SimulationCore&&                 simulationCore,
+        InteractionCore&&                interactionCore,
+        InputSpace::InputCore&&          inputCore,
+        ViewSpace::Renderer&&            rendererCore,
+        ViewSpace::CameraManager&&       cameraManager,
+        GameConfig&&                     gameConfig,
+        ContentSpace::GameContentLoader& gameContentLoader
+    )
+        : simulationCore_(std::move(simulationCore))
+        , interactionCore_(std::move(interactionCore))
+        , inputCore_(std::move(inputCore))
+        , rendererCore_(std::move(rendererCore))
+        , cameraManager_(std::move(cameraManager))
+        , gameConfig_(std::move(gameConfig))
+        , gameContentLoader_(gameContentLoader)
+    {
+        gamePhase_ = GamePhase::InitGame;
+    }
+
+    int GameCore::launch()
+    {
+        if (this->gamePhase_ == GamePhase::InitGame)
+        {
+            if (this->initializeGame() == 0)
+            {
+                this->gamePhase_ = GamePhase::RunGame;
+                if (this->runGame() == 0)
+                {
+                    if (this->gamePhase_ == GamePhase::EndGame)
+                    {
+                        return this->endGame();
+                    }
+                    else
+                    {
+                        return 1;
+                    }
+                }
+            }
+            else
+            {
+                return 1;
+            }
+        }
+        else
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    int GameCore::initializeGame()
+    {
+        const auto& initialSceneIt = this->gameContentLoader_.getGameConfig().find("initial_scene");
+
+        const auto& initialSceneName = std::get<std::string>(initialSceneIt->second);
+
+        const auto& initialResult = initializeSceneResource(initialSceneName);
+
+        if (!initialResult.isSucceeded())
+        {
+            initialResult.showMessage();
+            return 1;
+        }
+
+        const auto& loadSceneActorResult = this->loadSceneActors(this->gameContentLoader_.getDefinitionalActors());
+
+        if (!loadSceneActorResult.isSucceeded())
+        {
+            loadSceneActorResult.showMessage();
+            return 1;
+        }
+
+        if (this->gameState_.getPlayer() == nullptr)
+        {
+            return 1;
+        }
+
+        this->gameContentLoader_.releaseLoadData();
+
+        this->gameState_.updateHealth(this->gameConfig_.health_);
+        this->gameState_.updateScore(this->gameConfig_.score_);
+
+        updateGameState();
+
+        this->rendererCore_.renderText(this->gameConfig_.gameStartMessage_, true);
+
+        return 0;
+    }
+
+    ContentSpace::Definition::ResourceLoadResult GameCore::initializeSceneResource(std::string_view sceneName)
+    {
+        const auto& checkResult = this->gameContentLoader_.checkSceneResource(sceneName);
+
+        if (!checkResult.isSucceeded())
+        {
+            return checkResult;
+        }
+
+        const auto& loadResult = this->gameContentLoader_.loadSceneResource(sceneName);
+
+        if (!loadResult.isSucceeded())
+        {
+            return loadResult;
+        }
+
+        return {};
+    }
+
+    int GameCore::unloadScene()
+    {
+        GameState& gameState = this->gameState_;
+
+        gameState.actors_.clear();
+        gameState.actorIndexById_.clear();
+        gameState.playerIndex_.reset();
+        gameState.worldBuffer_.fill(' ');
+        gameState.npcOccupancyGrid_.fill(0);
+        gameState.blockingOccupancyGrid_.fill(0);
+        gameState.request_ = std::nullopt;
+
+        InteractionCore& interactionCore = this->interactionCore_;
+
+        interactionCore.clearResults();
+
+        return 0;
+    }
+
+    int GameCore::runGame()
+    {
+        const std::size_t viewportWidth = this->cameraManager_.getViewportWidth();
+        const std::size_t viewportHeight = this->cameraManager_.getViewportHeight();
+
+        while (this->gamePhase_ == GamePhase::RunGame)
+        {
+            this->gameState_.updateWorld();
+
+            this->interactionCore_.dialogueInteraction(this->gameState_);
+
+            const glm::ivec2 actorPosition = this->gameState_.getPlayer()->getPosition();
+
+            this->cameraManager_
+                .followActorByActorPosition(this->gameState_.worldBuffer_.data(), kMapWidth, kMapHeight, actorPosition);
+
+            this->rendererCore_
+                .renderWorld(this->cameraManager_.getPresentationBuffer(), viewportWidth, viewportHeight);
+
+            for (auto& interactionResult : this->interactionCore_.getInteractionResults())
+            {
+                this->rendererCore_.renderText(interactionResult.dialogue_, true);
+            };
+
+            this->interactionCore_.resolveInteractionResult(gameState_);
+
+            this->rendererCore_.renderText(
+                "health : " + std::to_string(this->gameState_.health_) + ", "
+                    + "score : " + std::to_string(this->gameState_.score_),
+                true
+            );
+
+            if (this->gameState_.request_)
+            {
+                if (gameState_.request_->intention_ == DialogueCommand::PlayerWin
+                    || gameState_.request_->intention_ == DialogueCommand::GameOver)
+                {
+                    this->gamePhase_ = GamePhase::EndGame;
+                    return 0;
+                }
+
+                if (gameState_.request_->intention_ == DialogueCommand::SceneTransition)
+                {
+                    const auto& initialResult = processSceneTransition(gameState_.request_->sceneName_);
+
+                    if (!initialResult.isSucceeded())
+                    {
+                        initialResult.showMessage();
+                        std::exit(EXIT_FAILURE);
+                    }
+
+                    continue;
+                }
+            }
+
+            this->rendererCore_.renderText("Please make a decision...", true);
+
+            this->rendererCore_.renderText("Your options are \"n\", \"e\", \"s\", \"w\", \"quit\"", true);
+
+            const auto intention = this->inputCore_.transitionRawCommand();
+
+            const auto simulatedResult = this->simulationCore_.update(this->gameState_, intention);
+
+            if (simulatedResult.outcome_ == GameTickOutcome::QuitRequested)
+            {
+                this->gamePhase_ = GamePhase::EndGame;
+                return 0;
+            }
+        }
+
+        return 0;
+    }
+
+    int GameCore::endGame()
+    {
+        if (this->gameState_.request_)
+        {
+            const auto dialogueCommand = this->gameState_.request_.value().intention_;
+
+            if (dialogueCommand == DialogueCommand::PlayerWin)
+            {
+                this->rendererCore_.renderText(this->gameConfig_.gameOverGoodMessage_, false);
+            }
+            else if (dialogueCommand == DialogueCommand::GameOver)
+            {
+                this->rendererCore_.renderText(this->gameConfig_.gameOverBadMessage_, false);
+            }
+        }
+        else
+        {
+            this->rendererCore_.renderText(this->gameConfig_.gameOverBadMessage_, false);
+        }
+        return 0;
+    }
+
+    ContentSpace::Definition::ResourceLoadResult
+    GameCore::loadSceneActors(const std::vector<ObjectSpace::ActorDefinition>& actorDefinitions)
+    {
+        this->gameState_.actors_.reserve(this->gameState_.actors_.size() + actorDefinitions.size());
+
+        for (const auto& definition : actorDefinitions)
+        {
+            if (definition.x_ >= 0 && definition.x_ < kMapWidth && definition.y_ >= 0 && definition.y_ < kMapHeight)
+            {
+                const char view = definition.view_.empty() ? '?' : definition.view_.front();
+
+                this->gameState_.actors_.emplace_back(
+                    definition.bBlocking_,
+                    view,
+                    glm::ivec2{definition.x_, definition.y_},
+                    glm::ivec2{definition.velX_, definition.velY_},
+                    definition.actorName_,
+                    definition.nearbyDialogue_,
+                    definition.contactDialogue_
+                );
+
+                const std::size_t actorIndex = this->gameState_.actors_.size() - 1;
+                const auto&       actor = this->gameState_.actors_.back();
+
+                this->gameState_.actorIndexById_[actor.getId()] = actorIndex;
+
+                if (actor.getActorName() == "player")
+                {
+                    this->gameState_.playerIndex_ = actorIndex;
+                }
+            }
+            else
+            {
+                return {ContentSpace::Definition::ResourceLoadError::InvalidActor, "Actor's index out of bounds"};
+            }
+        }
+
+        return {};
+    }
+
+    void GameCore::updateGameState() noexcept
+    {
+        const ObjectSpace::Actor* playerPtr = this->gameState_.getPlayer();
+
+        if (playerPtr == nullptr)
+        {
+            return;
+        }
+
+        for (const auto& actor : this->gameState_.actors_)
+        {
+            const glm::ivec2 position = actor.getPosition();
+
+            if (actor.getId() != playerPtr->getId())
+            {
+                this->gameState_.npcOccupancyGrid_[position.y * kMapWidth + position.x]++;
+            }
+
+            if (actor.getBlocking())
+            {
+                this->gameState_.blockingOccupancyGrid_[position.y * kMapWidth + position.x]++;
+            }
+        }
+    }
+
+    ContentSpace::Definition::ResourceLoadResult GameCore::processSceneTransition(std::string_view nextSceneName)
+    {
+        const auto& initialResult = initializeSceneResource(nextSceneName);
+
+        if (!initialResult.isSucceeded())
+        {
+            return initialResult;
+        }
+
+        unloadScene();
+
+        const auto& loadSceneActorResult = this->loadSceneActors(this->gameContentLoader_.getDefinitionalActors());
+
+        if (!loadSceneActorResult.isSucceeded())
+        {
+            return loadSceneActorResult;
+        }
+
+        this->gameContentLoader_.releaseLoadData();
+
+        if (this->gameState_.getPlayer() == nullptr)
+        {
+            return {ContentSpace::Definition::ResourceLoadError::MissingPlayer, "Scene is missing a player"};
+        }
+
+        updateGameState();
+
+        return {};
+    }
+} // namespace Uncarved::GameSpace
