@@ -7,32 +7,11 @@ project(Uncarved
 
 # Third Party
 
-set(GLM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/glm")
-if(NOT EXISTS "${GLM_ROOT}/glm/glm.hpp")
-    message(FATAL_ERROR
-        "GLM 1.0.3 was not found. Expected: "
-        "${GLM_ROOT}/glm/glm.hpp"
-    )
-endif()
-add_library(glm_headers INTERFACE)
-add_library(glm::glm ALIAS glm_headers)
-target_include_directories(glm_headers
-    SYSTEM INTERFACE
-        "${GLM_ROOT}"
-)
+find_package(glm CONFIG REQUIRED)
 
-set(RAPIDJSON_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson")
-if(NOT EXISTS "${RAPIDJSON_ROOT}/include/rapidjson/document.h")
-    message(FATAL_ERROR
-        "RapidJSON 1.1.0 was not found. Expected: "
-        "${RAPIDJSON_ROOT}/include/rapidjson/document.h"
-    )
-endif()
-add_library(rapidjson_headers INTERFACE)
-add_library(rapidjson::rapidjson ALIAS rapidjson_headers)
-target_include_directories(rapidjson_headers
-    SYSTEM INTERFACE
-        "${RAPIDJSON_ROOT}/include"
+find_path(RAPIDJSON_INCLUDE_DIR
+    NAMES rapidjson/document.h
+    REQUIRED
 )
 
 # Boot
@@ -60,11 +39,14 @@ set_target_properties(Uncarved PROPERTIES
 
 target_link_libraries(Uncarved PRIVATE
     glm::glm
-    rapidjson::rapidjson
 )
 
 target_include_directories(Uncarved PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+target_include_directories(Uncarved SYSTEM PRIVATE
+    "${RAPIDJSON_INCLUDE_DIR}"
 )
 
 if(MSVC)

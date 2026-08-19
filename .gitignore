@@ -33,6 +33,7 @@
 /build/
 /Build/
 /build-*/
+/vcpkg_installed/
 
 # CMake generated files
 CMakeFiles/
@@ -54,3 +55,6 @@ CMakeUserPresets.json
 *.bak
 *.swp
 .cache/
+
+# External file
+/References/

@@ -1,7 +1,18 @@
 # Third-Party Notices
 
-Uncarved incorporates software from third-party projects.
-The following notices are provided for attribution and license compliance.
+Uncarved depends on software from third-party projects. These components are
+managed through [vcpkg](https://github.com/microsoft/vcpkg) and are not vendored
+in this repository.
+
+Direct dependencies and version pins are declared in `vcpkg.json`.
+
+When dependencies are installed, vcpkg provides their license and copyright
+information under:
+
+`<build-dir>/vcpkg_installed/<triplet>/share/<port>/copyright`
+
+The notices below are provided for attribution and convenience. Each
+third-party component remains subject to its own license terms.
 
 ## GLM
 
@@ -9,11 +20,11 @@ The following notices are provided for attribution and license compliance.
 Version: 1.0.3
 Project: https://github.com/g-truc/glm
 Copyright: Copyright (c) 2005 - G-Truc Creation
-License: MIT License
+License: MIT License (selected from the upstream dual-license terms)
 
-The complete license text is available at:
+Upstream license:
 
-`third_party/glm/copying.txt`
+https://github.com/g-truc/glm/blob/1.0.3/copying.txt
 
 ## RapidJSON
 
@@ -23,8 +34,9 @@ Project: https://github.com/Tencent/rapidjson
 Copyright: Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip
 License: MIT License
 
-RapidJSON also includes `msinttypes`, which is distributed under the BSD-3-Clause License.
+RapidJSON includes `msinttypes`, which is distributed under the BSD-3-Clause
+License.
 
-The complete license and third-party notices distributed with RapidJSON are available at:
+Upstream license and third-party notices:
 
-`third_party/rapidjson/license.txt`
+https://github.com/Tencent/rapidjson/blob/v1.1.0/license.txt
