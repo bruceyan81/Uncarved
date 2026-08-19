@@ -14,6 +14,11 @@ find_path(RAPIDJSON_INCLUDE_DIR
     REQUIRED
 )
 
+find_package(SDL3 CONFIG REQUIRED)
+find_package(SDL3_image CONFIG REQUIRED)
+find_package(SDL3_ttf CONFIG REQUIRED)
+find_package(SDL3_mixer CONFIG REQUIRED)
+
 # Boot
 
 add_executable(Uncarved
@@ -39,6 +44,10 @@ set_target_properties(Uncarved PROPERTIES
 
 target_link_libraries(Uncarved PRIVATE
     glm::glm
+    SDL3::SDL3
+    $<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image-shared>,SDL3_image::SDL3_image-shared,SDL3_image::SDL3_image-static>
+    SDL3_ttf::SDL3_ttf
+    $<IF:$<TARGET_EXISTS:SDL3_mixer::SDL3_mixer>,SDL3_mixer::SDL3_mixer,SDL3_mixer::SDL3_mixer-static>
 )
 
 target_include_directories(Uncarved PRIVATE

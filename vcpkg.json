@@ -2,7 +2,16 @@
   "builtin-baseline": "06d00ffa491e4668627728f14b891d22c6fea146",
   "dependencies": [
     "glm",
-    "rapidjson"
+    "rapidjson",
+    "sdl3",
+    {
+      "name": "sdl3-image",
+      "features": [
+        "png"
+      ]
+    },
+    "sdl3-ttf",
+    "sdl3-mixer"
   ],
   "overrides": [
     {
@@ -12,6 +21,22 @@
     {
       "name": "rapidjson",
       "version": "1.1.0"
+    },
+    {
+      "name": "sdl3",
+      "version": "3.4.14"
+    },
+    {
+      "name": "sdl3-image",
+      "version": "3.4.4#1"
+    },
+    {
+      "name": "sdl3-ttf",
+      "version": "3.2.2#1"
+    },
+    {
+      "name": "sdl3-mixer",
+      "version": "3.2.4"
     }
   ]
 }
