@@ -8,7 +8,6 @@
 #include "Content/DataDefinition.h"
 #include "Input/Input.h"
 #include "Object/ActorDefinition.h"
-#include "View/Camera.h"
 #include "View/Renderer.h"
 
 #include <string_view>
@@ -38,7 +37,6 @@ namespace Uncarved::GameSpace
             InteractionCore&&                interactionCore,
             InputSpace::InputCore&&          inputCore,
             ViewSpace::Renderer&&            rendererCore,
-            ViewSpace::CameraManager&&       cameraManager,
             GameConfig&&                     gameConfig,
             ContentSpace::GameContentLoader& gameContentLoader
         );
@@ -59,7 +57,6 @@ namespace Uncarved::GameSpace
         InteractionCore          interactionCore_;
         InputSpace::InputCore    inputCore_;
         ViewSpace::Renderer      rendererCore_;
-        ViewSpace::CameraManager cameraManager_;
         GameConfig               gameConfig_;
         GameState                gameState_{};
 

@@ -2,43 +2,22 @@
 
 #include "Command.h"
 
-#include <iostream>
-#include <string>
+#include <SDL3/SDL.h>
 
 namespace Uncarved::InputSpace
 {
-    Intention InputCore::transitionRawCommand() const
+    bool InputCore::pollQuitRequest() const
     {
-        std::string rawCommand;
+        SDL_Event event{};
 
-        if (!(std::cin >> rawCommand))
+        while (SDL_PollEvent(&event))
         {
-            return Intention::Quit;
+            if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+            {
+                return true;
+            }
         }
 
-        if (rawCommand == "N" || rawCommand == "n")
-        {
-            return Intention::ToNorth;
-        }
-        else if (rawCommand == "E" || rawCommand == "e")
-        {
-            return Intention::ToEast;
-        }
-        else if (rawCommand == "S" || rawCommand == "s")
-        {
-            return Intention::ToSouth;
-        }
-        else if (rawCommand == "W" || rawCommand == "w")
-        {
-            return Intention::ToWest;
-        }
-        else if (rawCommand == "quit")
-        {
-            return Intention::Quit;
-        }
-        else
-        {
-            return Intention::None;
-        }
+        return false;
     }
 } // namespace Uncarved::InputSpace

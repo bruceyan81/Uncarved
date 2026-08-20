@@ -199,6 +199,11 @@ namespace Uncarved::ContentSpace
             std::exit(EXIT_FAILURE);
         }
 
+        if (document.HasMember("game_title") && document["game_title"].IsString())
+        {
+            gameConfig_.emplace("game_title", document["game_title"].GetString());
+        }
+
         if (document.HasMember("health") && document["health"].IsInt())
         {
             gameConfig_.emplace("health", document["health"].GetInt());
@@ -279,6 +284,21 @@ namespace Uncarved::ContentSpace
         else
         {
             std::cout << "info: Resources/Rendering.config has not y_resolution.";
+        }
+
+        if (document.HasMember("clear_color_r") && document["clear_color_r"].IsInt())
+        {
+            renderingConfig_.emplace("clear_color_r", document["clear_color_r"].GetInt());
+        }
+
+        if (document.HasMember("clear_color_g") && document["clear_color_g"].IsInt())
+        {
+            renderingConfig_.emplace("clear_color_g", document["clear_color_g"].GetInt());
+        }
+
+        if (document.HasMember("clear_color_b") && document["clear_color_b"].IsInt())
+        {
+            renderingConfig_.emplace("clear_color_b", document["clear_color_b"].GetInt());
         }
     }
 

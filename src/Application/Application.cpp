@@ -1,16 +1,30 @@
 #include "Application.h"
 
+#include "WindowManager.h"
+
 #include "Game/Game.h"
 #include "Game/Interaction.h"
 #include "Input/Input.h"
-#include "View/Camera.h"
 #include "View/Renderer.h"
+
+#include <SDL3/SDL.h>
+
+#include <iostream>
+#include <utility>
 
 namespace Uncarved::ApplicationSpace
 {
     ApplicationCore::ApplicationCore()
     {
         applicationState_ = ApplicationState::Init;
+    }
+
+    ApplicationCore::~ApplicationCore()
+    {
+        if (bIsSdlInitialized_)
+        {
+            SDL_Quit();
+        }
     }
 
     int ApplicationCore::initializeApplication()
@@ -28,6 +42,14 @@ namespace Uncarved::ApplicationSpace
             this->gameContentLoader_.loadRenderingConfig();
         }
 
+        bIsSdlInitialized_ = SDL_Init(SDL_INIT_VIDEO);
+
+        if (!bIsSdlInitialized_)
+        {
+            std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
+            return 1;
+        }
+
         return 0;
     }
 
@@ -40,20 +62,52 @@ namespace Uncarved::ApplicationSpace
             const auto& gameConfig = this->gameContentLoader_.getGameConfig();
             const auto& renderingConfig = this->gameContentLoader_.getRenderingConfig();
 
-            const auto viewportWidthIt = renderingConfig.find("x_resolution");
-            const auto viewportHeightIt = renderingConfig.find("y_resolution");
+            WindowManager windowManager{
+                gameConfig.find("game_title") != gameConfig.end()
+                    ? std::get<std::string>(gameConfig.find("game_title")->second)
+                    : "",
+                {
+                    (renderingConfig.find("x_resolution") != renderingConfig.end()
+                        ? std::get<int>(renderingConfig.find("x_resolution")->second)
+                        : 640
+                    ),
+                    (renderingConfig.find("y_resolution") != renderingConfig.end()
+                        ? std::get<int>(renderingConfig.find("y_resolution")->second)
+                        : 360
+                    )
+                }
+            };
 
-            const int viewportWidth =
-                viewportWidthIt != renderingConfig.end() ? std::get<int>(viewportWidthIt->second) : 0;
-            const int viewportHeight =
-                viewportHeightIt != renderingConfig.end() ? std::get<int>(viewportHeightIt->second) : 0;
+            ViewSpace::Renderer render{};
+
+            if (!windowManager.initializeWindow())
+            {
+                return 1;
+            }
+
+            bool bIsSuccess = render.initializeRenderer(
+                windowManager.getWindow(),
+                renderingConfig.find("clear_color_r") != renderingConfig.end()
+                    ? std::get<int>(renderingConfig.find("clear_color_r")->second)
+                    : 0,
+                renderingConfig.find("clear_color_g") != renderingConfig.end()
+                    ? std::get<int>(renderingConfig.find("clear_color_g")->second)
+                    : 0,
+                renderingConfig.find("clear_color_b") != renderingConfig.end()
+                    ? std::get<int>(renderingConfig.find("clear_color_b")->second)
+                    : 0
+            );
+
+            if (!bIsSuccess)
+            {
+                return 1;
+            }
 
             GameSpace::GameCore gameCore{
                 GameSpace::SimulationCore{},
                 GameSpace::InteractionCore{},
                 InputSpace::InputCore{},
-                ViewSpace::Renderer{},
-                ViewSpace::CameraManager{viewportWidth, viewportHeight, std::size_t{13}, std::size_t{9}},
+                std::move(render),
                 {
                     gameConfig.find("health") != gameConfig.end() ? std::get<int>(gameConfig.find("health")->second) : 3,
                     gameConfig.find("score") != gameConfig.end() ? std::get<int>(gameConfig.find("score")->second) : 0,

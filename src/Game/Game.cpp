@@ -18,7 +18,6 @@ namespace Uncarved::GameSpace
         InteractionCore&&                interactionCore,
         InputSpace::InputCore&&          inputCore,
         ViewSpace::Renderer&&            rendererCore,
-        ViewSpace::CameraManager&&       cameraManager,
         GameConfig&&                     gameConfig,
         ContentSpace::GameContentLoader& gameContentLoader
     )
@@ -26,7 +25,6 @@ namespace Uncarved::GameSpace
         , interactionCore_(std::move(interactionCore))
         , inputCore_(std::move(inputCore))
         , rendererCore_(std::move(rendererCore))
-        , cameraManager_(std::move(cameraManager))
         , gameConfig_(std::move(gameConfig))
         , gameContentLoader_(gameContentLoader)
     {
@@ -50,6 +48,10 @@ namespace Uncarved::GameSpace
                     {
                         return 1;
                     }
+                }
+                else
+                {
+                    return 1;
                 }
             }
             else
@@ -98,8 +100,6 @@ namespace Uncarved::GameSpace
 
         updateGameState();
 
-        this->rendererCore_.renderText(this->gameConfig_.gameStartMessage_, true);
-
         return 0;
     }
 
@@ -143,71 +143,22 @@ namespace Uncarved::GameSpace
 
     int GameCore::runGame()
     {
-        const std::size_t viewportWidth = this->cameraManager_.getViewportWidth();
-        const std::size_t viewportHeight = this->cameraManager_.getViewportHeight();
-
         while (this->gamePhase_ == GamePhase::RunGame)
         {
-            this->gameState_.updateWorld();
-
-            this->interactionCore_.dialogueInteraction(this->gameState_);
-
-            const glm::ivec2 actorPosition = this->gameState_.getPlayer()->getPosition();
-
-            this->cameraManager_
-                .followActorByActorPosition(this->gameState_.worldBuffer_.data(), kMapWidth, kMapHeight, actorPosition);
-
-            this->rendererCore_
-                .renderWorld(this->cameraManager_.getPresentationBuffer(), viewportWidth, viewportHeight);
-
-            for (auto& interactionResult : this->interactionCore_.getInteractionResults())
-            {
-                this->rendererCore_.renderText(interactionResult.dialogue_, true);
-            };
-
-            this->interactionCore_.resolveInteractionResult(gameState_);
-
-            this->rendererCore_.renderText(
-                "health : " + std::to_string(this->gameState_.health_) + ", "
-                    + "score : " + std::to_string(this->gameState_.score_),
-                true
-            );
-
-            if (this->gameState_.request_)
-            {
-                if (gameState_.request_->intention_ == DialogueCommand::PlayerWin
-                    || gameState_.request_->intention_ == DialogueCommand::GameOver)
-                {
-                    this->gamePhase_ = GamePhase::EndGame;
-                    return 0;
-                }
-
-                if (gameState_.request_->intention_ == DialogueCommand::SceneTransition)
-                {
-                    const auto& initialResult = processSceneTransition(gameState_.request_->sceneName_);
-
-                    if (!initialResult.isSucceeded())
-                    {
-                        initialResult.showMessage();
-                        std::exit(EXIT_FAILURE);
-                    }
-
-                    continue;
-                }
-            }
-
-            this->rendererCore_.renderText("Please make a decision...", true);
-
-            this->rendererCore_.renderText("Your options are \"n\", \"e\", \"s\", \"w\", \"quit\"", true);
-
-            const auto intention = this->inputCore_.transitionRawCommand();
-
-            const auto simulatedResult = this->simulationCore_.update(this->gameState_, intention);
-
-            if (simulatedResult.outcome_ == GameTickOutcome::QuitRequested)
+            if (this->inputCore_.pollQuitRequest())
             {
                 this->gamePhase_ = GamePhase::EndGame;
-                return 0;
+                break;
+            }
+
+            if (!this->rendererCore_.clear())
+            {
+                return 1;
+            }
+
+            if (!this->rendererCore_.present())
+            {
+                return 1;
             }
         }
 
@@ -216,23 +167,6 @@ namespace Uncarved::GameSpace
 
     int GameCore::endGame()
     {
-        if (this->gameState_.request_)
-        {
-            const auto dialogueCommand = this->gameState_.request_.value().intention_;
-
-            if (dialogueCommand == DialogueCommand::PlayerWin)
-            {
-                this->rendererCore_.renderText(this->gameConfig_.gameOverGoodMessage_, false);
-            }
-            else if (dialogueCommand == DialogueCommand::GameOver)
-            {
-                this->rendererCore_.renderText(this->gameConfig_.gameOverBadMessage_, false);
-            }
-        }
-        else
-        {
-            this->rendererCore_.renderText(this->gameConfig_.gameOverBadMessage_, false);
-        }
         return 0;
     }
 

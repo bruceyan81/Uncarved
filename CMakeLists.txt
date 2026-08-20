@@ -24,6 +24,7 @@ find_package(SDL3_mixer CONFIG REQUIRED)
 add_executable(Uncarved
     src/Main.cpp
     src/Application/Application.cpp
+    src/Application/WindowManager.cpp
     src/Content/GameContentLoader.cpp
     src/Game/AiController.cpp
     src/Game/GameSimulation.cpp
