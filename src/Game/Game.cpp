@@ -88,11 +88,6 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
-        if (this->gameState_.getPlayer() == nullptr)
-        {
-            return 1;
-        }
-
         this->gameContentLoader_.releaseLoadData();
 
         this->gameState_.updateHealth(this->gameConfig_.health_);
@@ -214,16 +209,11 @@ namespace Uncarved::GameSpace
     {
         const ObjectSpace::Actor* playerPtr = this->gameState_.getPlayer();
 
-        if (playerPtr == nullptr)
-        {
-            return;
-        }
-
         for (const auto& actor : this->gameState_.actors_)
         {
             const glm::ivec2 position = actor.getPosition();
 
-            if (actor.getId() != playerPtr->getId())
+            if (!playerPtr || actor.getId() != playerPtr->getId())
             {
                 this->gameState_.npcOccupancyGrid_[position.y * kMapWidth + position.x]++;
             }
@@ -254,11 +244,6 @@ namespace Uncarved::GameSpace
         }
 
         this->gameContentLoader_.releaseLoadData();
-
-        if (this->gameState_.getPlayer() == nullptr)
-        {
-            return {ContentSpace::Definition::ResourceLoadError::MissingPlayer, "Scene is missing a player"};
-        }
 
         updateGameState();
 

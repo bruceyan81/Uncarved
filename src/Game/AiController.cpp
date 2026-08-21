@@ -10,19 +10,14 @@ namespace Uncarved::GameSpace
 {
     void AiController::updateAi(GameState& gameState)
     {
-        const ObjectSpace::Actor* plyaerPtr = gameState.getPlayer();
-
-        if (plyaerPtr == nullptr)
-        {
-            return;
-        }
+        const ObjectSpace::Actor* playerPtr = gameState.getPlayer();
 
         const auto& occupancyGrid = gameState.getNpcOccupancyGrid();
         const auto& blockingOccupancyGrid = gameState.getBlockingOccupancyGrid();
 
         for (auto& actor : gameState.getActors())
         {
-            if (actor == *plyaerPtr)
+            if (playerPtr != nullptr && actor == *playerPtr)
             {
                 continue;
             }
@@ -54,7 +49,7 @@ namespace Uncarved::GameSpace
 
             const bool bIsBlocking = actor.getBlocking();
 
-            if (bIsBlocking && tryMovementPosition == plyaerPtr->getPosition())
+            if (bIsBlocking && (playerPtr != nullptr) && (tryMovementPosition == playerPtr->getPosition()))
             {
                 actor.updateVelocity(-velocity);
                 continue;
