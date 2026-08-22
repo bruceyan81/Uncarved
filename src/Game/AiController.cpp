@@ -1,6 +1,6 @@
 #include "AiController.h"
 
-#include "GameState.h"
+#include "GameStateManager.h"
 
 #include "Object/Actor.h"
 
@@ -8,14 +8,14 @@
 
 namespace Uncarved::GameSpace
 {
-    void AiController::updateAi(GameState& gameState)
+    void AiController::updateAi(GameStateManager& gameStateManager)
     {
-        const ObjectSpace::Actor* playerPtr = gameState.getPlayer();
+        const ObjectSpace::Actor* playerPtr = gameStateManager.getPlayer();
 
-        const auto& occupancyGrid = gameState.getNpcOccupancyGrid();
-        const auto& blockingOccupancyGrid = gameState.getBlockingOccupancyGrid();
+        const auto& occupancyGrid = gameStateManager.getNpcOccupancyGrid();
+        const auto& blockingOccupancyGrid = gameStateManager.getBlockingOccupancyGrid();
 
-        for (auto& actor : gameState.getActors())
+        for (auto& actor : gameStateManager.getActors())
         {
             if (playerPtr != nullptr && actor == *playerPtr)
             {
@@ -59,20 +59,20 @@ namespace Uncarved::GameSpace
 
             if (!bIsExistOtherNpc)
             {
-                gameState.updateNpcOccupancyGrid(position.y * kMapWidth + position.x, -1);
+                gameStateManager.updateNpcOccupancyGrid(position.y * kMapWidth + position.x, -1);
 
                 if (bIsBlocking)
                 {
-                    gameState.updateBlockingOccupancyGrid(position.y * kMapWidth + position.x, -1);
+                    gameStateManager.updateBlockingOccupancyGrid(position.y * kMapWidth + position.x, -1);
                 }
 
                 actor.moveBy(velocity);
 
-                gameState.updateNpcOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
+                gameStateManager.updateNpcOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
 
                 if (bIsBlocking)
                 {
-                    gameState.updateBlockingOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
+                    gameStateManager.updateBlockingOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
                 }
             }
             else

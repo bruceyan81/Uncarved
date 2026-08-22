@@ -12,7 +12,7 @@
 
 namespace Uncarved::ContentSpace
 {
-    using GameConfig = std::variant<int, std::string>;
+    using GameConfig = std::variant<int, std::string, std::vector<std::string>>;
     using RenderingConfig = std::variant<int>;
 
     class GameContentLoader final

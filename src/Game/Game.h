@@ -2,10 +2,11 @@
 
 #include "GameConfig.h"
 #include "GameSimulation.h"
-#include "GameState.h"
+#include "GameStateManager.h"
 #include "Interaction.h"
 
 #include "Content/DataDefinition.h"
+#include "Content/ImageLoader.h"
 #include "Input/Input.h"
 #include "Object/ActorDefinition.h"
 #include "View/Renderer.h"
@@ -16,7 +17,7 @@
 namespace Uncarved::ContentSpace
 {
     class GameContentLoader;
-}
+} // namespace Uncarved::ContentSpace
 
 namespace Uncarved::GameSpace
 {
@@ -38,6 +39,7 @@ namespace Uncarved::GameSpace
             InputSpace::InputCore&&          inputCore,
             ViewSpace::Renderer&&            rendererCore,
             GameConfig&&                     gameConfig,
+            ContentSpace::ImageLoader&&      imageLoader,
             ContentSpace::GameContentLoader& gameContentLoader
         );
 
@@ -52,13 +54,14 @@ namespace Uncarved::GameSpace
         int launch();
 
     private:
-        GamePhase                gamePhase_{GamePhase::None};
-        SimulationCore           simulationCore_;
-        InteractionCore          interactionCore_;
-        InputSpace::InputCore    inputCore_;
-        ViewSpace::Renderer      rendererCore_;
-        GameConfig               gameConfig_;
-        GameState                gameState_{};
+        GamePhase                 gamePhase_{GamePhase::None};
+        SimulationCore            simulationCore_;
+        InteractionCore           interactionCore_;
+        InputSpace::InputCore     inputCore_;
+        ViewSpace::Renderer       rendererCore_;
+        GameConfig                gameConfig_;
+        GameStateManager          gameStateManager_{};
+        ContentSpace::ImageLoader imageLoader_;
 
         ContentSpace::GameContentLoader& gameContentLoader_;
 

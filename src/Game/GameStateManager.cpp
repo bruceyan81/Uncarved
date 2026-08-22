@@ -1,10 +1,10 @@
-#include "GameState.h"
+#include "GameStateManager.h"
 
 #include <optional>
 
 namespace Uncarved::GameSpace
 {
-    std::optional<char> GameState::getWorldViewByCoord(const glm::ivec2& target) const noexcept
+    std::optional<char> GameStateManager::getWorldViewByCoord(const glm::ivec2& target) const noexcept
     {
         if (target.x >= 0 && target.x < kMapWidth && target.y >= 0 && target.y < kMapHeight)
         {
@@ -13,7 +13,7 @@ namespace Uncarved::GameSpace
         return std::nullopt;
     }
 
-    void GameState::updateWorld()
+    void GameStateManager::updateWorld()
     {
         this->worldBuffer_.fill(' ');
 
@@ -30,7 +30,7 @@ namespace Uncarved::GameSpace
         }
     }
 
-    void GameState::createRequest(DialogueCommand intention, std::string& nextSceneName)
+    void GameStateManager::createRequest(DialogueCommand intention, std::string& nextSceneName)
     {
         if (request_ != std::nullopt)
         {

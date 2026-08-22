@@ -2,11 +2,11 @@
 
 namespace Uncarved::GameSpace
 {
-    class GameState;
+    class GameStateManager;
 
     class AiController
     {
     public:
-        void updateAi(GameState& gameState);
+        void updateAi(GameStateManager& gameStateManager);
     };
 } // namespace Uncarved::GameSpace

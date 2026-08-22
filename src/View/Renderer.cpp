@@ -3,7 +3,6 @@
 #include <SDL3/SDL.h>
 
 #include <iostream>
-#include <string_view>
 #include <utility>
 
 namespace Uncarved::ViewSpace
@@ -19,12 +18,7 @@ namespace Uncarved::ViewSpace
         shutdown();
     }
 
-    bool Renderer::initializeRenderer(
-        SDL_Window*  window,
-        std::uint8_t r,
-        std::uint8_t g,
-        std::uint8_t b
-    )
+    bool Renderer::initializeRenderer(SDL_Window* window, std::uint8_t r, std::uint8_t g, std::uint8_t b)
     {
         renderer_ = SDL_CreateRenderer(window, nullptr);
 
@@ -59,6 +53,16 @@ namespace Uncarved::ViewSpace
     bool Renderer::present()
     {
         return SDL_RenderPresent(renderer_);
+    }
+
+    bool Renderer::renderTexture(SDL_Texture* texture)
+    {
+        if (renderer_ == nullptr || texture == nullptr)
+        {
+            return false;
+        }
+
+        return SDL_RenderTexture(renderer_, texture, nullptr, nullptr);
     }
 
     void Renderer::shutdown() noexcept

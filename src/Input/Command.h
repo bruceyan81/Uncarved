@@ -10,6 +10,7 @@ namespace Uncarved::InputSpace
         ToSouth,
         ToWest,
         Quit,
+        NextImage,
         Count
     };
 } // namespace Uncarved::InputSpace

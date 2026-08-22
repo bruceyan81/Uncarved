@@ -1,6 +1,6 @@
 #include "GameSimulation.h"
 
-#include "GameState.h"
+#include "GameStateManager.h"
 
 #include "Input/Command.h"
 
@@ -17,7 +17,7 @@ namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
-    SimulationResult SimulationCore::update(GameState& gameState, const InputSpace::Intention intention)
+    SimulationResult SimulationCore::update(GameStateManager& gameState, const InputSpace::Intention intention)
     {
         this->aiController_.updateAi(gameState);
 
@@ -62,7 +62,7 @@ namespace Uncarved::GameSpace
         }
     }
 
-    bool SimulationCore::canPlayerMoveTo(const GameState& gameState, const glm::ivec2& delta) const noexcept
+    bool SimulationCore::canPlayerMoveTo(const GameStateManager& gameState, const glm::ivec2& delta) const noexcept
     {
         const ObjectSpace::Actor* playerPtr = gameState.getPlayer();
 

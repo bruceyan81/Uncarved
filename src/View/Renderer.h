@@ -5,6 +5,7 @@
 
 struct SDL_Window;
 struct SDL_Renderer;
+struct SDL_Texture;
 
 namespace Uncarved::ViewSpace
 {
@@ -39,5 +40,12 @@ namespace Uncarved::ViewSpace
         bool clear();
 
         bool present();
+
+        SDL_Renderer* getRenderer() noexcept
+        {
+            return renderer_;
+        }
+
+        bool renderTexture(SDL_Texture* texture);
     };
 } // namespace Uncarved::ViewSpace

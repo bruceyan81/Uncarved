@@ -11,7 +11,7 @@ namespace Uncarved::InputSpace
 
 namespace Uncarved::GameSpace
 {
-    class GameState;
+    class GameStateManager;
 
     enum class GameTickOutcome
     {
@@ -31,11 +31,11 @@ namespace Uncarved::GameSpace
     class SimulationCore
     {
     public:
-        SimulationResult update(GameState& gameState, const InputSpace::Intention intention);
+        SimulationResult update(GameStateManager& gameStateManager, const InputSpace::Intention intention);
 
     private:
         AiController aiController_{};
 
-        bool canPlayerMoveTo(const GameState& gameState, const glm::ivec2& nextPosition) const noexcept;
+        bool canPlayerMoveTo(const GameStateManager& gameStateManager, const glm::ivec2& nextPosition) const noexcept;
     };
 } // namespace Uncarved::GameSpace

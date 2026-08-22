@@ -39,22 +39,31 @@ namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
+    enum class GameState
+    {
+        None,
+        Intro,
+        Gameplay
+    };
+
     struct GameStateRequest
     {
         DialogueCommand intention_;
         std::string     sceneName_;
     };
 
-    class GameState final
+    class GameStateManager final
     {
     public:
-        GameState() = default;
+        GameStateManager() = default;
 
-        GameState(const GameState&) = delete;
-        GameState& operator=(const GameState&) = delete;
+        GameStateManager(const GameStateManager&) = delete;
+        GameStateManager& operator=(const GameStateManager&) = delete;
 
-        GameState(GameState&&) noexcept = default;
-        GameState& operator=(GameState&&) noexcept = default;
+        GameStateManager(GameStateManager&&) noexcept = default;
+        GameStateManager& operator=(GameStateManager&&) noexcept = default;
+
+        ~GameStateManager() = default;
 
         int getHealth() const noexcept
         {
@@ -153,7 +162,15 @@ namespace Uncarved::GameSpace
             return &actors_[it->second];
         }
 
-        ~GameState() = default;
+        GameState getGameState() const noexcept
+        {
+            return gameState_;
+        }
+
+        void setGameState(GameState gameState) noexcept
+        {
+            gameState_ = gameState;
+        }
 
     private:
         int                                                   health_{};
@@ -165,6 +182,7 @@ namespace Uncarved::GameSpace
         std::array<std::size_t, kMapSize>                     npcOccupancyGrid_{};
         std::array<std::size_t, kMapSize>                     blockingOccupancyGrid_{};
         std::optional<GameStateRequest>                       request_{std::nullopt};
+        GameState                                             gameState_{GameState::None};
 
         friend class GameCore;
     };

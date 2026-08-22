@@ -86,7 +86,7 @@ namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
-    void InteractionCore::dialogueInteraction(const GameState& gameState)
+    void InteractionCore::dialogueInteraction(const GameStateManager& gameState)
     {
         const auto& playerPtr = gameState.getPlayer();
 
@@ -143,7 +143,7 @@ namespace Uncarved::GameSpace
         return results_;
     }
 
-    void InteractionCore::resolveInteractionResult(GameState& gameState) const noexcept
+    void InteractionCore::resolveInteractionResult(GameStateManager& gameState) const noexcept
     {
         for (const auto& result : results_)
         {

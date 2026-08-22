@@ -26,10 +26,11 @@ add_executable(Uncarved
     src/Application/Application.cpp
     src/Application/WindowManager.cpp
     src/Content/GameContentLoader.cpp
+    src/Content/ImageLoader.cpp
     src/Game/AiController.cpp
     src/Game/GameSimulation.cpp
     src/Game/Game.cpp
-    src/Game/GameState.cpp
+    src/Game/GameStateManager.cpp
     src/Game/Interaction.cpp
     src/Input/Input.cpp
     src/Object/Actor.cpp

@@ -6,7 +6,7 @@
 
 namespace Uncarved::InputSpace
 {
-    bool InputCore::pollQuitRequest() const
+    Intention InputCore::pollInputRequest() const
     {
         SDL_Event event{};
 
@@ -14,10 +14,23 @@ namespace Uncarved::InputSpace
         {
             if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
             {
-                return true;
+                return Intention::Quit;
+            }
+
+            if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
+            {
+                if (event.key.scancode == SDL_SCANCODE_RETURN || event.key.scancode == SDL_SCANCODE_SPACE)
+                {
+                    return Intention::NextImage;
+                }
+            }
+
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && event.button.button == SDL_BUTTON_LEFT)
+            {
+                return Intention::NextImage;
             }
         }
 
-        return false;
+        return Intention::None;
     }
 } // namespace Uncarved::InputSpace

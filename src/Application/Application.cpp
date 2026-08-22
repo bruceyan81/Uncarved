@@ -2,6 +2,7 @@
 
 #include "WindowManager.h"
 
+#include "Content/ImageLoader.h"
 #include "Game/Game.h"
 #include "Game/Interaction.h"
 #include "Input/Input.h"
@@ -10,7 +11,10 @@
 #include <SDL3/SDL.h>
 
 #include <iostream>
+#include <string>
 #include <utility>
+#include <variant>
+#include <vector>
 
 namespace Uncarved::ApplicationSpace
 {
@@ -67,11 +71,13 @@ namespace Uncarved::ApplicationSpace
                     ? std::get<std::string>(gameConfig.find("game_title")->second)
                     : "",
                 {
-                    (renderingConfig.find("x_resolution") != renderingConfig.end()
+                    (
+                        renderingConfig.find("x_resolution") != renderingConfig.end()
                         ? std::get<int>(renderingConfig.find("x_resolution")->second)
                         : 640
                     ),
-                    (renderingConfig.find("y_resolution") != renderingConfig.end()
+                    (
+                        renderingConfig.find("y_resolution") != renderingConfig.end()
                         ? std::get<int>(renderingConfig.find("y_resolution")->second)
                         : 360
                     )
@@ -103,6 +109,17 @@ namespace Uncarved::ApplicationSpace
                 return 1;
             }
 
+            ContentSpace::ImageLoader imageLoader{render.getRenderer()};
+
+            const auto& loadTextureResult =
+                imageLoader.loadTexture(std::get<std::vector<std::string>>(gameConfig.at("intro_image")));
+
+            if (loadTextureResult.error_ != ContentSpace::Definition::ResourceLoadError::None)
+            {
+                loadTextureResult.showErrorMessage();
+                return 1;
+            }
+
             GameSpace::GameCore gameCore{
                 GameSpace::SimulationCore{},
                 GameSpace::InteractionCore{},
@@ -121,6 +138,7 @@ namespace Uncarved::ApplicationSpace
                         ? std::get<std::string>(gameConfig.find("game_over_good_message")->second)
                         : ""
                 },
+                std::move(imageLoader),
                 this->gameContentLoader_
             };
 

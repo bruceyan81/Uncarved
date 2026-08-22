@@ -7,6 +7,6 @@ namespace Uncarved::InputSpace
     class InputCore
     {
     public:
-        bool pollQuitRequest() const;
+        Intention pollInputRequest() const;
     };
 } // namespace Uncarved::InputSpace

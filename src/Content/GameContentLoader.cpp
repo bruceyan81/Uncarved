@@ -8,6 +8,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <utility>
 
 namespace Uncarved
 {
@@ -147,6 +148,7 @@ namespace Uncarved::ContentSpace
 
     constexpr std::string_view kActorTemplatesDir = "ActorTemplates";
     constexpr std::string_view kScenesDir = "Scenes";
+    constexpr std::string_view kImagesDir = "Images";
 
     constexpr std::string_view kGameConfigFileName = "Game";
     constexpr std::string_view kRenderingConfigFileName = "Rendering";
@@ -154,6 +156,7 @@ namespace Uncarved::ContentSpace
     constexpr std::string_view kConfigFilePostfix = ".config";
     constexpr std::string_view kScenePostfix = ".scene";
     constexpr std::string_view kTemplatePostfix = ".template";
+    constexpr std::string_view kPngPostfix = ".png";
 
     void GameContentLoader::checkResourceDirectory() const
     {
@@ -197,6 +200,34 @@ namespace Uncarved::ContentSpace
         {
             std::cout << "error: initial_scene unspecified.";
             std::exit(EXIT_FAILURE);
+        }
+
+        if (document.HasMember("intro_image") && document["intro_image"].IsArray())
+        {
+            std::vector<std::string> introImage{};
+
+            const auto& array = document["intro_image"].GetArray();
+
+            const auto size = array.Size();
+
+            introImage.reserve(size);
+
+            for (const auto& introImageName : array)
+            {
+                if (introImageName.IsString())
+                {
+                    Fs::path imagePath =
+                        (gResourceRoot / kImagesDir / introImageName.GetString()).replace_extension(kPngPostfix);
+
+                    introImage.emplace_back(imagePath.string());
+                }
+            }
+
+            gameConfig_.emplace("intro_image", std::move(introImage));
+        }
+        else
+        {
+            std::cout << "info: intro_image unspecified.";
         }
 
         if (document.HasMember("game_title") && document["game_title"].IsString())

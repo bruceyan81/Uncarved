@@ -5,11 +5,14 @@
 
 #include "Content/DataDefinition.h"
 #include "Content/GameContentLoader.h"
+#include "Content/ImageLoader.h"
+#include "Input/Command.h"
 #include "Input/Input.h"
 #include "Object/Actor.h"
 
-#include <cstdlib>
+#include <cstddef>
 #include <utility>
+#include <variant>
 
 namespace Uncarved::GameSpace
 {
@@ -19,6 +22,7 @@ namespace Uncarved::GameSpace
         InputSpace::InputCore&&          inputCore,
         ViewSpace::Renderer&&            rendererCore,
         GameConfig&&                     gameConfig,
+        ContentSpace::ImageLoader&&      imageLoader,
         ContentSpace::GameContentLoader& gameContentLoader
     )
         : simulationCore_(std::move(simulationCore))
@@ -26,6 +30,7 @@ namespace Uncarved::GameSpace
         , inputCore_(std::move(inputCore))
         , rendererCore_(std::move(rendererCore))
         , gameConfig_(std::move(gameConfig))
+        , imageLoader_(std::move(imageLoader))
         , gameContentLoader_(gameContentLoader)
     {
         gamePhase_ = GamePhase::InitGame;
@@ -76,7 +81,7 @@ namespace Uncarved::GameSpace
 
         if (!initialResult.isSucceeded())
         {
-            initialResult.showMessage();
+            initialResult.showErrorMessage();
             return 1;
         }
 
@@ -84,14 +89,14 @@ namespace Uncarved::GameSpace
 
         if (!loadSceneActorResult.isSucceeded())
         {
-            loadSceneActorResult.showMessage();
+            loadSceneActorResult.showErrorMessage();
             return 1;
         }
 
         this->gameContentLoader_.releaseLoadData();
 
-        this->gameState_.updateHealth(this->gameConfig_.health_);
-        this->gameState_.updateScore(this->gameConfig_.score_);
+        this->gameStateManager_.updateHealth(this->gameConfig_.health_);
+        this->gameStateManager_.updateScore(this->gameConfig_.score_);
 
         updateGameState();
 
@@ -119,15 +124,15 @@ namespace Uncarved::GameSpace
 
     int GameCore::unloadScene()
     {
-        GameState& gameState = this->gameState_;
+        GameStateManager& gameStateManager = this->gameStateManager_;
 
-        gameState.actors_.clear();
-        gameState.actorIndexById_.clear();
-        gameState.playerIndex_.reset();
-        gameState.worldBuffer_.fill(' ');
-        gameState.npcOccupancyGrid_.fill(0);
-        gameState.blockingOccupancyGrid_.fill(0);
-        gameState.request_ = std::nullopt;
+        gameStateManager.actors_.clear();
+        gameStateManager.actorIndexById_.clear();
+        gameStateManager.playerIndex_.reset();
+        gameStateManager.worldBuffer_.fill(' ');
+        gameStateManager.npcOccupancyGrid_.fill(0);
+        gameStateManager.blockingOccupancyGrid_.fill(0);
+        gameStateManager.request_ = std::nullopt;
 
         InteractionCore& interactionCore = this->interactionCore_;
 
@@ -138,25 +143,80 @@ namespace Uncarved::GameSpace
 
     int GameCore::runGame()
     {
-        while (this->gamePhase_ == GamePhase::RunGame)
+        if (this->imageLoader_.getTextureCount() <= 0)
         {
-            if (this->inputCore_.pollQuitRequest())
-            {
-                this->gamePhase_ = GamePhase::EndGame;
-                break;
-            }
-
-            if (!this->rendererCore_.clear())
-            {
-                return 1;
-            }
-
-            if (!this->rendererCore_.present())
-            {
-                return 1;
-            }
+            this->gameStateManager_.setGameState(GameState::Gameplay);
+        }
+        else
+        {
+            this->gameStateManager_.setGameState(GameState::Intro);
         }
 
+        std::size_t textureIndex = 0;
+
+        while (this->gamePhase_ == GamePhase::RunGame)
+        {
+            switch (this->gameStateManager_.getGameState())
+            {
+                case GameState::Intro:
+                {
+                    if (!this->rendererCore_.clear())
+                    {
+                        return 1;
+                    }
+
+                    switch (this->inputCore_.pollInputRequest())
+                    {
+                        case InputSpace::Intention::Quit:
+                            this->gamePhase_ = GamePhase::EndGame;
+                            break;
+
+                        case InputSpace::Intention::NextImage:
+                            if (textureIndex < this->imageLoader_.getTextureCount() - 1)
+                            {
+                                textureIndex++;
+                            }
+                            else
+                            {
+                                this->gameStateManager_.setGameState(GameState::Gameplay);
+                            }
+                            break;
+                    }
+
+                    auto* texturePtr = this->imageLoader_.getTexture(textureIndex);
+
+                    if (!this->rendererCore_.renderTexture(texturePtr))
+                    {
+                        return 1;
+                    }
+
+                    if (!this->rendererCore_.present())
+                    {
+                        return 1;
+                    }
+                }
+                break;
+                case GameState::Gameplay:
+
+                    switch (this->inputCore_.pollInputRequest())
+                    {
+                        case InputSpace::Intention::Quit:
+                            this->gamePhase_ = GamePhase::EndGame;
+                            break;
+                    }
+
+                    if (!this->rendererCore_.clear())
+                    {
+                        return 1;
+                    }
+
+                    if (!this->rendererCore_.present())
+                    {
+                        return 1;
+                    }
+                    break;
+            }
+        }
         return 0;
     }
 
@@ -168,7 +228,7 @@ namespace Uncarved::GameSpace
     ContentSpace::Definition::ResourceLoadResult
     GameCore::loadSceneActors(const std::vector<ObjectSpace::ActorDefinition>& actorDefinitions)
     {
-        this->gameState_.actors_.reserve(this->gameState_.actors_.size() + actorDefinitions.size());
+        this->gameStateManager_.actors_.reserve(this->gameStateManager_.actors_.size() + actorDefinitions.size());
 
         for (const auto& definition : actorDefinitions)
         {
@@ -176,7 +236,7 @@ namespace Uncarved::GameSpace
             {
                 const char view = definition.view_.empty() ? '?' : definition.view_.front();
 
-                this->gameState_.actors_.emplace_back(
+                this->gameStateManager_.actors_.emplace_back(
                     definition.bBlocking_,
                     view,
                     glm::ivec2{definition.x_, definition.y_},
@@ -186,14 +246,14 @@ namespace Uncarved::GameSpace
                     definition.contactDialogue_
                 );
 
-                const std::size_t actorIndex = this->gameState_.actors_.size() - 1;
-                const auto&       actor = this->gameState_.actors_.back();
+                const std::size_t actorIndex = this->gameStateManager_.actors_.size() - 1;
+                const auto&       actor = this->gameStateManager_.actors_.back();
 
-                this->gameState_.actorIndexById_[actor.getId()] = actorIndex;
+                this->gameStateManager_.actorIndexById_[actor.getId()] = actorIndex;
 
                 if (actor.getActorName() == "player")
                 {
-                    this->gameState_.playerIndex_ = actorIndex;
+                    this->gameStateManager_.playerIndex_ = actorIndex;
                 }
             }
             else
@@ -207,20 +267,20 @@ namespace Uncarved::GameSpace
 
     void GameCore::updateGameState() noexcept
     {
-        const ObjectSpace::Actor* playerPtr = this->gameState_.getPlayer();
+        const ObjectSpace::Actor* playerPtr = this->gameStateManager_.getPlayer();
 
-        for (const auto& actor : this->gameState_.actors_)
+        for (const auto& actor : this->gameStateManager_.actors_)
         {
             const glm::ivec2 position = actor.getPosition();
 
             if (!playerPtr || actor.getId() != playerPtr->getId())
             {
-                this->gameState_.npcOccupancyGrid_[position.y * kMapWidth + position.x]++;
+                this->gameStateManager_.npcOccupancyGrid_[position.y * kMapWidth + position.x]++;
             }
 
             if (actor.getBlocking())
             {
-                this->gameState_.blockingOccupancyGrid_[position.y * kMapWidth + position.x]++;
+                this->gameStateManager_.blockingOccupancyGrid_[position.y * kMapWidth + position.x]++;
             }
         }
     }

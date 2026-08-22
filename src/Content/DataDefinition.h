@@ -14,7 +14,8 @@ namespace Uncarved::ContentSpace::Definition
         InvalidStructure,
         InvalidActor,
         MissingPlayer,
-        MissingTemplate
+        MissingTemplate,
+        MissingTexture
     };
 
     struct ResourceLoadResult final
@@ -27,7 +28,7 @@ namespace Uncarved::ContentSpace::Definition
             return error_ == errorType;
         }
 
-        void showMessage() const noexcept
+        void showErrorMessage() const noexcept
         {
             std::cout << message_;
         }

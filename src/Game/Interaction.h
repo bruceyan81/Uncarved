@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameState.h"
+#include "GameStateManager.h"
 
 #include <optional>
 #include <string>
@@ -27,11 +27,11 @@ namespace Uncarved::GameSpace
             results_.reserve(9);
         };
 
-        void dialogueInteraction(const GameState& gameState);
+        void dialogueInteraction(const GameStateManager& gameState);
 
         const std::vector<InteractionResult>& getInteractionResults() const noexcept;
 
-        void resolveInteractionResult(GameState& gameState) const noexcept;
+        void resolveInteractionResult(GameStateManager& gameState) const noexcept;
 
         void clearResults()
         {
