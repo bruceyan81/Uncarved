@@ -1,7 +1,6 @@
 #pragma once
 
-#include "GameStateManager.h"
-
+#include "Object/Actor.h"
 #include <optional>
 #include <string>
 #include <string_view>
@@ -9,6 +8,10 @@
 
 namespace Uncarved::GameSpace
 {
+    struct GameState;
+
+    class GameStateManager;
+
     enum class DialogueCommand;
 
     struct InteractionResult final
@@ -31,7 +34,7 @@ namespace Uncarved::GameSpace
 
         const std::vector<InteractionResult>& getInteractionResults() const noexcept;
 
-        void resolveInteractionResult(GameStateManager& gameState) const noexcept;
+        void resolveInteractionResult(GameState& gameState, GameStateManager& gameStateManager) const noexcept;
 
         void clearResults()
         {

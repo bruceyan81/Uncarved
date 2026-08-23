@@ -95,8 +95,8 @@ namespace Uncarved::GameSpace
 
         this->gameContentLoader_.releaseLoadData();
 
-        this->gameStateManager_.updateHealth(this->gameConfig_.health_);
-        this->gameStateManager_.updateScore(this->gameConfig_.score_);
+        gameState_.health_ = gameConfig_.health_;
+        gameState_.score_ = gameConfig_.score_;
 
         updateGameState();
 
@@ -129,7 +129,6 @@ namespace Uncarved::GameSpace
         gameStateManager.actors_.clear();
         gameStateManager.actorIndexById_.clear();
         gameStateManager.playerIndex_.reset();
-        gameStateManager.worldBuffer_.fill(' ');
         gameStateManager.npcOccupancyGrid_.fill(0);
         gameStateManager.blockingOccupancyGrid_.fill(0);
         gameStateManager.request_ = std::nullopt;
@@ -145,20 +144,20 @@ namespace Uncarved::GameSpace
     {
         if (this->imageLoader_.getTextureCount() <= 0)
         {
-            this->gameStateManager_.setGameState(GameState::Gameplay);
+            setGameFlowState(GameFlowState::Gameplay);
         }
         else
         {
-            this->gameStateManager_.setGameState(GameState::Intro);
+            setGameFlowState(GameFlowState::Intro);
         }
 
         std::size_t textureIndex = 0;
 
         while (this->gamePhase_ == GamePhase::RunGame)
         {
-            switch (this->gameStateManager_.getGameState())
+            switch (getGameFlowState())
             {
-                case GameState::Intro:
+                case GameFlowState::Intro:
                 {
                     if (!this->rendererCore_.clear())
                     {
@@ -178,7 +177,7 @@ namespace Uncarved::GameSpace
                             }
                             else
                             {
-                                this->gameStateManager_.setGameState(GameState::Gameplay);
+                                setGameFlowState(GameFlowState::Gameplay);
                             }
                             break;
                     }
@@ -196,7 +195,7 @@ namespace Uncarved::GameSpace
                     }
                 }
                 break;
-                case GameState::Gameplay:
+                case GameFlowState::Gameplay:
 
                     switch (this->inputCore_.pollInputRequest())
                     {

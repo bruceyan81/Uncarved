@@ -1,6 +1,8 @@
 #include "Interaction.h"
 
 #include "Gameplay.h"
+#include "GameState.h"
+#include "GameStateManager.h"
 
 #include <glm/glm.hpp>
 
@@ -143,11 +145,12 @@ namespace Uncarved::GameSpace
         return results_;
     }
 
-    void InteractionCore::resolveInteractionResult(GameStateManager& gameState) const noexcept
+    void
+    InteractionCore::resolveInteractionResult(GameState& gameState, GameStateManager& gameStateManager) const noexcept
     {
         for (const auto& result : results_)
         {
-            auto* actor = gameState.getActorById(result.sourceActorId_);
+            auto* actor = gameStateManager.getActorById(result.sourceActorId_);
 
             if (actor == nullptr)
             {
@@ -168,26 +171,26 @@ namespace Uncarved::GameSpace
                 case DialogueCommand::ScoreUp:
                     if (!actor->getHasUppedScore())
                     {
-                        gameState.updateScore(gameState.getScore() + 1);
+                        gameState.score_ += 1;
                         actor->updateHasUppedScore(true);
                     }
                     break;
                 case DialogueCommand::HealthDown:
-                    gameState.updateHealth(gameState.getHealth() - 1);
+                    gameState.health_ -= 1;
 
-                    if (gameState.getHealth() <= 0)
+                    if (gameState.health_ <= 0)
                     {
-                        gameState.createRequest(DialogueCommand::GameOver, nextSceneName);
+                        gameStateManager.createRequest(DialogueCommand::GameOver, nextSceneName);
                     }
                     break;
                 case DialogueCommand::SceneTransition:
-                    gameState.createRequest(DialogueCommand::SceneTransition, nextSceneName);
+                    gameStateManager.createRequest(DialogueCommand::SceneTransition, nextSceneName);
                     break;
                 case DialogueCommand::PlayerWin:
-                    gameState.createRequest(DialogueCommand::PlayerWin, nextSceneName);
+                    gameStateManager.createRequest(DialogueCommand::PlayerWin, nextSceneName);
                     break;
                 case DialogueCommand::GameOver:
-                    gameState.createRequest(DialogueCommand::GameOver, nextSceneName);
+                    gameStateManager.createRequest(DialogueCommand::GameOver, nextSceneName);
                     break;
                 default:
                     break;

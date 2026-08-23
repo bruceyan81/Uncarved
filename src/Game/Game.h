@@ -2,6 +2,7 @@
 
 #include "GameConfig.h"
 #include "GameSimulation.h"
+#include "GameState.h"
 #include "GameStateManager.h"
 #include "Interaction.h"
 
@@ -30,6 +31,13 @@ namespace Uncarved::GameSpace
         Count
     };
 
+    enum class GameFlowState
+    {
+        None,
+        Intro,
+        Gameplay
+    };
+
     class GameCore
     {
     public:
@@ -53,8 +61,21 @@ namespace Uncarved::GameSpace
 
         int launch();
 
+        GameFlowState getGameFlowState() const noexcept
+        {
+            return gameFlowState_;
+        }
+
+        void setGameFlowState(GameFlowState gameFlowState) noexcept
+        {
+            gameFlowState_ = gameFlowState;
+        }
+
     private:
-        GamePhase                 gamePhase_{GamePhase::None};
+        GamePhase     gamePhase_{GamePhase::None};
+        GameFlowState gameFlowState_{GameFlowState::None};
+        GameState     gameState_{};
+
         SimulationCore            simulationCore_;
         InteractionCore           interactionCore_;
         InputSpace::InputCore     inputCore_;

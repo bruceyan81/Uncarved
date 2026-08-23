@@ -39,12 +39,6 @@ namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
-    enum class GameState
-    {
-        None,
-        Intro,
-        Gameplay
-    };
 
     struct GameStateRequest
     {
@@ -64,26 +58,6 @@ namespace Uncarved::GameSpace
         GameStateManager& operator=(GameStateManager&&) noexcept = default;
 
         ~GameStateManager() = default;
-
-        int getHealth() const noexcept
-        {
-            return health_;
-        }
-
-        void updateHealth(int health) noexcept
-        {
-            health_ = health;
-        }
-
-        int getScore() const noexcept
-        {
-            return score_;
-        }
-
-        void updateScore(int score) noexcept
-        {
-            score_ = score;
-        }
 
         std::vector<ObjectSpace::Actor>& getActors()
         {
@@ -114,10 +88,6 @@ namespace Uncarved::GameSpace
                 actors_[playerIndex_.value()].moveBy(delta);
             }
         }
-
-        std::optional<char> getWorldViewByCoord(const glm::ivec2& target) const noexcept;
-
-        void updateWorld();
 
         void createRequest(DialogueCommand intention, std::string& nextSceneName);
 
@@ -162,27 +132,13 @@ namespace Uncarved::GameSpace
             return &actors_[it->second];
         }
 
-        GameState getGameState() const noexcept
-        {
-            return gameState_;
-        }
-
-        void setGameState(GameState gameState) noexcept
-        {
-            gameState_ = gameState;
-        }
-
     private:
-        int                                                   health_{};
-        int                                                   score_{};
         std::optional<std::size_t>                            playerIndex_{};
         std::vector<ObjectSpace::Actor>                       actors_{};
         std::unordered_map<ObjectSpace::ActorId, std::size_t> actorIndexById_{};
-        std::array<char, kMapSize>                            worldBuffer_{};
         std::array<std::size_t, kMapSize>                     npcOccupancyGrid_{};
         std::array<std::size_t, kMapSize>                     blockingOccupancyGrid_{};
         std::optional<GameStateRequest>                       request_{std::nullopt};
-        GameState                                             gameState_{GameState::None};
 
         friend class GameCore;
     };
