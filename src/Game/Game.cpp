@@ -85,11 +85,8 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
-        const auto& loadSceneActorResult = this->loadSceneActors(this->gameContentLoader_.getDefinitionalActors());
-
-        if (!loadSceneActorResult.isSucceeded())
+        if (!world_.tryLoadActors(gameContentLoader_.getDefinitionalActors()))
         {
-            loadSceneActorResult.showErrorMessage();
             return 1;
         }
 
@@ -97,8 +94,6 @@ namespace Uncarved::GameSpace
 
         gameState_.health_ = gameConfig_.health_;
         gameState_.score_ = gameConfig_.score_;
-
-        updateGameState();
 
         return 0;
     }
@@ -124,18 +119,9 @@ namespace Uncarved::GameSpace
 
     int GameCore::unloadScene()
     {
-        GameStateManager& gameStateManager = this->gameStateManager_;
+        world_.clearWorld();
 
-        gameStateManager.actors_.clear();
-        gameStateManager.actorIndexById_.clear();
-        gameStateManager.playerIndex_.reset();
-        gameStateManager.npcOccupancyGrid_.fill(0);
-        gameStateManager.blockingOccupancyGrid_.fill(0);
-        gameStateManager.request_ = std::nullopt;
-
-        InteractionCore& interactionCore = this->interactionCore_;
-
-        interactionCore.clearResults();
+        interactionCore_.clearResults();
 
         return 0;
     }
@@ -224,66 +210,6 @@ namespace Uncarved::GameSpace
         return 0;
     }
 
-    ContentSpace::Definition::ResourceLoadResult
-    GameCore::loadSceneActors(const std::vector<ObjectSpace::ActorDefinition>& actorDefinitions)
-    {
-        this->gameStateManager_.actors_.reserve(this->gameStateManager_.actors_.size() + actorDefinitions.size());
-
-        for (const auto& definition : actorDefinitions)
-        {
-            if (definition.x_ >= 0 && definition.x_ < kMapWidth && definition.y_ >= 0 && definition.y_ < kMapHeight)
-            {
-                const char view = definition.view_.empty() ? '?' : definition.view_.front();
-
-                this->gameStateManager_.actors_.emplace_back(
-                    definition.bBlocking_,
-                    view,
-                    glm::ivec2{definition.x_, definition.y_},
-                    glm::ivec2{definition.velX_, definition.velY_},
-                    definition.actorName_,
-                    definition.nearbyDialogue_,
-                    definition.contactDialogue_
-                );
-
-                const std::size_t actorIndex = this->gameStateManager_.actors_.size() - 1;
-                const auto&       actor = this->gameStateManager_.actors_.back();
-
-                this->gameStateManager_.actorIndexById_[actor.getId()] = actorIndex;
-
-                if (actor.getActorName() == "player")
-                {
-                    this->gameStateManager_.playerIndex_ = actorIndex;
-                }
-            }
-            else
-            {
-                return {ContentSpace::Definition::ResourceLoadError::InvalidActor, "Actor's index out of bounds"};
-            }
-        }
-
-        return {};
-    }
-
-    void GameCore::updateGameState() noexcept
-    {
-        const ObjectSpace::Actor* playerPtr = this->gameStateManager_.getPlayer();
-
-        for (const auto& actor : this->gameStateManager_.actors_)
-        {
-            const glm::ivec2 position = actor.getPosition();
-
-            if (!playerPtr || actor.getId() != playerPtr->getId())
-            {
-                this->gameStateManager_.npcOccupancyGrid_[position.y * kMapWidth + position.x]++;
-            }
-
-            if (actor.getBlocking())
-            {
-                this->gameStateManager_.blockingOccupancyGrid_[position.y * kMapWidth + position.x]++;
-            }
-        }
-    }
-
     ContentSpace::Definition::ResourceLoadResult GameCore::processSceneTransition(std::string_view nextSceneName)
     {
         const auto& initialResult = initializeSceneResource(nextSceneName);
@@ -295,16 +221,12 @@ namespace Uncarved::GameSpace
 
         unloadScene();
 
-        const auto& loadSceneActorResult = this->loadSceneActors(this->gameContentLoader_.getDefinitionalActors());
-
-        if (!loadSceneActorResult.isSucceeded())
+        if (!world_.tryLoadActors(gameContentLoader_.getDefinitionalActors()))
         {
-            return loadSceneActorResult;
+            return {ContentSpace::Definition::ResourceLoadError::InvalidActor, "Actor's index out of bounds"};
         }
 
         this->gameContentLoader_.releaseLoadData();
-
-        updateGameState();
 
         return {};
     }

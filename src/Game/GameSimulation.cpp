@@ -1,6 +1,6 @@
 #include "GameSimulation.h"
 
-#include "GameStateManager.h"
+#include "World.h"
 
 #include "Input/Command.h"
 
@@ -17,41 +17,41 @@ namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
-    SimulationResult SimulationCore::update(GameStateManager& gameState, const InputSpace::Intention intention)
+    SimulationResult SimulationCore::update(World& world, const InputSpace::Intention intention)
     {
-        this->aiController_.updateAi(gameState);
+        this->aiController_.updateAi(world);
 
         switch (intention)
         {
             case InputSpace::Intention::ToNorth:
             {
-                if (this->canPlayerMoveTo(gameState, kToNorth))
+                if (this->canPlayerMoveTo(world, kToNorth))
                 {
-                    gameState.movePlayerBy(kToNorth);
+                    world.movePlayerBy(kToNorth);
                 }
             }
                 return {GameTickOutcome::Continue};
             case InputSpace::Intention::ToEast:
             {
-                if (this->canPlayerMoveTo(gameState, kToEast))
+                if (this->canPlayerMoveTo(world, kToEast))
                 {
-                    gameState.movePlayerBy(kToEast);
+                    world.movePlayerBy(kToEast);
                 }
             }
                 return {GameTickOutcome::Continue};
             case InputSpace::Intention::ToSouth:
             {
-                if (this->canPlayerMoveTo(gameState, kToSouth))
+                if (this->canPlayerMoveTo(world, kToSouth))
                 {
-                    gameState.movePlayerBy(kToSouth);
+                    world.movePlayerBy(kToSouth);
                 }
             }
                 return {GameTickOutcome::Continue};
             case InputSpace::Intention::ToWest:
             {
-                if (this->canPlayerMoveTo(gameState, kToWest))
+                if (this->canPlayerMoveTo(world, kToWest))
                 {
-                    gameState.movePlayerBy(kToWest);
+                    world.movePlayerBy(kToWest);
                 }
             }
                 return {GameTickOutcome::Continue};
@@ -62,9 +62,9 @@ namespace Uncarved::GameSpace
         }
     }
 
-    bool SimulationCore::canPlayerMoveTo(const GameStateManager& gameState, const glm::ivec2& delta) const noexcept
+    bool SimulationCore::canPlayerMoveTo(const World& world, const glm::ivec2& delta) const noexcept
     {
-        const ObjectSpace::Actor* playerPtr = gameState.getPlayer();
+        const ObjectSpace::Actor* playerPtr = world.getPlayer();
 
         if (playerPtr == nullptr)
         {
@@ -79,7 +79,7 @@ namespace Uncarved::GameSpace
             return false;
         }
 
-        if (gameState.getBlockingOccupancyGrid()[nextPosition.y * kMapWidth + nextPosition.x] > 0)
+        if (world.getBlockingOccupancyGrid()[nextPosition.y * kMapWidth + nextPosition.x] > 0)
         {
             return false;
         }

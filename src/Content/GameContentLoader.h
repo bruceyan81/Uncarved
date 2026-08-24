@@ -2,7 +2,7 @@
 
 #include "DataDefinition.h"
 
-#include "Object/ActorDefinition.h"
+#include "Object/DefinitionalActor.h"
 
 #include <string>
 #include <string_view>
@@ -38,7 +38,7 @@ namespace Uncarved::ContentSpace
             return renderingConfig_;
         }
 
-        const std::vector<ObjectSpace::ActorDefinition>& getDefinitionalActors() const noexcept
+        const std::vector<ObjectSpace::DefinitionalActor>& getDefinitionalActors() const noexcept
         {
             return definitionalActors_;
         }
@@ -46,7 +46,7 @@ namespace Uncarved::ContentSpace
         void releaseLoadData()
         {
             std::vector<Definition::ActorDataPatch>{}.swap(rawActors_);
-            std::vector<ObjectSpace::ActorDefinition>{}.swap(definitionalActors_);
+            std::vector<ObjectSpace::DefinitionalActor>{}.swap(definitionalActors_);
         }
 
         void checkResourceDirectory() const;
@@ -72,6 +72,6 @@ namespace Uncarved::ContentSpace
         std::unordered_map<std::string, RenderingConfig> renderingConfig_;
 
         std::vector<Definition::ActorDataPatch>   rawActors_;
-        std::vector<ObjectSpace::ActorDefinition> definitionalActors_;
+        std::vector<ObjectSpace::DefinitionalActor> definitionalActors_;
     };
 } // namespace Uncarved::ContentSpace

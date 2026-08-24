@@ -69,7 +69,7 @@ namespace Uncarved
         }
 
         void applyActorDataPatch(
-            ObjectSpace::ActorDefinition&                   outDefinition,
+            ObjectSpace::DefinitionalActor&                   outDefinition,
             const ContentSpace::Definition::ActorDataPatch& outPatch
         )
         {
@@ -119,19 +119,19 @@ namespace Uncarved
             }
         }
 
-        ObjectSpace::ActorDefinition resolveActorDefinition(const ContentSpace::Definition::ActorDataPatch& patch)
+        ObjectSpace::DefinitionalActor resolveDefinitionalActor(const ContentSpace::Definition::ActorDataPatch& patch)
         {
-            ObjectSpace::ActorDefinition definition{};
+            ObjectSpace::DefinitionalActor definition{};
             applyActorDataPatch(definition, patch);
             return definition;
         }
 
-        ObjectSpace::ActorDefinition resolveActorDefinition(
+        ObjectSpace::DefinitionalActor resolveDefinitionalActor(
             const ContentSpace::Definition::ActorDataPatch& templatePatch,
             const ContentSpace::Definition::ActorDataPatch& patch
         )
         {
-            ObjectSpace::ActorDefinition definition{};
+            ObjectSpace::DefinitionalActor definition{};
 
             applyActorDataPatch(definition, templatePatch);
             applyActorDataPatch(definition, patch);
@@ -387,7 +387,7 @@ namespace Uncarved::ContentSpace
         const auto& actors = document["actors"];
 
         std::vector<Definition::ActorDataPatch>   tempRawActors;
-        std::vector<ObjectSpace::ActorDefinition> tempDefinitionalActors;
+        std::vector<ObjectSpace::DefinitionalActor> tempDefinitionalActors;
 
         tempRawActors.reserve(actors.Size());
         tempDefinitionalActors.reserve(actors.Size());
@@ -405,7 +405,7 @@ namespace Uncarved::ContentSpace
 
             if (templateIt == rawActor.MemberEnd())
             {
-                tempDefinitionalActors.emplace_back(resolveActorDefinition(tempRawActors.back()));
+                tempDefinitionalActors.emplace_back(resolveDefinitionalActor(tempRawActors.back()));
 
                 continue;
             }
@@ -427,7 +427,7 @@ namespace Uncarved::ContentSpace
 
             auto templatePatch = loadActorTemplate(templateName);
 
-            tempDefinitionalActors.emplace_back(resolveActorDefinition(templatePatch, tempRawActors.back()));
+            tempDefinitionalActors.emplace_back(resolveDefinitionalActor(templatePatch, tempRawActors.back()));
         }
 
         rawActors_.swap(tempRawActors);

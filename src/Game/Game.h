@@ -3,17 +3,15 @@
 #include "GameConfig.h"
 #include "GameSimulation.h"
 #include "GameState.h"
-#include "GameStateManager.h"
 #include "Interaction.h"
+#include "World.h"
 
 #include "Content/DataDefinition.h"
 #include "Content/ImageLoader.h"
 #include "Input/Input.h"
-#include "Object/ActorDefinition.h"
 #include "View/Renderer.h"
 
 #include <string_view>
-#include <vector>
 
 namespace Uncarved::ContentSpace
 {
@@ -81,21 +79,16 @@ namespace Uncarved::GameSpace
         InputSpace::InputCore     inputCore_;
         ViewSpace::Renderer       rendererCore_;
         GameConfig                gameConfig_;
-        GameStateManager          gameStateManager_{};
+        World                     world_{};
         ContentSpace::ImageLoader imageLoader_;
 
         ContentSpace::GameContentLoader& gameContentLoader_;
 
         int initializeGame();
 
-        void updateGameState() noexcept;
-
         ContentSpace::Definition::ResourceLoadResult initializeSceneResource(std::string_view sceneName);
 
         int unloadScene();
-
-        ContentSpace::Definition::ResourceLoadResult
-        loadSceneActors(const std::vector<ObjectSpace::ActorDefinition>& actorDefinitions);
 
         int runGame();
 

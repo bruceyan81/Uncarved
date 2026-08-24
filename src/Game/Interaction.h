@@ -10,7 +10,7 @@ namespace Uncarved::GameSpace
 {
     struct GameState;
 
-    class GameStateManager;
+    class World;
 
     enum class DialogueCommand;
 
@@ -30,11 +30,11 @@ namespace Uncarved::GameSpace
             results_.reserve(9);
         };
 
-        void dialogueInteraction(const GameStateManager& gameState);
+        void dialogueInteraction(const World& world);
 
         const std::vector<InteractionResult>& getInteractionResults() const noexcept;
 
-        void resolveInteractionResult(GameState& gameState, GameStateManager& gameStateManager) const noexcept;
+        void resolveInteractionResult(GameState& gameState, World& world) const noexcept;
 
         void clearResults()
         {

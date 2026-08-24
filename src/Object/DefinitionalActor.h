@@ -4,7 +4,7 @@
 
 namespace Uncarved::ObjectSpace
 {
-    struct ActorDefinition final
+    struct DefinitionalActor final
     {
         bool        bBlocking_{false};
         std::string view_{"?"};

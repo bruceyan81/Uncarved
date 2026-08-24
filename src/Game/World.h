@@ -4,6 +4,7 @@
 #include "Gameplay.h"
 
 #include "Object/Actor.h"
+#include "Object/DefinitionalActor.h"
 
 #include <glm/glm.hpp>
 
@@ -11,6 +12,7 @@
 #include <cstddef>
 #include <limits>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -46,18 +48,18 @@ namespace Uncarved::GameSpace
         std::string     sceneName_;
     };
 
-    class GameStateManager final
+    class World final
     {
     public:
-        GameStateManager() = default;
+        World() = default;
 
-        GameStateManager(const GameStateManager&) = delete;
-        GameStateManager& operator=(const GameStateManager&) = delete;
+        World(const World&) = delete;
+        World& operator=(const World&) = delete;
 
-        GameStateManager(GameStateManager&&) noexcept = default;
-        GameStateManager& operator=(GameStateManager&&) noexcept = default;
+        World(World&&) noexcept = default;
+        World& operator=(World&&) noexcept = default;
 
-        ~GameStateManager() = default;
+        ~World() = default;
 
         std::vector<ObjectSpace::Actor>& getActors()
         {
@@ -132,6 +134,10 @@ namespace Uncarved::GameSpace
             return &actors_[it->second];
         }
 
+        bool tryLoadActors(std::span<const ObjectSpace::DefinitionalActor> definitionalActors);
+
+        void clearWorld() noexcept;
+
     private:
         std::optional<std::size_t>                            playerIndex_{};
         std::vector<ObjectSpace::Actor>                       actors_{};
@@ -140,6 +146,6 @@ namespace Uncarved::GameSpace
         std::array<std::size_t, kMapSize>                     blockingOccupancyGrid_{};
         std::optional<GameStateRequest>                       request_{std::nullopt};
 
-        friend class GameCore;
+        void addActor(const ObjectSpace::DefinitionalActor& definitionalActor);
     };
 } // namespace Uncarved::GameSpace

@@ -1,6 +1,6 @@
 #include "AiController.h"
 
-#include "GameStateManager.h"
+#include "World.h"
 
 #include "Object/Actor.h"
 
@@ -8,14 +8,14 @@
 
 namespace Uncarved::GameSpace
 {
-    void AiController::updateAi(GameStateManager& gameStateManager)
+    void AiController::updateAi(World& world)
     {
-        const ObjectSpace::Actor* playerPtr = gameStateManager.getPlayer();
+        const ObjectSpace::Actor* playerPtr = world.getPlayer();
 
-        const auto& occupancyGrid = gameStateManager.getNpcOccupancyGrid();
-        const auto& blockingOccupancyGrid = gameStateManager.getBlockingOccupancyGrid();
+        const auto& occupancyGrid = world.getNpcOccupancyGrid();
+        const auto& blockingOccupancyGrid = world.getBlockingOccupancyGrid();
 
-        for (auto& actor : gameStateManager.getActors())
+        for (auto& actor : world.getActors())
         {
             if (playerPtr != nullptr && actor == *playerPtr)
             {
@@ -59,20 +59,20 @@ namespace Uncarved::GameSpace
 
             if (!bIsExistOtherNpc)
             {
-                gameStateManager.updateNpcOccupancyGrid(position.y * kMapWidth + position.x, -1);
+                world.updateNpcOccupancyGrid(position.y * kMapWidth + position.x, -1);
 
                 if (bIsBlocking)
                 {
-                    gameStateManager.updateBlockingOccupancyGrid(position.y * kMapWidth + position.x, -1);
+                    world.updateBlockingOccupancyGrid(position.y * kMapWidth + position.x, -1);
                 }
 
                 actor.moveBy(velocity);
 
-                gameStateManager.updateNpcOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
+                world.updateNpcOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
 
                 if (bIsBlocking)
                 {
-                    gameStateManager.updateBlockingOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
+                    world.updateBlockingOccupancyGrid(actor.getPosition().y * kMapWidth + actor.getPosition().x, 1);
                 }
             }
             else
