@@ -5,6 +5,22 @@
 
 namespace Uncarved::GameSpace
 {
+    bool World::moveActorBy(ObjectSpace::ActorId actorId, const glm::ivec2& delta) noexcept
+    {
+        auto actorIt = actorIndexById_.find(actorId);
+
+        if (actorIt == actorIndexById_.end())
+        {
+            return false;
+        }
+
+        auto& actor = actors_[actorIt->second];
+
+        actor.moveBy(delta);
+
+        return true;
+    }
+
     void World::createRequest(DialogueCommand intention, std::string& nextSceneName)
     {
         if (request_ != std::nullopt)
@@ -37,23 +53,6 @@ namespace Uncarved::GameSpace
         for (const auto& definitionalActor : definitionalActors)
         {
             nextWorld.addActor(definitionalActor);
-        }
-
-        auto* playerPtr = nextWorld.getPlayer();
-
-        for (const auto& actor : nextWorld.actors_)
-        {
-            const glm::ivec2 position = actor.getPosition();
-
-            if (!playerPtr || actor.getId() != playerPtr->getId())
-            {
-                nextWorld.npcOccupancyGrid_[position.y * kMapWidth + position.x]++;
-            }
-
-            if (actor.getBlocking())
-            {
-                nextWorld.blockingOccupancyGrid_[position.y * kMapWidth + position.x]++;
-            }
         }
 
         *this = std::move(nextWorld);

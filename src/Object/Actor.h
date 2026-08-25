@@ -7,6 +7,11 @@
 #include <string>
 #include <string_view>
 
+namespace Uncarved::GameSpace
+{
+    class World;
+}
+
 namespace Uncarved::ObjectSpace
 {
     using ActorId = std::uint64_t;
@@ -45,16 +50,6 @@ namespace Uncarved::ObjectSpace
             return bBlocking_;
         }
 
-        bool getHasUppedScore() const noexcept
-        {
-            return bHasUppedScore_;
-        }
-
-        void updateHasUppedScore(bool bHasUppedScore) noexcept
-        {
-            bHasUppedScore_ = bHasUppedScore;
-        }
-
         const glm::ivec2& getPosition() const noexcept
         {
             return position_;
@@ -68,11 +63,6 @@ namespace Uncarved::ObjectSpace
         void updateVelocity(const glm::ivec2& newVelocity)
         {
             velocity_ = newVelocity;
-        }
-
-        void moveBy(const glm::ivec2& delta)
-        {
-            position_ += delta;
         }
 
         const std::string& getActorName() const noexcept
@@ -95,6 +85,8 @@ namespace Uncarved::ObjectSpace
             return view_;
         }
 
+        bool tryConsumeScoreAward();
+
         ~Actor() = default;
 
     private:
@@ -110,5 +102,12 @@ namespace Uncarved::ObjectSpace
         std::string actorName_;
         std::string nearbyDialogue_;
         std::string contactDialogue_;
+
+        friend class GameSpace::World;
+
+        void moveBy(const glm::ivec2& delta)
+        {
+            position_ += delta;
+        }
     };
 } // namespace Uncarved::ObjectSpace

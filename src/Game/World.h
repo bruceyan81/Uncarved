@@ -9,35 +9,11 @@
 #include <glm/glm.hpp>
 
 #include <array>
-#include <cstddef>
-#include <limits>
 #include <optional>
 #include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-namespace Uncarved
-{
-    namespace
-    {
-        void updateOccupancyCount(std::size_t& currentCount, int delta)
-        {
-            if (delta < 0)
-            {
-                const std::size_t decrement = static_cast<std::size_t>(-delta);
-                currentCount = decrement > currentCount ? std::size_t{0} : currentCount - decrement;
-                return;
-            }
-
-            const std::size_t increment = static_cast<std::size_t>(delta);
-
-            currentCount = increment > (std::numeric_limits<std::size_t>::max() - currentCount)
-                ? std::numeric_limits<std::size_t>::max()
-                : currentCount + increment;
-        }
-    } // namespace
-} // namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
@@ -61,12 +37,7 @@ namespace Uncarved::GameSpace
 
         ~World() = default;
 
-        std::vector<ObjectSpace::Actor>& getActors()
-        {
-            return actors_;
-        }
-
-        const std::vector<ObjectSpace::Actor>& getActorsReadOnly() const noexcept
+        const std::vector<ObjectSpace::Actor>& getActors() const noexcept
         {
             return actors_;
         }
@@ -83,13 +54,7 @@ namespace Uncarved::GameSpace
             }
         }
 
-        void movePlayerBy(const glm::ivec2& delta) noexcept
-        {
-            if (playerIndex_)
-            {
-                actors_[playerIndex_.value()].moveBy(delta);
-            }
-        }
+        bool moveActorBy(ObjectSpace::ActorId actorId, const glm::ivec2& delta) noexcept;
 
         void createRequest(DialogueCommand intention, std::string& nextSceneName);
 
@@ -103,23 +68,9 @@ namespace Uncarved::GameSpace
             return npcOccupancyGrid_;
         }
 
-        void updateNpcOccupancyGrid(std::size_t index, int delta)
-        {
-            std::size_t& currentCount = npcOccupancyGrid_[index];
-
-            updateOccupancyCount(currentCount, delta);
-        }
-
         const std::array<std::size_t, kMapSize>& getBlockingOccupancyGrid() const noexcept
         {
             return blockingOccupancyGrid_;
-        }
-
-        void updateBlockingOccupancyGrid(std::size_t index, int delta)
-        {
-            std::size_t& currentCount = blockingOccupancyGrid_[index];
-
-            updateOccupancyCount(currentCount, delta);
         }
 
         ObjectSpace::Actor* getActorById(ObjectSpace::ActorId id)

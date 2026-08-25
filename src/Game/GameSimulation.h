@@ -37,5 +37,7 @@ namespace Uncarved::GameSpace
         AiController aiController_{};
 
         bool canPlayerMoveTo(const World& world, const glm::ivec2& nextPosition) const noexcept;
+
+        void tryMovePlayer(World& world, const glm::ivec2& delta) noexcept;
     };
 } // namespace Uncarved::GameSpace

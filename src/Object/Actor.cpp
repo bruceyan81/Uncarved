@@ -36,4 +36,14 @@ namespace Uncarved::ObjectSpace
         , contactDialogue_(std::move(other.contactDialogue_))
     {
     }
+
+    bool Actor::tryConsumeScoreAward()
+    {
+        if (!bHasUppedScore_)
+        {
+            bHasUppedScore_ = true;
+            return bHasUppedScore_;
+        }
+        return false;
+    }
 } // namespace Uncarved::ObjectSpace

@@ -104,7 +104,7 @@ namespace Uncarved::GameSpace
 
         const glm::ivec2 playerPosition = playerPtr->getPosition();
 
-        for (const auto& actor : world.getActorsReadOnly())
+        for (const auto& actor : world.getActors())
         {
             if (actor == *playerPtr)
             {
@@ -169,16 +169,15 @@ namespace Uncarved::GameSpace
                 case DialogueCommand::None:
                     break;
                 case DialogueCommand::ScoreUp:
-                    if (!actor->getHasUppedScore())
+                    if (actor->tryConsumeScoreAward())
                     {
-                        gameState.score_ += 1;
-                        actor->updateHasUppedScore(true);
+                        gameState.addScore(1);
                     }
                     break;
                 case DialogueCommand::HealthDown:
-                    gameState.health_ -= 1;
+                    gameState.applyDamage(1);
 
-                    if (gameState.health_ <= 0)
+                    if (gameState.getHealth() <= 0)
                     {
                         world.createRequest(DialogueCommand::GameOver, nextSceneName);
                     }

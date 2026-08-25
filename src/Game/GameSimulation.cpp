@@ -25,34 +25,22 @@ namespace Uncarved::GameSpace
         {
             case InputSpace::Intention::ToNorth:
             {
-                if (this->canPlayerMoveTo(world, kToNorth))
-                {
-                    world.movePlayerBy(kToNorth);
-                }
+                tryMovePlayer(world, kToNorth);
             }
                 return {GameTickOutcome::Continue};
             case InputSpace::Intention::ToEast:
             {
-                if (this->canPlayerMoveTo(world, kToEast))
-                {
-                    world.movePlayerBy(kToEast);
-                }
+                tryMovePlayer(world, kToEast);
             }
                 return {GameTickOutcome::Continue};
             case InputSpace::Intention::ToSouth:
             {
-                if (this->canPlayerMoveTo(world, kToSouth))
-                {
-                    world.movePlayerBy(kToSouth);
-                }
+                tryMovePlayer(world, kToSouth);
             }
                 return {GameTickOutcome::Continue};
             case InputSpace::Intention::ToWest:
             {
-                if (this->canPlayerMoveTo(world, kToWest))
-                {
-                    world.movePlayerBy(kToWest);
-                }
+                tryMovePlayer(world, kToWest);
             }
                 return {GameTickOutcome::Continue};
             case InputSpace::Intention::Quit:
@@ -79,11 +67,16 @@ namespace Uncarved::GameSpace
             return false;
         }
 
-        if (world.getBlockingOccupancyGrid()[nextPosition.y * kMapWidth + nextPosition.x] > 0)
-        {
-            return false;
-        }
-
         return true;
+    }
+
+    void SimulationCore::tryMovePlayer(World& world, const glm::ivec2& delta) noexcept
+    {
+        const ObjectSpace::Actor* playerPtr = world.getPlayer();
+
+        if (playerPtr != nullptr && canPlayerMoveTo(world, delta))
+        {
+            world.moveActorBy(playerPtr->getId(), delta);
+        }
     }
 } // namespace Uncarved::GameSpace

@@ -92,8 +92,7 @@ namespace Uncarved::GameSpace
 
         this->gameContentLoader_.releaseLoadData();
 
-        gameState_.health_ = gameConfig_.health_;
-        gameState_.score_ = gameConfig_.score_;
+        gameState_.initialize(gameConfig_.health_, gameConfig_.score_);
 
         return 0;
     }

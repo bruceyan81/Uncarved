@@ -30,6 +30,7 @@ add_executable(Uncarved
     src/Game/AiController.cpp
     src/Game/GameSimulation.cpp
     src/Game/Game.cpp
+    src/Game/GameState.cpp
     src/Game/World.cpp
     src/Game/Interaction.cpp
     src/Input/Input.cpp
