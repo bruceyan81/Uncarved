@@ -1,5 +1,6 @@
 #include "GameSimulation.h"
 
+#include "CommandBuffer.h"
 #include "World.h"
 
 #include "Input/Command.h"
@@ -17,66 +18,41 @@ namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
-    SimulationResult SimulationCore::update(World& world, const InputSpace::Intention intention)
+    void SimulationCore::update(const World& world, const InputSpace::Intention intention, CommandBuffer& commandBuffer)
     {
-        this->aiController_.updateAi(world);
+        this->aiController_.updateAi(world, commandBuffer);
 
         switch (intention)
         {
             case InputSpace::Intention::ToNorth:
-            {
-                tryMovePlayer(world, kToNorth);
-            }
-                return {GameTickOutcome::Continue};
+                submitPlayerMovement(world, kToNorth, commandBuffer);
+                break;
             case InputSpace::Intention::ToEast:
-            {
-                tryMovePlayer(world, kToEast);
-            }
-                return {GameTickOutcome::Continue};
+                submitPlayerMovement(world, kToEast, commandBuffer);
+                break;
             case InputSpace::Intention::ToSouth:
-            {
-                tryMovePlayer(world, kToSouth);
-            }
-                return {GameTickOutcome::Continue};
+                submitPlayerMovement(world, kToSouth, commandBuffer);
+                break;
             case InputSpace::Intention::ToWest:
-            {
-                tryMovePlayer(world, kToWest);
-            }
-                return {GameTickOutcome::Continue};
+                submitPlayerMovement(world, kToWest, commandBuffer);
+                break;
             case InputSpace::Intention::Quit:
-                return {GameTickOutcome::QuitRequested};
+                commandBuffer.submit(QuitCommand{});
+                break;
             default:
-                return {GameTickOutcome::None};
+                break;
         }
     }
 
-    bool SimulationCore::canPlayerMoveTo(const World& world, const glm::ivec2& delta) const noexcept
+    void SimulationCore::submitPlayerMovement(const World& world, const glm::ivec2& delta, CommandBuffer& commandBuffer)
     {
         const ObjectSpace::Actor* playerPtr = world.getPlayer();
 
         if (playerPtr == nullptr)
         {
-            return false;
+            return;
         }
 
-        const glm::ivec2 playerPosition = playerPtr->getPosition();
-        const glm::ivec2 nextPosition = playerPosition + delta;
-
-        if (nextPosition.x < 0 || nextPosition.x >= kMapWidth || nextPosition.y < 0 || nextPosition.y >= kMapHeight)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    void SimulationCore::tryMovePlayer(World& world, const glm::ivec2& delta) noexcept
-    {
-        const ObjectSpace::Actor* playerPtr = world.getPlayer();
-
-        if (playerPtr != nullptr && canPlayerMoveTo(world, delta))
-        {
-            world.moveActorBy(playerPtr->getId(), delta);
-        }
+        commandBuffer.submit(MoveActorCommand{playerPtr->getId(), delta});
     }
 } // namespace Uncarved::GameSpace

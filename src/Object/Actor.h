@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <limits>
 #include <string>
-#include <string_view>
 
 namespace Uncarved::GameSpace
 {
@@ -24,9 +23,7 @@ namespace Uncarved::ObjectSpace
             char        view,
             glm::ivec2  position,
             glm::ivec2  velocity,
-            std::string actorName,
-            std::string nearbyDialogue,
-            std::string contactDialogue
+            std::string actorName
         );
 
         Actor(const Actor&) = delete;
@@ -60,32 +57,15 @@ namespace Uncarved::ObjectSpace
             return velocity_;
         }
 
-        void updateVelocity(const glm::ivec2& newVelocity)
-        {
-            velocity_ = newVelocity;
-        }
-
         const std::string& getActorName() const noexcept
         {
             return actorName_;
-        }
-
-        std::string_view getContactDialogue() const noexcept
-        {
-            return contactDialogue_;
-        }
-
-        std::string_view getNearbyDialogue() const noexcept
-        {
-            return nearbyDialogue_;
         }
 
         char getActorView() const noexcept
         {
             return view_;
         }
-
-        bool tryConsumeScoreAward();
 
         ~Actor() = default;
 
@@ -94,20 +74,22 @@ namespace Uncarved::ObjectSpace
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
         bool        bBlocking_;
-        bool        bHasUppedScore_{false};
         char        view_;
         ActorId     id_;
         glm::ivec2  position_;
         glm::ivec2  velocity_;
         std::string actorName_;
-        std::string nearbyDialogue_;
-        std::string contactDialogue_;
 
         friend class GameSpace::World;
 
         void moveBy(const glm::ivec2& delta)
         {
             position_ += delta;
+        }
+
+        void setVelocity(const glm::ivec2& newVelocity)
+        {
+            velocity_ = newVelocity;
         }
     };
 } // namespace Uncarved::ObjectSpace

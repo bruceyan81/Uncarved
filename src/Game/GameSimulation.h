@@ -11,33 +11,17 @@ namespace Uncarved::InputSpace
 
 namespace Uncarved::GameSpace
 {
+    class CommandBuffer;
     class World;
-
-    enum class GameTickOutcome
-    {
-        None,
-        Continue,
-        QuitRequested,
-        Won,
-        Lost,
-        Count
-    };
-
-    struct SimulationResult final
-    {
-        GameTickOutcome outcome_;
-    };
 
     class SimulationCore
     {
     public:
-        SimulationResult update(World& world, const InputSpace::Intention intention);
+        void update(const World& world, const InputSpace::Intention intention, CommandBuffer& commandBuffer);
 
     private:
         AiController aiController_{};
 
-        bool canPlayerMoveTo(const World& world, const glm::ivec2& nextPosition) const noexcept;
-
-        void tryMovePlayer(World& world, const glm::ivec2& delta) noexcept;
+        void submitPlayerMovement(const World& world, const glm::ivec2& delta, CommandBuffer& commandBuffer);
     };
 } // namespace Uncarved::GameSpace

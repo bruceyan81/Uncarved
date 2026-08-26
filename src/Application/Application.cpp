@@ -4,7 +4,6 @@
 
 #include "Content/ImageLoader.h"
 #include "Game/Game.h"
-#include "Game/Interaction.h"
 #include "Input/Input.h"
 #include "View/Renderer.h"
 
@@ -122,7 +121,6 @@ namespace Uncarved::ApplicationSpace
 
             GameSpace::GameCore gameCore{
                 GameSpace::SimulationCore{},
-                GameSpace::InteractionCore{},
                 InputSpace::InputCore{},
                 std::move(render),
                 {

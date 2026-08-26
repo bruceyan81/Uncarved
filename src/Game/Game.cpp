@@ -1,14 +1,10 @@
 #include "Game.h"
 
-#include "GameCommon.h"
-#include "Gameplay.h"
-
 #include "Content/DataDefinition.h"
 #include "Content/GameContentLoader.h"
 #include "Content/ImageLoader.h"
 #include "Input/Command.h"
 #include "Input/Input.h"
-#include "Object/Actor.h"
 
 #include <cstddef>
 #include <utility>
@@ -18,7 +14,6 @@ namespace Uncarved::GameSpace
 {
     GameCore::GameCore(
         SimulationCore&&                 simulationCore,
-        InteractionCore&&                interactionCore,
         InputSpace::InputCore&&          inputCore,
         ViewSpace::Renderer&&            rendererCore,
         GameConfig&&                     gameConfig,
@@ -26,7 +21,6 @@ namespace Uncarved::GameSpace
         ContentSpace::GameContentLoader& gameContentLoader
     )
         : simulationCore_(std::move(simulationCore))
-        , interactionCore_(std::move(interactionCore))
         , inputCore_(std::move(inputCore))
         , rendererCore_(std::move(rendererCore))
         , gameConfig_(std::move(gameConfig))
@@ -85,10 +79,7 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
-        if (!world_.tryLoadActors(gameContentLoader_.getDefinitionalActors()))
-        {
-            return 1;
-        }
+        world_.loadActors(gameContentLoader_.getDefinitionalActors());
 
         this->gameContentLoader_.releaseLoadData();
 
@@ -120,8 +111,6 @@ namespace Uncarved::GameSpace
     {
         world_.clearWorld();
 
-        interactionCore_.clearResults();
-
         return 0;
     }
 
@@ -152,7 +141,8 @@ namespace Uncarved::GameSpace
                     switch (this->inputCore_.pollInputRequest())
                     {
                         case InputSpace::Intention::Quit:
-                            this->gamePhase_ = GamePhase::EndGame;
+                            commandBuffer_.submit(QuitCommand{});
+                            commitCommands();
                             break;
 
                         case InputSpace::Intention::NextImage:
@@ -181,12 +171,15 @@ namespace Uncarved::GameSpace
                 }
                 break;
                 case GameFlowState::Gameplay:
+                    const InputSpace::Intention intention = inputCore_.pollInputRequest();
 
-                    switch (this->inputCore_.pollInputRequest())
+                    simulationCore_.update(world_, intention, commandBuffer_);
+
+                    commitCommands();
+
+                    if (gamePhase_ != GamePhase::RunGame)
                     {
-                        case InputSpace::Intention::Quit:
-                            this->gamePhase_ = GamePhase::EndGame;
-                            break;
+                        break;
                     }
 
                     if (!this->rendererCore_.clear())
@@ -198,6 +191,7 @@ namespace Uncarved::GameSpace
                     {
                         return 1;
                     }
+
                     break;
             }
         }
@@ -220,13 +214,37 @@ namespace Uncarved::GameSpace
 
         unloadScene();
 
-        if (!world_.tryLoadActors(gameContentLoader_.getDefinitionalActors()))
-        {
-            return {ContentSpace::Definition::ResourceLoadError::InvalidActor, "Actor's index out of bounds"};
-        }
+        world_.loadActors(gameContentLoader_.getDefinitionalActors());
 
         this->gameContentLoader_.releaseLoadData();
 
         return {};
+    }
+
+    void GameCore::commitCommands() noexcept
+    {
+        for (const auto& command : commandBuffer_.getCommands())
+        {
+            std::visit([this](const auto& targetCommand) { this->commitCommand(targetCommand); }, command);
+        }
+
+        commandBuffer_.clearCommands();
+    }
+
+    void GameCore::commitCommand(const MoveActorCommand& command) noexcept
+    {
+        world_.moveActorBy(command.actorId_, command.delta_);
+    }
+
+    void GameCore::commitCommand(const SetActorVelocityCommand& command) noexcept
+    {
+        world_.setActorVelocity(command.actorId_, command.velocity_);
+    }
+
+    void GameCore::commitCommand(const QuitCommand& command) noexcept
+    {
+        (void)command;
+
+        gamePhase_ = GamePhase::EndGame;
     }
 } // namespace Uncarved::GameSpace

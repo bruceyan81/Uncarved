@@ -2,8 +2,8 @@
 
 #include "Content/DataDefinition.h"
 
-#include <string>
 #include <cstddef>
+#include <string>
 #include <vector>
 
 struct SDL_Renderer;

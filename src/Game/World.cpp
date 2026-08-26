@@ -1,6 +1,5 @@
 #include "World.h"
 
-#include <optional>
 #include <utility>
 
 namespace Uncarved::GameSpace
@@ -21,17 +20,36 @@ namespace Uncarved::GameSpace
         return true;
     }
 
-    void World::createRequest(DialogueCommand intention, std::string& nextSceneName)
+    bool World::setActorVelocity(ObjectSpace::ActorId actorId, const glm::ivec2& velocity) noexcept
     {
-        if (request_ != std::nullopt)
+
+        auto actorIt = actorIndexById_.find(actorId);
+
+        if (actorIt == actorIndexById_.end())
         {
-            return;
+            return false;
         }
 
-        request_ = GameStateRequest{intention, std::move(nextSceneName)};
+        auto& actor = actors_[actorIt->second];
+
+        actor.setVelocity(velocity);
+
+        return true;
     }
 
-    bool World::tryLoadActors(std::span<const ObjectSpace::DefinitionalActor> definitionalActors)
+    const ObjectSpace::Actor* World::getActorById(ObjectSpace::ActorId id) const noexcept
+    {
+        const auto it = actorIndexById_.find(id);
+
+        if (it == actorIndexById_.end())
+        {
+            return nullptr;
+        }
+
+        return &actors_[it->second];
+    }
+
+    void World::loadActors(std::span<const ObjectSpace::DefinitionalActor> definitionalActors)
     {
         World nextWorld{};
 
@@ -39,25 +57,10 @@ namespace Uncarved::GameSpace
 
         for (const auto& definitionalActor : definitionalActors)
         {
-            if (definitionalActor.x_ >= 0 && definitionalActor.x_ < kMapWidth && definitionalActor.y_ >= 0
-                && definitionalActor.y_ < kMapHeight)
-            {
-                continue;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        for (const auto& definitionalActor : definitionalActors)
-        {
             nextWorld.addActor(definitionalActor);
         }
 
         *this = std::move(nextWorld);
-
-        return true;
     }
 
     void World::clearWorld() noexcept
@@ -65,9 +68,6 @@ namespace Uncarved::GameSpace
         actors_.clear();
         actorIndexById_.clear();
         playerIndex_.reset();
-        npcOccupancyGrid_.fill(0);
-        blockingOccupancyGrid_.fill(0);
-        request_.reset();
     }
 
     void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor)
@@ -79,9 +79,7 @@ namespace Uncarved::GameSpace
             view,
             glm::ivec2{definitionalActor.x_, definitionalActor.y_},
             glm::ivec2{definitionalActor.velX_, definitionalActor.velY_},
-            definitionalActor.actorName_,
-            definitionalActor.nearbyDialogue_,
-            definitionalActor.contactDialogue_
+            definitionalActor.actorName_
         );
 
         const std::size_t actorIndex = actors_.size() - 1;

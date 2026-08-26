@@ -1,9 +1,9 @@
 #pragma once
 
+#include "CommandBuffer.h"
 #include "GameConfig.h"
 #include "GameSimulation.h"
 #include "GameState.h"
-#include "Interaction.h"
 #include "World.h"
 
 #include "Content/DataDefinition.h"
@@ -41,7 +41,6 @@ namespace Uncarved::GameSpace
     public:
         GameCore(
             SimulationCore&&                 simulationCore,
-            InteractionCore&&                interactionCore,
             InputSpace::InputCore&&          inputCore,
             ViewSpace::Renderer&&            rendererCore,
             GameConfig&&                     gameConfig,
@@ -75,12 +74,12 @@ namespace Uncarved::GameSpace
         GameState     gameState_{};
 
         SimulationCore            simulationCore_;
-        InteractionCore           interactionCore_;
         InputSpace::InputCore     inputCore_;
         ViewSpace::Renderer       rendererCore_;
         GameConfig                gameConfig_;
         World                     world_{};
         ContentSpace::ImageLoader imageLoader_;
+        CommandBuffer             commandBuffer_{};
 
         ContentSpace::GameContentLoader& gameContentLoader_;
 
@@ -95,5 +94,13 @@ namespace Uncarved::GameSpace
         int endGame();
 
         ContentSpace::Definition::ResourceLoadResult processSceneTransition(std::string_view nextSceneName);
+
+        void commitCommands() noexcept;
+
+        void commitCommand(const MoveActorCommand& command) noexcept;
+
+        void commitCommand(const SetActorVelocityCommand& command) noexcept;
+
+        void commitCommand(const QuitCommand& command) noexcept;
     };
 } // namespace Uncarved::GameSpace
