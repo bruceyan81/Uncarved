@@ -18,12 +18,6 @@ namespace Uncarved::ViewSpace
 
     class Renderer
     {
-    private:
-        SDL_Renderer* renderer_{nullptr};
-        Color         clearColor_{};
-
-        void shutdown() noexcept;
-
     public:
         Renderer() = default;
 
@@ -47,5 +41,13 @@ namespace Uncarved::ViewSpace
         }
 
         bool renderTexture(SDL_Texture* texture);
+
+        bool renderTexture(SDL_Texture* texture, float screenX, float screenY);
+
+    private:
+        SDL_Renderer* renderer_{nullptr};
+        Color         clearColor_{};
+
+        void shutdown() noexcept;
     };
 } // namespace Uncarved::ViewSpace

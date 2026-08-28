@@ -69,7 +69,7 @@ namespace Uncarved
         }
 
         void applyActorDataPatch(
-            ObjectSpace::DefinitionalActor&                   outDefinition,
+            ObjectSpace::DefinitionalActor&                 outDefinition,
             const ContentSpace::Definition::ActorDataPatch& outPatch
         )
         {
@@ -147,6 +147,7 @@ namespace Uncarved::ContentSpace
     const Fs::path gResourceRoot = "Resources";
 
     constexpr std::string_view kActorTemplatesDir = "ActorTemplates";
+    constexpr std::string_view kFontsDir = "Fonts";
     constexpr std::string_view kScenesDir = "Scenes";
     constexpr std::string_view kImagesDir = "Images";
 
@@ -154,9 +155,10 @@ namespace Uncarved::ContentSpace
     constexpr std::string_view kRenderingConfigFileName = "Rendering";
 
     constexpr std::string_view kConfigFilePostfix = ".config";
+    constexpr std::string_view kPngPostfix = ".png";
     constexpr std::string_view kScenePostfix = ".scene";
     constexpr std::string_view kTemplatePostfix = ".template";
-    constexpr std::string_view kPngPostfix = ".png";
+    constexpr std::string_view kTtfPostfix = ".ttf";
 
     void GameContentLoader::checkResourceDirectory() const
     {
@@ -228,6 +230,45 @@ namespace Uncarved::ContentSpace
         else
         {
             std::cout << "info: intro_image unspecified.";
+            gameConfig_.emplace("intro_image", std::vector<std::string>{});
+        }
+
+        if (document.HasMember("font") && document["font"].IsString())
+        {
+            Fs::path fontPath =
+                (gResourceRoot / kFontsDir / document["font"].GetString()).replace_extension(kTtfPostfix);
+
+            gameConfig_.emplace("font", fontPath.string());
+        }
+        else
+        {
+            std::cout << "error: font unspecified.";
+            std::exit(EXIT_FAILURE);
+        }
+
+        if (document.HasMember("intro_text") && document["intro_text"].IsArray())
+        {
+            std::vector<std::string> introText{};
+            const auto&              array = document["intro_text"].GetArray();
+
+            const auto size = array.Size();
+
+            introText.reserve(size);
+
+            for (const auto& text : array)
+            {
+                if (text.IsString())
+                {
+                    introText.emplace_back(text.GetString());
+                }
+            }
+
+            gameConfig_.emplace("intro_text", std::move(introText));
+        }
+        else
+        {
+            std::cout << "error: intro_text unspecified.";
+            std::exit(EXIT_FAILURE);
         }
 
         if (document.HasMember("game_title") && document["game_title"].IsString())
@@ -243,21 +284,6 @@ namespace Uncarved::ContentSpace
         if (document.HasMember("score") && document["score"].IsInt())
         {
             gameConfig_.emplace("score", document["score"].GetInt());
-        }
-
-        if (document.HasMember("game_start_message") && document["game_start_message"].IsString())
-        {
-            gameConfig_.emplace("game_start_message", document["game_start_message"].GetString());
-        }
-
-        if (document.HasMember("game_over_bad_message") && document["game_over_bad_message"].IsString())
-        {
-            gameConfig_.emplace("game_over_bad_message", document["game_over_bad_message"].GetString());
-        }
-
-        if (document.HasMember("game_over_good_message") && document["game_over_good_message"].IsString())
-        {
-            gameConfig_.emplace("game_over_good_message", document["game_over_good_message"].GetString());
         }
 
         return true;
@@ -386,7 +412,7 @@ namespace Uncarved::ContentSpace
 
         const auto& actors = document["actors"];
 
-        std::vector<Definition::ActorDataPatch>   tempRawActors;
+        std::vector<Definition::ActorDataPatch>     tempRawActors;
         std::vector<ObjectSpace::DefinitionalActor> tempDefinitionalActors;
 
         tempRawActors.reserve(actors.Size());

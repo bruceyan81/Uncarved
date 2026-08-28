@@ -65,6 +65,23 @@ namespace Uncarved::ViewSpace
         return SDL_RenderTexture(renderer_, texture, nullptr, nullptr);
     }
 
+    bool Renderer::renderTexture(SDL_Texture* texture, float screenX, float screenY)
+    {
+        if (renderer_ == nullptr || texture == nullptr)
+        {
+            return false;
+        }
+
+        SDL_FRect dstRect{
+            screenX,
+            screenY,
+            texture->w,
+            texture->h
+        };
+
+        return SDL_RenderTexture(renderer_, texture, nullptr, &dstRect);
+    }
+
     void Renderer::shutdown() noexcept
     {
         if (renderer_ != nullptr)

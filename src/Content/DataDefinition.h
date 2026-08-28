@@ -15,7 +15,8 @@ namespace Uncarved::ContentSpace::Definition
         InvalidActor,
         MissingPlayer,
         MissingTemplate,
-        MissingTexture
+        MissingTexture,
+        MissingFont
     };
 
     struct ResourceLoadResult final

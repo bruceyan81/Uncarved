@@ -10,6 +10,7 @@
 #include "Content/ImageLoader.h"
 #include "Input/Input.h"
 #include "View/Renderer.h"
+#include "View/TextRenderer.h"
 
 #include <string_view>
 
@@ -40,12 +41,14 @@ namespace Uncarved::GameSpace
     {
     public:
         GameCore(
-            SimulationCore&&                 simulationCore,
-            InputSpace::InputCore&&          inputCore,
-            ViewSpace::Renderer&&            rendererCore,
-            GameConfig&&                     gameConfig,
-            ContentSpace::ImageLoader&&      imageLoader,
-            ContentSpace::GameContentLoader& gameContentLoader
+            SimulationCore&&            simulationCore,
+            InputSpace::InputCore&&     inputCore,
+            ViewSpace::Renderer&&       rendererCore,
+            ViewSpace::TextRenderer&&   textRendererCore,
+            GameConfig&&                gameConfig,
+            ContentSpace::ImageLoader&& imageLoader,
+
+            ContentSpace::GameContentLoader& outGameContentLoader
         );
 
         GameCore(const GameCore&) = delete;
@@ -76,12 +79,13 @@ namespace Uncarved::GameSpace
         SimulationCore            simulationCore_;
         InputSpace::InputCore     inputCore_;
         ViewSpace::Renderer       rendererCore_;
+        ViewSpace::TextRenderer   textRendererCore_;
         GameConfig                gameConfig_;
         World                     world_{};
         ContentSpace::ImageLoader imageLoader_;
         CommandBuffer             commandBuffer_{};
 
-        ContentSpace::GameContentLoader& gameContentLoader_;
+        ContentSpace::GameContentLoader& outGameContentLoader_;
 
         int initializeGame();
 

@@ -34,5 +34,6 @@ namespace Uncarved::ApplicationSpace
         ApplicationState                applicationState_{};
         ContentSpace::GameContentLoader gameContentLoader_{};
         bool                            bIsSdlInitialized_{false};
+        bool                            bIsSdlTtfInitialized_{false};
     };
 } // namespace Uncarved::ApplicationSpace

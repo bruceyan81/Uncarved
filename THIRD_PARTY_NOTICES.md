@@ -1,20 +1,26 @@
 # Third-Party Notices
 
-Uncarved depends on software from third-party projects. These components are
-managed through [vcpkg](https://github.com/microsoft/vcpkg) and are not vendored
-in this repository.
+Uncarved uses software and assets from third-party projects.
 
-Direct dependencies and version pins are declared in `vcpkg.json`.
+Software dependencies are managed through vcpkg unless otherwise noted and
+are not vendored in this repository.
+
+Direct software dependencies and version pins are declared in `vcpkg.json`.
 
 When dependencies are installed, vcpkg provides their license and copyright
 information under:
 
 `<build-dir>/vcpkg_installed/<triplet>/share/<port>/copyright`
 
-The notices below are provided for attribution and convenience. Each
-third-party component remains subject to its own license terms.
+Some third-party assets are bundled directly with the project under
+`Resources/`. These assets remain subject to their respective license terms,
+and applicable license texts are distributed alongside them.
 
-## GLM
+The notices below are provided for attribution and convenience.
+
+## Software Dependencies
+
+### GLM
 
 **OpenGL Mathematics (GLM)**
 Version: 1.0.3
@@ -26,7 +32,7 @@ Upstream license:
 
 https://github.com/g-truc/glm/blob/1.0.3/copying.txt
 
-## RapidJSON
+### RapidJSON
 
 **RapidJSON**
 Version: 1.1.0
@@ -40,3 +46,21 @@ License.
 Upstream license and third-party notices:
 
 https://github.com/Tencent/rapidjson/blob/v1.1.0/license.txt
+
+## Bundled Assets
+
+### Noto Sans
+
+**Noto Sans**
+Version: 2.015
+Project: notofonts/latin-greek-cyrillic
+Release: `NotoSans-v2.015`
+Upstream commit: `c4a321e123e4d4ff315f57f4e0adf294fe3a95be`
+Upstream file: `NotoSans/googlefonts/variable-ttf/NotoSans[wdth,wght].ttf`
+Bundled file: `Resources/Fonts/NotoSans.ttf`
+Copyright: Copyright 2022 The Noto Project Authors
+License: SIL Open Font License, Version 1.1
+Bundled license: `Resources/Fonts/OFL-NotoSans.txt`
+
+The bundled font binary is unmodified from the upstream release; only its
+filename has been changed for use within the project's resource layout.

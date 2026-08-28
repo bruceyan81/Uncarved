@@ -27,6 +27,7 @@ add_executable(Uncarved
     src/Application/WindowManager.cpp
     src/Content/GameContentLoader.cpp
     src/Content/ImageLoader.cpp
+    src/Content/FontLoader.cpp
     src/Game/AiController.cpp
     src/Game/GameSimulation.cpp
     src/Game/CommandBuffer.cpp
@@ -36,6 +37,7 @@ add_executable(Uncarved
     src/Input/Input.cpp
     src/Object/Actor.cpp
     src/View/Renderer.cpp
+    src/View/TextRenderer.cpp
     src/View/Camera.cpp
 )
 

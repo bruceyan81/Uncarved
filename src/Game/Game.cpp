@@ -6,6 +6,7 @@
 #include "Input/Command.h"
 #include "Input/Input.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <utility>
 #include <variant>
@@ -13,19 +14,22 @@
 namespace Uncarved::GameSpace
 {
     GameCore::GameCore(
-        SimulationCore&&                 simulationCore,
-        InputSpace::InputCore&&          inputCore,
-        ViewSpace::Renderer&&            rendererCore,
-        GameConfig&&                     gameConfig,
-        ContentSpace::ImageLoader&&      imageLoader,
-        ContentSpace::GameContentLoader& gameContentLoader
+        SimulationCore&&            simulationCore,
+        InputSpace::InputCore&&     inputCore,
+        ViewSpace::Renderer&&       rendererCore,
+        ViewSpace::TextRenderer&&   textRendererCore,
+        GameConfig&&                gameConfig,
+        ContentSpace::ImageLoader&& imageLoader,
+
+        ContentSpace::GameContentLoader& outGameContentLoader
     )
         : simulationCore_(std::move(simulationCore))
         , inputCore_(std::move(inputCore))
         , rendererCore_(std::move(rendererCore))
+        , textRendererCore_(std::move(textRendererCore))
         , gameConfig_(std::move(gameConfig))
         , imageLoader_(std::move(imageLoader))
-        , gameContentLoader_(gameContentLoader)
+        , outGameContentLoader_(outGameContentLoader)
     {
         gamePhase_ = GamePhase::InitGame;
     }
@@ -67,7 +71,7 @@ namespace Uncarved::GameSpace
 
     int GameCore::initializeGame()
     {
-        const auto& initialSceneIt = this->gameContentLoader_.getGameConfig().find("initial_scene");
+        const auto& initialSceneIt = this->outGameContentLoader_.getGameConfig().find("initial_scene");
 
         const auto& initialSceneName = std::get<std::string>(initialSceneIt->second);
 
@@ -79,9 +83,9 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
-        world_.loadActors(gameContentLoader_.getDefinitionalActors());
+        world_.loadActors(outGameContentLoader_.getDefinitionalActors());
 
-        this->gameContentLoader_.releaseLoadData();
+        this->outGameContentLoader_.releaseLoadData();
 
         gameState_.initialize(gameConfig_.health_, gameConfig_.score_);
 
@@ -90,14 +94,14 @@ namespace Uncarved::GameSpace
 
     ContentSpace::Definition::ResourceLoadResult GameCore::initializeSceneResource(std::string_view sceneName)
     {
-        const auto& checkResult = this->gameContentLoader_.checkSceneResource(sceneName);
+        const auto& checkResult = this->outGameContentLoader_.checkSceneResource(sceneName);
 
         if (!checkResult.isSucceeded())
         {
             return checkResult;
         }
 
-        const auto& loadResult = this->gameContentLoader_.loadSceneResource(sceneName);
+        const auto& loadResult = this->outGameContentLoader_.loadSceneResource(sceneName);
 
         if (!loadResult.isSucceeded())
         {
@@ -116,7 +120,11 @@ namespace Uncarved::GameSpace
 
     int GameCore::runGame()
     {
-        if (this->imageLoader_.getTextureCount() <= 0)
+        const std::size_t imageCount = imageLoader_.getTextureCount();
+        const std::size_t textCount = gameConfig_.introText_.size();
+        const std::size_t introStepCount = std::max(imageCount, textCount);
+
+        if (introStepCount == 0)
         {
             setGameFlowState(GameFlowState::Gameplay);
         }
@@ -125,7 +133,7 @@ namespace Uncarved::GameSpace
             setGameFlowState(GameFlowState::Intro);
         }
 
-        std::size_t textureIndex = 0;
+        std::size_t introStep = 0;
 
         while (this->gamePhase_ == GamePhase::RunGame)
         {
@@ -146,22 +154,41 @@ namespace Uncarved::GameSpace
                             break;
 
                         case InputSpace::Intention::NextImage:
-                            if (textureIndex < this->imageLoader_.getTextureCount() - 1)
+                            if (introStep + 1 >= introStepCount)
                             {
-                                textureIndex++;
+                                setGameFlowState(GameFlowState::Gameplay);
                             }
                             else
                             {
-                                setGameFlowState(GameFlowState::Gameplay);
+                                introStep++;
                             }
                             break;
                     }
 
-                    auto* texturePtr = this->imageLoader_.getTexture(textureIndex);
-
-                    if (!this->rendererCore_.renderTexture(texturePtr))
+                    if (getGameFlowState() != GameFlowState::Intro || gamePhase_ != GamePhase::RunGame)
                     {
-                        return 1;
+                        break;
+                    }
+
+                    if (imageCount > 0)
+                    {
+                        const std::size_t imageIndex = std::min(introStep, imageCount - 1);
+                        auto*             texturePtr = this->imageLoader_.getTexture(imageIndex);
+
+                        if (!this->rendererCore_.renderTexture(texturePtr))
+                        {
+                            return 1;
+                        }
+                    }
+
+                    if (textCount > 0)
+                    {
+                        const std::size_t textIndex = std::min(introStep, textCount - 1);
+
+                        if (!this->textRendererCore_.drawText(gameConfig_.introText_[textIndex], 75.0f, 75.0f))
+                        {
+                            return 1;
+                        }
                     }
 
                     if (!this->rendererCore_.present())
@@ -214,9 +241,9 @@ namespace Uncarved::GameSpace
 
         unloadScene();
 
-        world_.loadActors(gameContentLoader_.getDefinitionalActors());
+        world_.loadActors(outGameContentLoader_.getDefinitionalActors());
 
-        this->gameContentLoader_.releaseLoadData();
+        this->outGameContentLoader_.releaseLoadData();
 
         return {};
     }

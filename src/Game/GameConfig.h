@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace Uncarved::GameSpace
 {
@@ -9,8 +10,6 @@ namespace Uncarved::GameSpace
         int health_{};
         int score_{};
 
-        std::string gameStartMessage_;
-        std::string gameOverBadMessage_;
-        std::string gameOverGoodMessage_;
+        std::vector<std::string> introText_{};
     };
 } // namespace Uncarved::GameSpace

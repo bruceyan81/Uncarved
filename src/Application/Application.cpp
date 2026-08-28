@@ -2,12 +2,15 @@
 
 #include "WindowManager.h"
 
+#include "Content/FontLoader.h"
 #include "Content/ImageLoader.h"
 #include "Game/Game.h"
 #include "Input/Input.h"
 #include "View/Renderer.h"
+#include "View/TextRenderer.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include <iostream>
 #include <string>
@@ -24,6 +27,11 @@ namespace Uncarved::ApplicationSpace
 
     ApplicationCore::~ApplicationCore()
     {
+        if (bIsSdlTtfInitialized_)
+        {
+            TTF_Quit();
+        }
+
         if (bIsSdlInitialized_)
         {
             SDL_Quit();
@@ -50,6 +58,14 @@ namespace Uncarved::ApplicationSpace
         if (!bIsSdlInitialized_)
         {
             std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
+            return 1;
+        }
+
+        bIsSdlTtfInitialized_ = TTF_Init();
+
+        if (!bIsSdlTtfInitialized_)
+        {
+            std::cerr << "TTF_Init failed: " << SDL_GetError() << '\n';
             return 1;
         }
 
@@ -83,14 +99,14 @@ namespace Uncarved::ApplicationSpace
                 }
             };
 
-            ViewSpace::Renderer render{};
-
             if (!windowManager.initializeWindow())
             {
                 return 1;
             }
 
-            bool bIsSuccess = render.initializeRenderer(
+            ViewSpace::Renderer renderer{};
+
+            bool bRendererInitResult = renderer.initializeRenderer(
                 windowManager.getWindow(),
                 renderingConfig.find("clear_color_r") != renderingConfig.end()
                     ? std::get<int>(renderingConfig.find("clear_color_r")->second)
@@ -103,38 +119,62 @@ namespace Uncarved::ApplicationSpace
                     : 0
             );
 
-            if (!bIsSuccess)
+            if (!bRendererInitResult)
             {
                 return 1;
             }
 
-            ContentSpace::ImageLoader imageLoader{render.getRenderer()};
+            const auto& introImages =
+                std::get<std::vector<std::string>>(gameConfig.at("intro_image"));
+            const auto& introTexts =
+                std::get<std::vector<std::string>>(gameConfig.at("intro_text"));
+            const auto& fontPath = std::get<std::string>(gameConfig.at("font"));
 
-            const auto& loadTextureResult =
-                imageLoader.loadTexture(std::get<std::vector<std::string>>(gameConfig.at("intro_image")));
+            ContentSpace::FontLoader fontLoader{};
+            ViewSpace::TextRenderer  textRenderer{};
 
-            if (loadTextureResult.error_ != ContentSpace::Definition::ResourceLoadError::None)
+            if (!introTexts.empty())
             {
-                loadTextureResult.showErrorMessage();
-                return 1;
+                const auto& loadFontResult = fontLoader.loadFont(fontPath);
+
+                if (loadFontResult.error_ != ContentSpace::Definition::ResourceLoadError::None)
+                {
+                    loadFontResult.showErrorMessage();
+                    return 1;
+                }
+
+                if (!textRenderer.initializeTextEngine(renderer.getRenderer(), fontLoader.getFont()))
+                {
+                    return 1;
+                }
+            }
+
+            ContentSpace::ImageLoader imageLoader{renderer.getRenderer()};
+
+            if (!introImages.empty())
+            {
+                const auto& loadTextureResult = imageLoader.loadTexture(introImages);
+
+                if (loadTextureResult.error_ != ContentSpace::Definition::ResourceLoadError::None)
+                {
+                    loadTextureResult.showErrorMessage();
+                    return 1;
+                }
             }
 
             GameSpace::GameCore gameCore{
                 GameSpace::SimulationCore{},
                 InputSpace::InputCore{},
-                std::move(render),
+                std::move(renderer),
+                std::move(textRenderer),
                 {
-                    gameConfig.find("health") != gameConfig.end() ? std::get<int>(gameConfig.find("health")->second) : 3,
-                    gameConfig.find("score") != gameConfig.end() ? std::get<int>(gameConfig.find("score")->second) : 0,
-                    gameConfig.find("game_start_message") != gameConfig.end()
-                        ? std::get<std::string>(gameConfig.find("game_start_message")->second)
-                        : "",
-                    gameConfig.find("game_over_bad_message") != gameConfig.end()
-                        ? std::get<std::string>(gameConfig.find("game_over_bad_message")->second)
-                        : "",
-                    gameConfig.find("game_over_good_message") != gameConfig.end()
-                        ? std::get<std::string>(gameConfig.find("game_over_good_message")->second)
-                        : ""
+                    gameConfig.find("health") != gameConfig.end()
+                        ? std::get<int>(gameConfig.find("health")->second)
+                        : 3,
+                    gameConfig.find("score") != gameConfig.end()
+                        ? std::get<int>(gameConfig.find("score")->second)
+                        : 0,
+                    std::move(std::get<std::vector<std::string>>(gameConfig.at("intro_text")))
                 },
                 std::move(imageLoader),
                 this->gameContentLoader_
