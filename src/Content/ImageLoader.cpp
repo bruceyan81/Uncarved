@@ -2,6 +2,9 @@
 
 #include <SDL3_image/SDL_image.h>
 
+#include <string>
+#include <vector>
+
 namespace Uncarved::ContentSpace
 {
     Uncarved::ContentSpace::ImageLoader::ImageLoader(SDL_Renderer* rendererPtr) : renderer_(rendererPtr)
@@ -18,26 +21,38 @@ namespace Uncarved::ContentSpace
         }
     }
 
-    ContentSpace::Definition::ResourceLoadResult ImageLoader::loadTexture(const std::vector<std::string>& texturePath)
+    ContentResult ImageLoader::loadTexture(const std::vector<std::string>& texturePaths)
     {
-        if (texturePath.empty())
+        if (texturePaths.empty())
         {
             return {};
         }
 
-        textureCache_.reserve(texturePath.size());
+        std::vector<SDL_Texture*> loadedTextures{};
+        loadedTextures.reserve(texturePaths.size());
+        textureCache_.reserve(textureCache_.size() + texturePaths.size());
 
-        for (const auto& name : texturePath)
+        for (const auto& texturePath : texturePaths)
         {
-            SDL_Texture* texture = IMG_LoadTexture(renderer_, name.c_str());
+            SDL_Texture* texture = IMG_LoadTexture(renderer_, texturePath.c_str());
 
             if (texture == nullptr)
             {
-                return {ContentSpace::Definition::ResourceLoadError::MissingTexture, "Error reading texture."};
+                for (auto* loadedTexture : loadedTextures)
+                {
+                    SDL_DestroyTexture(loadedTexture);
+                }
+
+                return {ResourceError{
+                    "error: failed to load texture " + texturePath + ": " + SDL_GetError(),
+                    ResourceErrorType::LoadFailed
+                }};
             }
 
-            textureCache_.push_back(texture);
+            loadedTextures.push_back(texture);
         }
+
+        textureCache_.insert(textureCache_.end(), loadedTextures.begin(), loadedTextures.end());
 
         return {};
     }

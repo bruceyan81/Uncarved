@@ -13,10 +13,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include <iostream>
-#include <string>
 #include <utility>
-#include <variant>
-#include <vector>
 
 namespace Uncarved::ApplicationSpace
 {
@@ -40,17 +37,60 @@ namespace Uncarved::ApplicationSpace
 
     int ApplicationCore::initializeApplication()
     {
-        this->gameContentLoader_.checkResourceDirectory();
-        this->gameContentLoader_.checkGameConfig();
+        const auto resourceDirectoryResult = gameContentLoader_.checkResourceDirectory();
 
-        if (!this->gameContentLoader_.loadGameConfig())
+        if (!resourceDirectoryResult.isSucceeded())
         {
+            std::cerr << resourceDirectoryResult.getErrorMessage();
             return 1;
         }
 
-        if (this->gameContentLoader_.checkRenderingConfig())
+        const auto gameConfigCheckResult = gameContentLoader_.checkGameConfig();
+
+        if (!gameConfigCheckResult.isSucceeded())
         {
-            this->gameContentLoader_.loadRenderingConfig();
+            std::cerr << gameConfigCheckResult.getErrorMessage();
+            return 1;
+        }
+
+        const auto gameConfigLoadResult = gameContentLoader_.loadGameConfig();
+
+        if (!gameConfigLoadResult.isSucceeded())
+        {
+            std::cerr << gameConfigLoadResult.getErrorMessage();
+            return 1;
+        }
+
+        const auto renderingConfigCheckResult = gameContentLoader_.checkRenderingConfig();
+
+        if (renderingConfigCheckResult.isSucceeded())
+        {
+            const auto renderingConfigLoadResult = gameContentLoader_.loadRenderingConfig();
+
+            if (!renderingConfigLoadResult.isSucceeded())
+            {
+                std::cout << renderingConfigLoadResult.getErrorMessage();
+            }
+        }
+        else
+        {
+            std::cout << renderingConfigCheckResult.getErrorMessage();
+        }
+
+        const auto introConfigCheckResult = gameContentLoader_.checkIntroConfig();
+
+        if (!introConfigCheckResult.isSucceeded())
+        {
+            std::cerr << introConfigCheckResult.getErrorMessage();
+            return 1;
+        }
+
+        const auto introConfigLoadResult = gameContentLoader_.loadIntroConfig();
+
+        if (!introConfigLoadResult.isSucceeded())
+        {
+            std::cerr << introConfigLoadResult.getErrorMessage();
+            return 1;
         }
 
         bIsSdlInitialized_ = SDL_Init(SDL_INIT_VIDEO);
@@ -74,29 +114,17 @@ namespace Uncarved::ApplicationSpace
 
     int ApplicationCore::launch()
     {
-        if (this->initializeApplication() == 0)
+        if (initializeApplication() == 0)
         {
-            this->applicationState_ = ApplicationState::Running;
+            applicationState_ = ApplicationState::Running;
 
-            const auto& gameConfig = this->gameContentLoader_.getGameConfig();
-            const auto& renderingConfig = this->gameContentLoader_.getRenderingConfig();
+            const auto& gameConfig = gameContentLoader_.getGameConfig();
+            const auto& renderingConfig = gameContentLoader_.getRenderingConfig();
+            const auto& introConfig = gameContentLoader_.getIntroConfig();
 
             WindowManager windowManager{
-                gameConfig.find("game_title") != gameConfig.end()
-                    ? std::get<std::string>(gameConfig.find("game_title")->second)
-                    : "",
-                {
-                    (
-                        renderingConfig.find("x_resolution") != renderingConfig.end()
-                        ? std::get<int>(renderingConfig.find("x_resolution")->second)
-                        : 640
-                    ),
-                    (
-                        renderingConfig.find("y_resolution") != renderingConfig.end()
-                        ? std::get<int>(renderingConfig.find("y_resolution")->second)
-                        : 360
-                    )
-                }
+                gameConfig.gameTitle_,
+                {renderingConfig.xResolution_, renderingConfig.yResolution_}
             };
 
             if (!windowManager.initializeWindow())
@@ -108,15 +136,9 @@ namespace Uncarved::ApplicationSpace
 
             bool bRendererInitResult = renderer.initializeRenderer(
                 windowManager.getWindow(),
-                renderingConfig.find("clear_color_r") != renderingConfig.end()
-                    ? std::get<int>(renderingConfig.find("clear_color_r")->second)
-                    : 0,
-                renderingConfig.find("clear_color_g") != renderingConfig.end()
-                    ? std::get<int>(renderingConfig.find("clear_color_g")->second)
-                    : 0,
-                renderingConfig.find("clear_color_b") != renderingConfig.end()
-                    ? std::get<int>(renderingConfig.find("clear_color_b")->second)
-                    : 0
+                renderingConfig.clearColorR_,
+                renderingConfig.clearColorG_,
+                renderingConfig.clearColorB_
             );
 
             if (!bRendererInitResult)
@@ -124,22 +146,20 @@ namespace Uncarved::ApplicationSpace
                 return 1;
             }
 
-            const auto& introImages =
-                std::get<std::vector<std::string>>(gameConfig.at("intro_image"));
-            const auto& introTexts =
-                std::get<std::vector<std::string>>(gameConfig.at("intro_text"));
-            const auto& fontPath = std::get<std::string>(gameConfig.at("font"));
-
             ContentSpace::FontLoader fontLoader{};
             ViewSpace::TextRenderer  textRenderer{};
+
+            const auto& fontPath = gameConfig.fontPath_;
+            const auto& introImages = introConfig.introImages_;
+            const auto& introTexts = introConfig.introText_;
 
             if (!introTexts.empty())
             {
                 const auto& loadFontResult = fontLoader.loadFont(fontPath);
 
-                if (loadFontResult.error_ != ContentSpace::Definition::ResourceLoadError::None)
+                if (!loadFontResult.isSucceeded())
                 {
-                    loadFontResult.showErrorMessage();
+                    std::cerr << loadFontResult.getErrorMessage();
                     return 1;
                 }
 
@@ -155,9 +175,9 @@ namespace Uncarved::ApplicationSpace
             {
                 const auto& loadTextureResult = imageLoader.loadTexture(introImages);
 
-                if (loadTextureResult.error_ != ContentSpace::Definition::ResourceLoadError::None)
+                if (!loadTextureResult.isSucceeded())
                 {
-                    loadTextureResult.showErrorMessage();
+                    std::cerr << loadTextureResult.getErrorMessage();
                     return 1;
                 }
             }
@@ -168,13 +188,9 @@ namespace Uncarved::ApplicationSpace
                 std::move(renderer),
                 std::move(textRenderer),
                 {
-                    gameConfig.find("health") != gameConfig.end()
-                        ? std::get<int>(gameConfig.find("health")->second)
-                        : 3,
-                    gameConfig.find("score") != gameConfig.end()
-                        ? std::get<int>(gameConfig.find("score")->second)
-                        : 0,
-                    std::move(std::get<std::vector<std::string>>(gameConfig.at("intro_text")))
+                    gameConfig.health_,
+                    gameConfig.score_,
+                    introConfig.introText_
                 },
                 std::move(imageLoader),
                 this->gameContentLoader_

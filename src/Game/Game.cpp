@@ -1,6 +1,5 @@
 #include "Game.h"
 
-#include "Content/DataDefinition.h"
 #include "Content/GameContentLoader.h"
 #include "Content/ImageLoader.h"
 #include "Input/Command.h"
@@ -8,6 +7,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iostream>
 #include <utility>
 #include <variant>
 
@@ -71,15 +71,13 @@ namespace Uncarved::GameSpace
 
     int GameCore::initializeGame()
     {
-        const auto& initialSceneIt = this->outGameContentLoader_.getGameConfig().find("initial_scene");
-
-        const auto& initialSceneName = std::get<std::string>(initialSceneIt->second);
+        const auto& initialSceneName = outGameContentLoader_.getGameConfig().initialSceneName_;
 
         const auto& initialResult = initializeSceneResource(initialSceneName);
 
         if (!initialResult.isSucceeded())
         {
-            initialResult.showErrorMessage();
+            std::cerr << initialResult.getErrorMessage();
             return 1;
         }
 
@@ -92,7 +90,7 @@ namespace Uncarved::GameSpace
         return 0;
     }
 
-    ContentSpace::Definition::ResourceLoadResult GameCore::initializeSceneResource(std::string_view sceneName)
+    ContentSpace::ContentResult GameCore::initializeSceneResource(std::string_view sceneName)
     {
         const auto& checkResult = this->outGameContentLoader_.checkSceneResource(sceneName);
 
@@ -153,7 +151,7 @@ namespace Uncarved::GameSpace
                             commitCommands();
                             break;
 
-                        case InputSpace::Intention::NextImage:
+                        case InputSpace::Intention::AdvanceIntro:
                             if (introStep + 1 >= introStepCount)
                             {
                                 setGameFlowState(GameFlowState::Gameplay);
@@ -230,7 +228,7 @@ namespace Uncarved::GameSpace
         return 0;
     }
 
-    ContentSpace::Definition::ResourceLoadResult GameCore::processSceneTransition(std::string_view nextSceneName)
+    ContentSpace::ContentResult GameCore::processSceneTransition(std::string_view nextSceneName)
     {
         const auto& initialResult = initializeSceneResource(nextSceneName);
 

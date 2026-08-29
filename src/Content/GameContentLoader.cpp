@@ -3,7 +3,6 @@
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
-#include <cstdlib>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -153,6 +152,7 @@ namespace Uncarved::ContentSpace
 
     constexpr std::string_view kGameConfigFileName = "Game";
     constexpr std::string_view kRenderingConfigFileName = "Rendering";
+    constexpr std::string_view kIntroConfigFileName = "Intro";
 
     constexpr std::string_view kConfigFilePostfix = ".config";
     constexpr std::string_view kPngPostfix = ".png";
@@ -160,26 +160,29 @@ namespace Uncarved::ContentSpace
     constexpr std::string_view kTemplatePostfix = ".template";
     constexpr std::string_view kTtfPostfix = ".ttf";
 
-    void GameContentLoader::checkResourceDirectory() const
+    ContentResult GameContentLoader::checkResourceDirectory() const
     {
         if (!Fs::exists(gResourceRoot) || !Fs::is_directory(gResourceRoot))
         {
-            std::cout << "error: Resources/ missing.";
-            std::exit(EXIT_FAILURE);
+            return {FileError{"error: Resources/ missing.", FileErrorType::InvalidPath}};
         }
+
+        return {};
     }
 
-    void GameContentLoader::checkGameConfig() const
+    ContentResult GameContentLoader::checkGameConfig() const
     {
         const Fs::path gameConfigPath = (gResourceRoot / kGameConfigFileName).replace_extension(kConfigFilePostfix);
+
         if (!Fs::exists(gameConfigPath))
         {
-            std::cout << "error: Resources/Game.config missing.";
-            std::exit(EXIT_FAILURE);
+            return {FileError{"error: Resources/Game.config missing.", FileErrorType::InvalidPath}};
         }
+
+        return {};
     }
 
-    bool GameContentLoader::loadGameConfig()
+    ContentResult GameContentLoader::loadGameConfig()
     {
         std::ifstream inputFileStream{(gResourceRoot / kGameConfigFileName).replace_extension(kConfigFilePostfix)};
 
@@ -189,48 +192,25 @@ namespace Uncarved::ContentSpace
 
         document.ParseStream(streamWrapper);
 
-        if (document.HasParseError() || !document.IsObject())
+        if (document.HasParseError())
         {
-            return false;
+            return {ParseError{"error: Resources/Game.config has parse error.", ParseErrorType::ParseFailed}};
         }
+
+        if (!document.IsObject())
+        {
+            return {ParseError{"error: Resources/Game.config is not object.", ParseErrorType::InvalidStructure}};
+        }
+
+        Definition::GameConfigDefinition tempGameConfigDefinition{};
 
         if (document.HasMember("initial_scene") && document["initial_scene"].IsString())
         {
-            gameConfig_.emplace("initial_scene", document["initial_scene"].GetString());
+            tempGameConfigDefinition.initialSceneName_ = std::move(document["initial_scene"].GetString());
         }
         else
         {
-            std::cout << "error: initial_scene unspecified.";
-            std::exit(EXIT_FAILURE);
-        }
-
-        if (document.HasMember("intro_image") && document["intro_image"].IsArray())
-        {
-            std::vector<std::string> introImage{};
-
-            const auto& array = document["intro_image"].GetArray();
-
-            const auto size = array.Size();
-
-            introImage.reserve(size);
-
-            for (const auto& introImageName : array)
-            {
-                if (introImageName.IsString())
-                {
-                    Fs::path imagePath =
-                        (gResourceRoot / kImagesDir / introImageName.GetString()).replace_extension(kPngPostfix);
-
-                    introImage.emplace_back(imagePath.string());
-                }
-            }
-
-            gameConfig_.emplace("intro_image", std::move(introImage));
-        }
-        else
-        {
-            std::cout << "info: intro_image unspecified.";
-            gameConfig_.emplace("intro_image", std::vector<std::string>{});
+            return {ValidationError{"error: initial_scene unspecified.", ValidationErrorType::InvalidData}};
         }
 
         if (document.HasMember("font") && document["font"].IsString())
@@ -238,72 +218,47 @@ namespace Uncarved::ContentSpace
             Fs::path fontPath =
                 (gResourceRoot / kFontsDir / document["font"].GetString()).replace_extension(kTtfPostfix);
 
-            gameConfig_.emplace("font", fontPath.string());
+            tempGameConfigDefinition.fontPath_ = std::move(fontPath.string());
         }
         else
         {
-            std::cout << "error: font unspecified.";
-            std::exit(EXIT_FAILURE);
-        }
-
-        if (document.HasMember("intro_text") && document["intro_text"].IsArray())
-        {
-            std::vector<std::string> introText{};
-            const auto&              array = document["intro_text"].GetArray();
-
-            const auto size = array.Size();
-
-            introText.reserve(size);
-
-            for (const auto& text : array)
-            {
-                if (text.IsString())
-                {
-                    introText.emplace_back(text.GetString());
-                }
-            }
-
-            gameConfig_.emplace("intro_text", std::move(introText));
-        }
-        else
-        {
-            std::cout << "error: intro_text unspecified.";
-            std::exit(EXIT_FAILURE);
+            return {ValidationError{"error: font unspecified.", ValidationErrorType::InvalidData}};
         }
 
         if (document.HasMember("game_title") && document["game_title"].IsString())
         {
-            gameConfig_.emplace("game_title", document["game_title"].GetString());
+            tempGameConfigDefinition.gameTitle_ = std::move(document["game_title"].GetString());
         }
 
         if (document.HasMember("health") && document["health"].IsInt())
         {
-            gameConfig_.emplace("health", document["health"].GetInt());
+            tempGameConfigDefinition.health_ = document["health"].GetInt();
         }
 
         if (document.HasMember("score") && document["score"].IsInt())
         {
-            gameConfig_.emplace("score", document["score"].GetInt());
+            tempGameConfigDefinition.score_ = document["score"].GetInt();
         }
 
-        return true;
+        gameConfigDefinition_ = std::move(tempGameConfigDefinition);
+
+        return {};
     }
 
-    bool GameContentLoader::checkRenderingConfig() const
+    ContentResult GameContentLoader::checkRenderingConfig() const
     {
         const Fs::path renderingConfigPath =
             (gResourceRoot / kRenderingConfigFileName).replace_extension(kConfigFilePostfix);
 
         if (!Fs::exists(renderingConfigPath))
         {
-            std::cout << "info: Resources/Rendering.config missing.";
-            return false;
+            return {FileError{"info: Resources/Rendering.config missing.", FileErrorType::InvalidPath}};
         }
 
-        return true;
+        return {};
     }
 
-    void GameContentLoader::loadRenderingConfig()
+    ContentResult GameContentLoader::loadRenderingConfig()
     {
         std::ifstream inputFileStream{(gResourceRoot / kRenderingConfigFileName).replace_extension(kConfigFilePostfix)};
 
@@ -315,19 +270,19 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            std::cout << "info: Resources/Rendering.config has parse error.";
-            return;
+            return {ParseError{"info: Resources/Rendering.config has parse error.", ParseErrorType::ParseFailed}};
         }
 
         if (!document.IsObject())
         {
-            std::cout << "info: Resources/Rendering.config is not Object.";
-            return;
+            return {ParseError{"info: Resources/Rendering.config is not Object.", ParseErrorType::InvalidStructure}};
         }
+
+        Definition::RenderingConfigDefinition tempRenderingConfigDefinition{};
 
         if (document.HasMember("x_resolution") && document["x_resolution"].IsInt())
         {
-            renderingConfig_.emplace("x_resolution", document["x_resolution"].GetInt());
+            tempRenderingConfigDefinition.xResolution_ = document["x_resolution"].GetInt();
         }
         else
         {
@@ -336,7 +291,7 @@ namespace Uncarved::ContentSpace
 
         if (document.HasMember("y_resolution") && document["y_resolution"].IsInt())
         {
-            renderingConfig_.emplace("y_resolution", document["y_resolution"].GetInt());
+            tempRenderingConfigDefinition.yResolution_ = document["y_resolution"].GetInt();
         }
         else
         {
@@ -345,36 +300,165 @@ namespace Uncarved::ContentSpace
 
         if (document.HasMember("clear_color_r") && document["clear_color_r"].IsInt())
         {
-            renderingConfig_.emplace("clear_color_r", document["clear_color_r"].GetInt());
+            tempRenderingConfigDefinition.clearColorR_ = document["clear_color_r"].GetInt();
         }
 
         if (document.HasMember("clear_color_g") && document["clear_color_g"].IsInt())
         {
-            renderingConfig_.emplace("clear_color_g", document["clear_color_g"].GetInt());
+            tempRenderingConfigDefinition.clearColorG_ = document["clear_color_g"].GetInt();
         }
 
         if (document.HasMember("clear_color_b") && document["clear_color_b"].IsInt())
         {
-            renderingConfig_.emplace("clear_color_b", document["clear_color_b"].GetInt());
+            tempRenderingConfigDefinition.clearColorB_ = document["clear_color_b"].GetInt();
         }
+
+        renderingConfigDefinition_ = std::move(tempRenderingConfigDefinition);
+
+        return {};
     }
 
-    ContentSpace::Definition::ResourceLoadResult GameContentLoader::checkSceneResource(std::string_view sceneName) const
+    ContentResult GameContentLoader::checkIntroConfig() const
     {
-        Fs::path scenePath = (gResourceRoot / kScenesDir / std::string{sceneName}).replace_extension(kScenePostfix);
+        const Fs::path introConfigPath = (gResourceRoot / kIntroConfigFileName).replace_extension(kConfigFilePostfix);
 
-        if (!Fs::exists(scenePath) || !Fs::is_regular_file(scenePath))
+        if (!Fs::exists(introConfigPath) || !Fs::is_regular_file(introConfigPath))
         {
-            return {
-                ContentSpace::Definition::ResourceLoadError::NotFound,
-                std::format("error: scene {} is missing.", sceneName)
-            };
+            return {FileError{"error: Resources/Intro.config missing.", FileErrorType::InvalidPath}};
         }
 
         return {};
     }
 
-    ContentSpace::Definition::ResourceLoadResult GameContentLoader::loadSceneResource(std::string_view sceneName)
+    ContentResult GameContentLoader::loadIntroConfig()
+    {
+        std::ifstream inputFileStream{(gResourceRoot / kIntroConfigFileName).replace_extension(kConfigFilePostfix)};
+
+        rapidjson::IStreamWrapper streamWrapper{inputFileStream};
+
+        rapidjson::Document document;
+
+        document.ParseStream(streamWrapper);
+
+        if (document.HasParseError())
+        {
+            return {ParseError{"error: Resources/Intro.config has parse error.", ParseErrorType::ParseFailed}};
+        }
+
+        if (!document.IsObject())
+        {
+            return {ParseError{"error: Resources/Intro.config is not Object.", ParseErrorType::InvalidStructure}};
+        }
+
+        Definition::IntroConfigDefinition tempIntroConfigDefinition{};
+
+        if (document.HasMember("intro_image") && document["intro_image"].IsArray())
+        {
+            const auto& introImageArray = document["intro_image"].GetArray();
+
+            tempIntroConfigDefinition.introImages_.reserve(introImageArray.Size());
+
+            for (const auto& introImageName : introImageArray)
+            {
+                if (introImageName.IsString())
+                {
+                    Fs::path imagePath =
+                        (gResourceRoot / kImagesDir / introImageName.GetString()).replace_extension(kPngPostfix);
+
+                    tempIntroConfigDefinition.introImages_.emplace_back(imagePath.string());
+                }
+            }
+        }
+        else
+        {
+            std::cout << "info: intro_image unspecified.";
+        }
+
+        if (document.HasMember("intro_text") && document["intro_text"].IsArray())
+        {
+            const auto& introTextArray = document["intro_text"].GetArray();
+
+            tempIntroConfigDefinition.introText_.reserve(introTextArray.Size());
+
+            for (const auto& text : introTextArray)
+            {
+                if (text.IsString())
+                {
+                    tempIntroConfigDefinition.introText_.emplace_back(text.GetString());
+                }
+            }
+        }
+        else
+        {
+            return {ValidationError{"error: intro_text unspecified.", ValidationErrorType::InvalidData}};
+        }
+
+        introConfigDefinition_ = std::move(tempIntroConfigDefinition);
+
+        return {};
+    }
+
+    ContentResult GameContentLoader::checkActorTemplate(std::string_view actorName) const
+    {
+        const Fs::path templatePath =
+            (gResourceRoot / kActorTemplatesDir / actorName).replace_extension(kTemplatePostfix);
+
+        if (!Fs::exists(templatePath) || !Fs::is_regular_file(templatePath))
+        {
+            return {FileError{std::format("error: template {} is missing.", actorName), FileErrorType::NotFound}};
+        }
+
+        return {};
+    }
+
+    ContentResult GameContentLoader::loadActorTemplate(std::string_view actorName)
+    {
+        std::ifstream inputFileStream{
+            (gResourceRoot / kActorTemplatesDir / actorName).replace_extension(kTemplatePostfix)
+        };
+
+        rapidjson::IStreamWrapper streamWrapper{inputFileStream};
+
+        rapidjson::Document document;
+
+        document.ParseStream(streamWrapper);
+
+        if (document.HasParseError())
+        {
+            return {ParseError{
+                std::format("error: Resources/ActorTemplates/{}{} has parse error.", actorName, kTemplatePostfix),
+                ParseErrorType::ParseFailed
+            }};
+        }
+
+        if (!document.IsObject())
+        {
+            return {ParseError{
+                std::format("error: Resources/ActorTemplates/{}{} is not Object.", actorName, kTemplatePostfix),
+                ParseErrorType::InvalidStructure
+            }};
+        }
+
+        Definition::ActorDataPatch tempActorTemplatePatch = makeActorDataPatch(document);
+
+        actorTemplatePatchesByName_.insert_or_assign(std::string{actorName}, std::move(tempActorTemplatePatch));
+
+        return {};
+    }
+
+    ContentResult GameContentLoader::checkSceneResource(std::string_view sceneName) const
+    {
+        Fs::path scenePath = (gResourceRoot / kScenesDir / std::string{sceneName}).replace_extension(kScenePostfix);
+
+        if (!Fs::exists(scenePath) || !Fs::is_regular_file(scenePath))
+        {
+            return {FileError{std::format("error: scene {} is missing.", sceneName), FileErrorType::NotFound}};
+        }
+
+        return {};
+    }
+
+    ContentResult GameContentLoader::loadSceneResource(std::string_view sceneName)
     {
         std::ifstream inputFileStream{
             (gResourceRoot / kScenesDir / std::string{sceneName}).replace_extension(kScenePostfix)
@@ -388,26 +472,26 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {
-                ContentSpace::Definition::ResourceLoadError::ParseFailed,
-                std::format("info: Resources/Scenes/{}.scene has parse error.", sceneName)
-            };
+            return {ParseError{
+                std::format("error: Resources/Scenes/{}.scene has parse error.", sceneName),
+                ParseErrorType::ParseFailed
+            }};
         }
 
         if (!document.IsObject())
         {
-            return {
-                ContentSpace::Definition::ResourceLoadError::InvalidStructure,
-                std::format("info: Resources/Scenes/{}.scene is not Object.", sceneName)
-            };
+            return {ParseError{
+                std::format("error: Resources/Scenes/{}.scene is not Object.", sceneName),
+                ParseErrorType::InvalidStructure
+            }};
         }
 
         if (!document.HasMember("actors") || !document["actors"].IsArray())
         {
-            return {
-                ContentSpace::Definition::ResourceLoadError::InvalidActor,
-                std::format("info: Resources/Scenes/{}.scene has invalid actors.", sceneName)
-            };
+            return {ValidationError{
+                std::format("error: Resources/Scenes/{}.scene has invalid actors.", sceneName),
+                ValidationErrorType::InvalidData
+            }};
         }
 
         const auto& actors = document["actors"];
@@ -438,61 +522,45 @@ namespace Uncarved::ContentSpace
 
             if (!templateIt->value.IsString())
             {
-                return {Definition::ResourceLoadError::InvalidActor, "info: actor template property is not String."};
+                return {
+                    ValidationError{"error: actor template property is not String.", ValidationErrorType::InvalidData}
+                };
             }
 
             const std::string_view templateName = templateIt->value.GetString();
 
-            if (!checkActorTemplate(templateName))
+            const auto checkTemplateResult = checkActorTemplate(templateName);
+
+            if (!checkTemplateResult.isSucceeded())
             {
-                return {
-                    Definition::ResourceLoadError::MissingTemplate,
-                    std::format("error: template {} is missing.", templateName)
-                };
+                return checkTemplateResult;
             }
 
-            auto templatePatch = loadActorTemplate(templateName);
+            const auto loadTemplateResult = loadActorTemplate(templateName);
 
-            tempDefinitionalActors.emplace_back(resolveDefinitionalActor(templatePatch, tempRawActors.back()));
+            if (!loadTemplateResult.isSucceeded())
+            {
+                return loadTemplateResult;
+            }
+
+            const auto templatePatchIt = actorTemplatePatchesByName_.find(std::string{templateName});
+
+            if (templatePatchIt == actorTemplatePatchesByName_.end())
+            {
+                return {ValidationError{
+                    std::format("error: template {} has no loaded data.", templateName),
+                    ValidationErrorType::InvalidData
+                }};
+            }
+
+            tempDefinitionalActors.emplace_back(
+                resolveDefinitionalActor(templatePatchIt->second, tempRawActors.back())
+            );
         }
 
         rawActors_.swap(tempRawActors);
         definitionalActors_.swap(tempDefinitionalActors);
 
         return {};
-    }
-
-    bool GameContentLoader::checkActorTemplate(std::string_view actorName) const
-    {
-        const Fs::path templatePath =
-            (gResourceRoot / kActorTemplatesDir / actorName).replace_extension(kTemplatePostfix);
-
-        if (!Fs::exists(templatePath))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    Definition::ActorDataPatch GameContentLoader::loadActorTemplate(std::string_view actorName)
-    {
-        std::ifstream inputFileStream{
-            (gResourceRoot / kActorTemplatesDir / actorName).replace_extension(kTemplatePostfix)
-        };
-
-        rapidjson::IStreamWrapper streamWrapper{inputFileStream};
-
-        rapidjson::Document document;
-
-        document.ParseStream(streamWrapper);
-
-        if (document.HasParseError() || !document.IsObject())
-        {
-            std::cout << "error: Resources/ActorTemplates/" << actorName << kTemplatePostfix << " is not Object.";
-            std::exit(EXIT_FAILURE);
-        }
-
-        return makeActorDataPatch(document);
     }
 } // namespace Uncarved::ContentSpace

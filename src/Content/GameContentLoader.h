@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ContentResult.h"
 #include "DataDefinition.h"
 
 #include "Object/DefinitionalActor.h"
@@ -7,14 +8,10 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 namespace Uncarved::ContentSpace
 {
-    using GameConfig = std::variant<int, std::string, std::vector<std::string>>;
-    using RenderingConfig = std::variant<int>;
-
     class GameContentLoader final
     {
     public:
@@ -28,14 +25,48 @@ namespace Uncarved::ContentSpace
 
         ~GameContentLoader() = default;
 
-        const std::unordered_map<std::string, GameConfig>& getGameConfig() const noexcept
+        ContentResult checkResourceDirectory() const;
+
+        ContentResult checkGameConfig() const;
+
+        ContentResult loadGameConfig();
+
+        ContentResult checkRenderingConfig() const;
+
+        ContentResult loadRenderingConfig();
+
+        ContentResult checkIntroConfig() const;
+
+        ContentResult loadIntroConfig();
+
+        ContentResult checkActorTemplate(std::string_view actorName) const;
+
+        ContentResult loadActorTemplate(std::string_view actorName);
+
+        ContentResult checkSceneResource(std::string_view sceneName) const;
+
+        ContentResult loadSceneResource(std::string_view sceneName);
+
+        void releaseLoadData()
         {
-            return gameConfig_;
+            std::vector<Definition::ActorDataPatch>{}.swap(rawActors_);
+            std::vector<ObjectSpace::DefinitionalActor>{}.swap(definitionalActors_);
+            std::unordered_map<std::string, Definition::ActorDataPatch>{}.swap(actorTemplatePatchesByName_);
         }
 
-        const std::unordered_map<std::string, RenderingConfig>& getRenderingConfig() const noexcept
+        const Definition::GameConfigDefinition& getGameConfig() const noexcept
         {
-            return renderingConfig_;
+            return gameConfigDefinition_;
+        }
+
+        const Definition::RenderingConfigDefinition& getRenderingConfig() const noexcept
+        {
+            return renderingConfigDefinition_;
+        }
+
+        const Definition::IntroConfigDefinition& getIntroConfig() const noexcept
+        {
+            return introConfigDefinition_;
         }
 
         const std::vector<ObjectSpace::DefinitionalActor>& getDefinitionalActors() const noexcept
@@ -43,35 +74,14 @@ namespace Uncarved::ContentSpace
             return definitionalActors_;
         }
 
-        void releaseLoadData()
-        {
-            std::vector<Definition::ActorDataPatch>{}.swap(rawActors_);
-            std::vector<ObjectSpace::DefinitionalActor>{}.swap(definitionalActors_);
-        }
-
-        void checkResourceDirectory() const;
-
-        void checkGameConfig() const;
-
-        bool loadGameConfig();
-
-        bool checkRenderingConfig() const;
-
-        void loadRenderingConfig();
-
-        ContentSpace::Definition::ResourceLoadResult checkSceneResource(std::string_view sceneName) const;
-
-        ContentSpace::Definition::ResourceLoadResult loadSceneResource(std::string_view sceneName);
-
-        bool checkActorTemplate(std::string_view actorName) const;
-
-        Definition::ActorDataPatch loadActorTemplate(std::string_view actorName);
-
     private:
-        std::unordered_map<std::string, GameConfig>      gameConfig_;
-        std::unordered_map<std::string, RenderingConfig> renderingConfig_;
+        Definition::GameConfigDefinition      gameConfigDefinition_;
+        Definition::RenderingConfigDefinition renderingConfigDefinition_;
+        Definition::IntroConfigDefinition     introConfigDefinition_;
 
-        std::vector<Definition::ActorDataPatch>   rawActors_;
+        std::vector<Definition::ActorDataPatch>     rawActors_;
         std::vector<ObjectSpace::DefinitionalActor> definitionalActors_;
+
+        std::unordered_map<std::string, Definition::ActorDataPatch> actorTemplatePatchesByName_;
     };
 } // namespace Uncarved::ContentSpace

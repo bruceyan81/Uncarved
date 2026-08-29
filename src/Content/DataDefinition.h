@@ -3,6 +3,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace Uncarved::ContentSpace::Definition
 {
@@ -46,5 +47,29 @@ namespace Uncarved::ContentSpace::Definition
         std::optional<std::string> actorName_;
         std::optional<std::string> nearbyDialogue_;
         std::optional<std::string> contactDialogue_;
+    };
+
+    struct GameConfigDefinition final
+    {
+        std::string gameTitle_{};
+        std::string initialSceneName_{};
+        std::string fontPath_{};
+        int         health_{3};
+        int         score_{0};
+    };
+
+    struct RenderingConfigDefinition final
+    {
+        int xResolution_{640};
+        int yResolution_{360};
+        int clearColorR_{0};
+        int clearColorG_{0};
+        int clearColorB_{0};
+    };
+
+    struct IntroConfigDefinition final
+    {
+        std::vector<std::string> introImages_{};
+        std::vector<std::string> introText_{};
     };
 } // namespace Uncarved::ContentSpace::Definition

@@ -6,10 +6,7 @@ struct TTF_Font;
 
 namespace Uncarved::ContentSpace
 {
-    namespace Definition
-    {
-        class ResourceLoadResult;
-    }
+    struct ContentResult;
 
     class FontLoader final
     {
@@ -24,7 +21,7 @@ namespace Uncarved::ContentSpace
 
         ~FontLoader();
 
-        ContentSpace::Definition::ResourceLoadResult loadFont(const std::string& fontPath);
+        ContentResult loadFont(const std::string& fontPath);
 
         TTF_Font* getFont() noexcept
         {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Content/DataDefinition.h"
+#include "ContentResult.h"
 
 #include <cstddef>
 #include <string>
@@ -24,7 +24,7 @@ namespace Uncarved::ContentSpace
 
         ~ImageLoader();
 
-        ContentSpace::Definition::ResourceLoadResult loadTexture(const std::vector<std::string>& list);
+        ContentResult loadTexture(const std::vector<std::string>& texturePaths);
 
         SDL_Texture* getTexture(std::size_t index) const noexcept;
 

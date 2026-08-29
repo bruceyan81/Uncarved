@@ -6,7 +6,7 @@
 #include "GameState.h"
 #include "World.h"
 
-#include "Content/DataDefinition.h"
+#include "Content/ContentResult.h"
 #include "Content/ImageLoader.h"
 #include "Input/Input.h"
 #include "View/Renderer.h"
@@ -89,7 +89,7 @@ namespace Uncarved::GameSpace
 
         int initializeGame();
 
-        ContentSpace::Definition::ResourceLoadResult initializeSceneResource(std::string_view sceneName);
+        ContentSpace::ContentResult initializeSceneResource(std::string_view sceneName);
 
         int unloadScene();
 
@@ -97,7 +97,7 @@ namespace Uncarved::GameSpace
 
         int endGame();
 
-        ContentSpace::Definition::ResourceLoadResult processSceneTransition(std::string_view nextSceneName);
+        ContentSpace::ContentResult processSceneTransition(std::string_view nextSceneName);
 
         void commitCommands() noexcept;
 

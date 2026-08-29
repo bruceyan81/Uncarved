@@ -21,13 +21,13 @@ namespace Uncarved::InputSpace
             {
                 if (event.key.scancode == SDL_SCANCODE_RETURN || event.key.scancode == SDL_SCANCODE_SPACE)
                 {
-                    return Intention::NextImage;
+                    return Intention::AdvanceIntro;
                 }
             }
 
             if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && event.button.button == SDL_BUTTON_LEFT)
             {
-                return Intention::NextImage;
+                return Intention::AdvanceIntro;
             }
         }
 
