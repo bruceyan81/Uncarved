@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <string>
 
 namespace Uncarved::GameSpace
@@ -19,11 +20,14 @@ namespace Uncarved::ObjectSpace
     {
     public:
         Actor(
-            bool        bBlocking,
-            char        view,
-            glm::ivec2  position,
-            glm::ivec2  velocity,
-            std::string actorName
+            bool                       bBlocking,
+            float                      rotationRadians,
+            glm::ivec2                 position,
+            glm::ivec2                 velocity,
+            glm::fvec2                 scale,
+            std::string                actorName,
+            std::optional<glm::fvec2>  normalizedPivot,
+            std::optional<std::string> viewTextureName
         );
 
         Actor(const Actor&) = delete;
@@ -47,6 +51,11 @@ namespace Uncarved::ObjectSpace
             return bBlocking_;
         }
 
+        float getRotationRadians() const noexcept
+        {
+            return rotationRadians_;
+        }
+
         const glm::ivec2& getPosition() const noexcept
         {
             return position_;
@@ -57,14 +66,24 @@ namespace Uncarved::ObjectSpace
             return velocity_;
         }
 
+        const glm::fvec2& getScale() const noexcept
+        {
+            return scale_;
+        }
+
         const std::string& getActorName() const noexcept
         {
             return actorName_;
         }
 
-        char getActorView() const noexcept
+        const std::optional<glm::fvec2>& getNormalizedPivot() const noexcept
         {
-            return view_;
+            return normalizedPivot_;
+        }
+
+        const std::optional<std::string>& getViewTextureName() const noexcept
+        {
+            return viewTextureName_;
         }
 
         ~Actor() = default;
@@ -73,12 +92,15 @@ namespace Uncarved::ObjectSpace
         inline static ActorId    actorCount_ = 0;
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
-        bool        bBlocking_;
-        char        view_;
-        ActorId     id_;
-        glm::ivec2  position_;
-        glm::ivec2  velocity_;
-        std::string actorName_;
+        bool                       bBlocking_;
+        float                      rotationRadians_;
+        ActorId                    id_;
+        glm::ivec2                 position_;
+        glm::ivec2                 velocity_;
+        glm::fvec2                 scale_;
+        std::string                actorName_;
+        std::optional<glm::fvec2>  normalizedPivot_;
+        std::optional<std::string> viewTextureName_;
 
         friend class GameSpace::World;
 

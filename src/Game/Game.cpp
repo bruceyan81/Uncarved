@@ -10,6 +10,7 @@
 #include <iostream>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace Uncarved::GameSpace
 {
@@ -66,7 +67,6 @@ namespace Uncarved::GameSpace
         {
             return 1;
         }
-        return 0;
     }
 
     int GameCore::initializeGame()
@@ -86,6 +86,38 @@ namespace Uncarved::GameSpace
         this->outGameContentLoader_.releaseLoadData();
 
         gameState_.initialize(gameConfig_.health_, gameConfig_.score_);
+
+        std::vector<std::string> actorTexturePaths{};
+
+        const auto& actors = world_.getActors();
+
+        actorTexturePaths.reserve(actors.size());
+
+        for (auto& actor : world_.getActors())
+        {
+            const auto& viewTextureName = actor.getViewTextureName();
+
+            if (!viewTextureName.has_value())
+            {
+                continue;
+            }
+
+            std::string path = outGameContentLoader_.createActorTexturePath(*viewTextureName);
+
+            if (!path.empty())
+            {
+                actorTexturePaths.push_back(path);
+                imageLoader_.updateActorTexturePathCache(std::string{*viewTextureName}, std::move(path));
+            }
+        }
+
+        const auto& loadActorTextureResult = imageLoader_.loadActorTexture(actorTexturePaths);
+
+        if (!loadActorTextureResult.isSucceeded())
+        {
+            std::cerr << loadActorTextureResult.getErrorMessage();
+            return 1;
+        }
 
         return 0;
     }
@@ -118,7 +150,7 @@ namespace Uncarved::GameSpace
 
     int GameCore::runGame()
     {
-        const std::size_t imageCount = imageLoader_.getTextureCount();
+        const std::size_t imageCount = imageLoader_.getIntroTextureCount();
         const std::size_t textCount = gameConfig_.introText_.size();
         const std::size_t introStepCount = std::max(imageCount, textCount);
 
@@ -171,7 +203,7 @@ namespace Uncarved::GameSpace
                     if (imageCount > 0)
                     {
                         const std::size_t imageIndex = std::min(introStep, imageCount - 1);
-                        auto*             texturePtr = this->imageLoader_.getTexture(imageIndex);
+                        auto*             texturePtr = this->imageLoader_.getIntroTexture(imageIndex);
 
                         if (!this->rendererCore_.renderTexture(texturePtr))
                         {
@@ -210,6 +242,30 @@ namespace Uncarved::GameSpace
                     if (!this->rendererCore_.clear())
                     {
                         return 1;
+                    }
+
+                    for (const auto& actor : world_.getActors())
+                    {
+                        const auto& actorTextureName = actor.getViewTextureName();
+                        if (actorTextureName.has_value())
+                        {
+                            if (!rendererCore_.renderTexture(
+                                    imageLoader_.getActorTextureByName(*actorTextureName),
+                                    rendererCore_.createSpriteTransform(
+                                        actor.getNormalizedPivot(),
+                                        actor.getPosition(),
+                                        actor.getScale(),
+                                        actor.getRotationRadians()
+                                    )
+                                ))
+                            {
+                                return 1;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
 
                     if (!this->rendererCore_.present())

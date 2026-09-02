@@ -25,6 +25,8 @@ namespace Uncarved::ContentSpace
 
         ~GameContentLoader() = default;
 
+        std::string createActorTexturePath(std::string_view textureName) const;
+
         ContentResult checkResourceDirectory() const;
 
         ContentResult checkGameConfig() const;

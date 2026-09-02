@@ -65,21 +65,54 @@ namespace Uncarved::ViewSpace
         return SDL_RenderTexture(renderer_, texture, nullptr, nullptr);
     }
 
-    bool Renderer::renderTexture(SDL_Texture* texture, float screenX, float screenY)
+    bool Renderer::renderTexture(SDL_Texture* texture, const SpriteTransform& spriteTransform)
     {
         if (renderer_ == nullptr || texture == nullptr)
         {
             return false;
         }
 
-        SDL_FRect dstRect{
-            screenX,
-            screenY,
-            texture->w,
-            texture->h
-        };
+        const float textureWidth = spriteTransform.scale_.x * (texture->w);
+        const float textureHeight = spriteTransform.scale_.y * (texture->h);
 
-        return SDL_RenderTexture(renderer_, texture, nullptr, &dstRect);
+        SDL_FRect dstRect{spriteTransform.position_.x, spriteTransform.position_.y, textureWidth, textureHeight};
+
+        const auto normalizedPivot = spriteTransform.normalizedPivot_;
+
+        SDL_FPoint rotationCenter{};
+
+        if (normalizedPivot.has_value())
+        {
+            rotationCenter.x = textureWidth * (*normalizedPivot).x;
+            rotationCenter.y = textureHeight * (*normalizedPivot).y;
+        }
+
+        return SDL_RenderTextureRotated(
+            renderer_,
+            texture,
+            nullptr,
+            &dstRect,
+            spriteTransform.getRotationDegrees(),
+            normalizedPivot ? &rotationCenter : nullptr,
+            SDL_FLIP_NONE
+        );
+    }
+
+    SpriteTransform Renderer::createSpriteTransform(
+        const std::optional<glm::fvec2>& normalizedPivot,
+        const glm::fvec2&                position,
+        const glm::fvec2                 scale,
+        double                           rotationRadians
+    ) const
+    {
+        std::optional<SDL_FPoint> normalizedPivotPoint = std::nullopt;
+
+        if (normalizedPivot.has_value())
+        {
+            normalizedPivotPoint = {(*normalizedPivot).x, (*normalizedPivot).y};
+        }
+
+        return {normalizedPivotPoint, {position.x, position.y}, {scale.x, scale.y}, rotationRadians};
     }
 
     void Renderer::shutdown() noexcept

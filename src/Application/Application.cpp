@@ -123,8 +123,8 @@ namespace Uncarved::ApplicationSpace
             const auto& introConfig = gameContentLoader_.getIntroConfig();
 
             WindowManager windowManager{
-                gameConfig.gameTitle_,
-                {renderingConfig.xResolution_, renderingConfig.yResolution_}
+                {renderingConfig.xResolution_, renderingConfig.yResolution_},
+                gameConfig.gameTitle_
             };
 
             if (!windowManager.initializeWindow())
@@ -173,7 +173,7 @@ namespace Uncarved::ApplicationSpace
 
             if (!introImages.empty())
             {
-                const auto& loadTextureResult = imageLoader.loadTexture(introImages);
+                const auto& loadTextureResult = imageLoader.loadIntroTexture(introImages);
 
                 if (!loadTextureResult.isSucceeded())
                 {

@@ -1,6 +1,6 @@
 {
   "blocking": true,
-  "view": "g",
+  "view_texture": "g",
   "vel_x": 0,
   "vel_y": 0
 }

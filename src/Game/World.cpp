@@ -72,14 +72,27 @@ namespace Uncarved::GameSpace
 
     void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor)
     {
-        const char view = definitionalActor.view_.empty() ? '?' : definitionalActor.view_.front();
+        std::optional<glm::fvec2> normalizedPivot = std::nullopt;
+        if (definitionalActor.normalizedPivotX_.has_value() && definitionalActor.normalizedPivotY_.has_value())
+        {
+            normalizedPivot = {*(definitionalActor.normalizedPivotX_), *(definitionalActor.normalizedPivotY_)};
+        }
+
+        std::optional<std::string> viewTextureName = std::nullopt;
+        if (definitionalActor.viewTextureName_.has_value())
+        {
+            viewTextureName = definitionalActor.viewTextureName_;
+        }
 
         actors_.emplace_back(
             definitionalActor.bBlocking_,
-            view,
+            definitionalActor.rotationRadians_,
             glm::ivec2{definitionalActor.x_, definitionalActor.y_},
             glm::ivec2{definitionalActor.velX_, definitionalActor.velY_},
-            definitionalActor.actorName_
+            glm::fvec2{definitionalActor.scaleX_, definitionalActor.scaleY_},
+            definitionalActor.actorName_,
+            normalizedPivot,
+            viewTextureName
         );
 
         const std::size_t actorIndex = actors_.size() - 1;

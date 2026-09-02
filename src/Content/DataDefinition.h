@@ -39,14 +39,17 @@ namespace Uncarved::ContentSpace::Definition
     struct ActorDataPatch final
     {
         std::optional<bool>        bBlocking_;
+        std::optional<float>       rotationRadians_;
         std::optional<int>         x_;
         std::optional<int>         y_;
         std::optional<int>         velX_;
         std::optional<int>         velY_;
-        std::optional<std::string> view_;
+        std::optional<float>       scaleX_;
+        std::optional<float>       scaleY_;
         std::optional<std::string> actorName_;
-        std::optional<std::string> nearbyDialogue_;
-        std::optional<std::string> contactDialogue_;
+        std::optional<float>       normalizedPivotX_;
+        std::optional<float>       normalizedPivotY_;
+        std::optional<std::string> viewTextureName_;
     };
 
     struct GameConfigDefinition final

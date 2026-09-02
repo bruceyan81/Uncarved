@@ -20,7 +20,7 @@ namespace Uncarved::ApplicationSpace
         std::string windowTitle_;
 
     public:
-        WindowManager(const std::string& windowTitle, const WindowSize& windowSize);
+        WindowManager(const WindowSize& windowSize, const std::string& windowTitle);
 
         WindowManager(const WindowManager&) = delete;
         WindowManager& operator=(const WindowManager&) = delete;

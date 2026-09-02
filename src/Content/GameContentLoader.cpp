@@ -42,26 +42,44 @@ namespace Uncarved
                 patch.velY_ = it->value.GetInt();
             }
 
-            if (const auto it = rawActor.FindMember("view"); it != rawActor.MemberEnd() && it->value.IsString())
-            {
-                patch.view_ = it->value.GetString();
-            }
-
             if (const auto it = rawActor.FindMember("name"); it != rawActor.MemberEnd() && it->value.IsString())
             {
                 patch.actorName_ = it->value.GetString();
             }
 
-            if (const auto it = rawActor.FindMember("nearby_dialogue");
-                it != rawActor.MemberEnd() && it->value.IsString())
+            if (const auto it = rawActor.FindMember("view_texture"); it != rawActor.MemberEnd() && it->value.IsString())
             {
-                patch.nearbyDialogue_ = it->value.GetString();
+                patch.viewTextureName_ = it->value.GetString();
             }
 
-            if (const auto it = rawActor.FindMember("contact_dialogue");
-                it != rawActor.MemberEnd() && it->value.IsString())
+            if (const auto it = rawActor.FindMember("transform_scale_x");
+                it != rawActor.MemberEnd() && it->value.IsNumber())
             {
-                patch.contactDialogue_ = it->value.GetString();
+                patch.scaleX_ = it->value.GetFloat();
+            }
+
+            if (const auto it = rawActor.FindMember("transform_scale_y");
+                it != rawActor.MemberEnd() && it->value.IsNumber())
+            {
+                patch.scaleY_ = it->value.GetFloat();
+            }
+
+            if (const auto it = rawActor.FindMember("transform_rotation_radians");
+                it != rawActor.MemberEnd() && it->value.IsNumber())
+            {
+                patch.rotationRadians_ = it->value.GetFloat();
+            }
+
+            if (const auto it = rawActor.FindMember("view_normalized_pivot_x");
+                it != rawActor.MemberEnd() && it->value.IsNumber())
+            {
+                patch.normalizedPivotX_ = it->value.GetFloat();
+            }
+
+            if (const auto it = rawActor.FindMember("view_normalized_pivot_y");
+                it != rawActor.MemberEnd() && it->value.IsNumber())
+            {
+                patch.normalizedPivotY_ = it->value.GetFloat();
             }
 
             return patch;
@@ -75,6 +93,11 @@ namespace Uncarved
             if (outPatch.bBlocking_)
             {
                 outDefinition.bBlocking_ = *outPatch.bBlocking_;
+            }
+
+            if (outPatch.rotationRadians_)
+            {
+                outDefinition.rotationRadians_ = *outPatch.rotationRadians_;
             }
 
             if (outPatch.x_)
@@ -97,9 +120,14 @@ namespace Uncarved
                 outDefinition.velY_ = *outPatch.velY_;
             }
 
-            if (outPatch.view_)
+            if (outPatch.scaleX_)
             {
-                outDefinition.view_ = *outPatch.view_;
+                outDefinition.scaleX_ = *outPatch.scaleX_;
+            }
+
+            if (outPatch.scaleY_)
+            {
+                outDefinition.scaleY_ = *outPatch.scaleY_;
             }
 
             if (outPatch.actorName_)
@@ -107,14 +135,19 @@ namespace Uncarved
                 outDefinition.actorName_ = *outPatch.actorName_;
             }
 
-            if (outPatch.nearbyDialogue_)
+            if (outPatch.normalizedPivotX_)
             {
-                outDefinition.nearbyDialogue_ = *outPatch.nearbyDialogue_;
+                outDefinition.normalizedPivotX_ = *outPatch.normalizedPivotX_;
             }
 
-            if (outPatch.contactDialogue_)
+            if (outPatch.normalizedPivotY_)
             {
-                outDefinition.contactDialogue_ = *outPatch.contactDialogue_;
+                outDefinition.normalizedPivotY_ = *outPatch.normalizedPivotY_;
+            }
+
+            if (outPatch.viewTextureName_)
+            {
+                outDefinition.viewTextureName_ = *outPatch.viewTextureName_;
             }
         }
 
@@ -147,8 +180,9 @@ namespace Uncarved::ContentSpace
 
     constexpr std::string_view kActorTemplatesDir = "ActorTemplates";
     constexpr std::string_view kFontsDir = "Fonts";
-    constexpr std::string_view kScenesDir = "Scenes";
     constexpr std::string_view kImagesDir = "Images";
+    constexpr std::string_view kScenesDir = "Scenes";
+    constexpr std::string_view kTexturesDir = "Textures";
 
     constexpr std::string_view kGameConfigFileName = "Game";
     constexpr std::string_view kRenderingConfigFileName = "Rendering";
@@ -159,6 +193,20 @@ namespace Uncarved::ContentSpace
     constexpr std::string_view kScenePostfix = ".scene";
     constexpr std::string_view kTemplatePostfix = ".template";
     constexpr std::string_view kTtfPostfix = ".ttf";
+
+    std::string GameContentLoader::createActorTexturePath(std::string_view textureName) const
+    {
+        Fs::path texturePath;
+
+        if (textureName.empty())
+        {
+            return texturePath.string();
+        }
+
+        texturePath = (gResourceRoot / kTexturesDir / textureName).replace_extension(kPngPostfix);
+
+        return texturePath.string();
+    }
 
     ContentResult GameContentLoader::checkResourceDirectory() const
     {

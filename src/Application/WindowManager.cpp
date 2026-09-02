@@ -7,9 +7,9 @@
 
 namespace Uncarved::ApplicationSpace
 {
-    WindowManager::WindowManager(const std::string& windowTitle, const WindowSize& windowSize)
-        : windowTitle_(windowTitle)
-        , windowSize_(windowSize)
+    WindowManager::WindowManager(const WindowSize& windowSize, const std::string& windowTitle)
+        : windowSize_(windowSize)
+        , windowTitle_(windowTitle)
     {
     }
 
