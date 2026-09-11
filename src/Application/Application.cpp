@@ -1,38 +1,24 @@
 #include "Application.h"
 
-#include "WindowManager.h"
-
-#include "Content/FontLoader.h"
-#include "Content/ImageLoader.h"
 #include "Game/Game.h"
 #include "Input/Input.h"
-#include "View/Renderer.h"
-#include "View/TextRenderer.h"
+#include "Platform/EventPump.h"
+#include "Platform/FontLoader.h"
+#include "Platform/PlatformRuntime.h"
+#include "Platform/Renderer.h"
+#include "Platform/TextRenderer.h"
+#include "Platform/TextRuntime.h"
+#include "Platform/TextureStore.h"
+#include "Platform/Window.h"
 
-#include <SDL3/SDL.h>
-#include <SDL3_ttf/SDL_ttf.h>
-
+#include <cstdint>
 #include <iostream>
-#include <utility>
 
 namespace Uncarved::ApplicationSpace
 {
     ApplicationCore::ApplicationCore()
     {
         applicationState_ = ApplicationState::Init;
-    }
-
-    ApplicationCore::~ApplicationCore()
-    {
-        if (bIsSdlTtfInitialized_)
-        {
-            TTF_Quit();
-        }
-
-        if (bIsSdlInitialized_)
-        {
-            SDL_Quit();
-        }
     }
 
     int ApplicationCore::initializeApplication()
@@ -93,22 +79,6 @@ namespace Uncarved::ApplicationSpace
             return 1;
         }
 
-        bIsSdlInitialized_ = SDL_Init(SDL_INIT_VIDEO);
-
-        if (!bIsSdlInitialized_)
-        {
-            std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
-            return 1;
-        }
-
-        bIsSdlTtfInitialized_ = TTF_Init();
-
-        if (!bIsSdlTtfInitialized_)
-        {
-            std::cerr << "TTF_Init failed: " << SDL_GetError() << '\n';
-            return 1;
-        }
-
         return 0;
     }
 
@@ -118,40 +88,57 @@ namespace Uncarved::ApplicationSpace
         {
             applicationState_ = ApplicationState::Running;
 
+            PlatformSpace::PlatformRuntime platformRuntime{};
+
+            if (!platformRuntime.initialize())
+            {
+                return 1;
+            }
+
             const auto& gameConfig = gameContentLoader_.getGameConfig();
             const auto& renderingConfig = gameContentLoader_.getRenderingConfig();
             const auto& introConfig = gameContentLoader_.getIntroConfig();
 
-            WindowManager windowManager{
+            PlatformSpace::Window window{
                 {renderingConfig.xResolution_, renderingConfig.yResolution_},
-                gameConfig.gameTitle_
+                std::string{gameConfig.gameTitle_}
             };
 
-            if (!windowManager.initializeWindow())
+            if (!window.initialize())
             {
                 return 1;
             }
 
-            ViewSpace::Renderer renderer{};
+            PlatformSpace::Renderer renderer{window};
 
-            bool bRendererInitResult = renderer.initializeRenderer(
-                windowManager.getWindow(),
-                renderingConfig.clearColorR_,
-                renderingConfig.clearColorG_,
-                renderingConfig.clearColorB_
+            if (!renderer.initialize())
+            {
+                return 1;
+            }
+
+            renderer.setClearColor(
+                {
+                    static_cast<std::uint8_t>(renderingConfig.clearColorR_),
+                    static_cast<std::uint8_t>(renderingConfig.clearColorG_),
+                    static_cast<std::uint8_t>(renderingConfig.clearColorB_)
+                }
             );
-
-            if (!bRendererInitResult)
-            {
-                return 1;
-            }
-
-            ContentSpace::FontLoader fontLoader{};
-            ViewSpace::TextRenderer  textRenderer{};
 
             const auto& fontPath = gameConfig.fontPath_;
             const auto& introImages = introConfig.introImages_;
             const auto& introTexts = introConfig.introText_;
+
+            PlatformSpace::TextRuntime textRuntime{};
+
+            if (!introTexts.empty())
+            {
+                if (!textRuntime.initialize())
+                {
+                    return 1;
+                }
+            }
+
+            PlatformSpace::FontLoader fontLoader{textRuntime};
 
             if (!introTexts.empty())
             {
@@ -162,18 +149,20 @@ namespace Uncarved::ApplicationSpace
                     std::cerr << loadFontResult.getErrorMessage();
                     return 1;
                 }
-
-                if (!textRenderer.initializeTextEngine(renderer.getRenderer(), fontLoader.getFont()))
-                {
-                    return 1;
-                }
             }
 
-            ContentSpace::ImageLoader imageLoader{renderer.getRenderer()};
+            PlatformSpace::TextRenderer textRenderer{textRuntime, fontLoader.getFont(), renderer};
+
+            if (!introTexts.empty() && !textRenderer.initialize())
+            {
+                return 1;
+            }
+
+            PlatformSpace::TextureStore textureStore{renderer};
 
             if (!introImages.empty())
             {
-                const auto& loadTextureResult = imageLoader.loadIntroTexture(introImages);
+                const auto& loadTextureResult = textureStore.loadIntroTextures(introImages);
 
                 if (!loadTextureResult.isSucceeded())
                 {
@@ -182,18 +171,17 @@ namespace Uncarved::ApplicationSpace
                 }
             }
 
+            PlatformSpace::EventPump eventPump{};
+            InputSpace::InputCore    inputCore{eventPump};
+
             GameSpace::GameCore gameCore{
+                {gameConfig.health_, gameConfig.score_, introConfig.introText_},
                 GameSpace::SimulationCore{},
-                InputSpace::InputCore{},
-                std::move(renderer),
-                std::move(textRenderer),
-                {
-                    gameConfig.health_,
-                    gameConfig.score_,
-                    introConfig.introText_
-                },
-                std::move(imageLoader),
-                this->gameContentLoader_
+                inputCore,
+                renderer,
+                textRenderer,
+                textureStore,
+                gameContentLoader_
             };
 
             if (gameCore.launch() == 0)

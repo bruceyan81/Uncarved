@@ -19,15 +19,37 @@ find_package(SDL3_image CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_mixer CONFIG REQUIRED)
 
-# Boot
+# Platform
 
-add_executable(Uncarved
-    src/Main.cpp
+add_library(UncarvedPlatform STATIC
+    src/Platform/EventPump.cpp
+    src/Platform/Graphics.cpp
+    src/Platform/PlatformRuntime.cpp
+    src/Platform/Text.cpp
+    src/Platform/TextRuntime.cpp
+)
+
+target_link_libraries(UncarvedPlatform
+    PUBLIC
+        glm::glm
+    PRIVATE
+        SDL3::SDL3
+        $<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image-shared>,SDL3_image::SDL3_image-shared,SDL3_image::SDL3_image-static>
+        SDL3_ttf::SDL3_ttf
+        $<IF:$<TARGET_EXISTS:SDL3_mixer::SDL3_mixer>,SDL3_mixer::SDL3_mixer,SDL3_mixer::SDL3_mixer-static>
+)
+
+target_include_directories(UncarvedPlatform PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+target_compile_features(UncarvedPlatform PUBLIC cxx_std_20)
+
+# Core
+
+add_library(UncarvedCore STATIC
     src/Application/Application.cpp
-    src/Application/WindowManager.cpp
     src/Content/GameContentLoader.cpp
-    src/Content/ImageLoader.cpp
-    src/Content/FontLoader.cpp
     src/Game/AiController.cpp
     src/Game/GameSimulation.cpp
     src/Game/CommandBuffer.cpp
@@ -36,46 +58,56 @@ add_executable(Uncarved
     src/Game/World.cpp
     src/Input/Input.cpp
     src/Object/Actor.cpp
-    src/View/Renderer.cpp
-    src/View/TextRenderer.cpp
     src/View/Camera.cpp
+)
+
+target_link_libraries(UncarvedCore
+    PUBLIC
+        glm::glm
+        UncarvedPlatform
+)
+
+target_include_directories(UncarvedCore PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+target_include_directories(UncarvedCore SYSTEM PRIVATE
+    "${RAPIDJSON_INCLUDE_DIR}"
+)
+
+target_compile_features(UncarvedCore PUBLIC cxx_std_20)
+
+# Boot
+
+add_executable(Uncarved
+    src/Main.cpp
+)
+
+target_link_libraries(Uncarved PRIVATE
+    UncarvedCore
 )
 
 target_compile_features(Uncarved PRIVATE cxx_std_20)
 
-set_target_properties(Uncarved PROPERTIES
-    CXX_EXTENSIONS OFF
-)
-
-target_link_libraries(Uncarved PRIVATE
-    glm::glm
-    SDL3::SDL3
-    $<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image-shared>,SDL3_image::SDL3_image-shared,SDL3_image::SDL3_image-static>
-    SDL3_ttf::SDL3_ttf
-    $<IF:$<TARGET_EXISTS:SDL3_mixer::SDL3_mixer>,SDL3_mixer::SDL3_mixer,SDL3_mixer::SDL3_mixer-static>
-)
-
-target_include_directories(Uncarved PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
-)
-
-target_include_directories(Uncarved SYSTEM PRIVATE
-    "${RAPIDJSON_INCLUDE_DIR}"
-)
-
-if(MSVC)
-    target_compile_options(Uncarved PRIVATE
-        /W4
-        /permissive-
-        /Zc:__cplusplus
+foreach(target IN ITEMS UncarvedCore UncarvedPlatform Uncarved)
+    set_target_properties(${target} PROPERTIES
+        CXX_EXTENSIONS OFF
     )
-else()
-    target_compile_options(Uncarved PRIVATE
-        -Wall
-        -Wextra
-        -Wpedantic
-    )
-endif()
+
+    if(MSVC)
+        target_compile_options(${target} PRIVATE
+            /W4
+            /permissive-
+            /Zc:__cplusplus
+        )
+    else()
+        target_compile_options(${target} PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+        )
+    endif()
+endforeach()
 
 add_custom_target(SyncResources ALL
     COMMAND ${CMAKE_COMMAND} -E rm -rf

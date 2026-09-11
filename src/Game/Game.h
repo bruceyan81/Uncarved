@@ -7,10 +7,10 @@
 #include "World.h"
 
 #include "Content/ContentResult.h"
-#include "Content/ImageLoader.h"
 #include "Input/Input.h"
-#include "View/Renderer.h"
-#include "View/TextRenderer.h"
+#include "Platform/Renderer.h"
+#include "Platform/TextRenderer.h"
+#include "Platform/TextureStore.h"
 
 #include <string_view>
 
@@ -41,13 +41,13 @@ namespace Uncarved::GameSpace
     {
     public:
         GameCore(
-            SimulationCore&&            simulationCore,
-            InputSpace::InputCore&&     inputCore,
-            ViewSpace::Renderer&&       rendererCore,
-            ViewSpace::TextRenderer&&   textRendererCore,
-            GameConfig&&                gameConfig,
-            ContentSpace::ImageLoader&& imageLoader,
+            GameConfig&&     gameConfig,
+            SimulationCore&& simulationCore,
 
+            InputSpace::InputCore&           outInputCore,
+            PlatformSpace::Renderer&         outRenderer,
+            PlatformSpace::TextRenderer&     outTextRenderer,
+            PlatformSpace::TextureStore&     outTextureStore,
             ContentSpace::GameContentLoader& outGameContentLoader
         );
 
@@ -75,16 +75,16 @@ namespace Uncarved::GameSpace
         GamePhase     gamePhase_{GamePhase::None};
         GameFlowState gameFlowState_{GameFlowState::None};
         GameState     gameState_{};
+        World         world_{};
+        CommandBuffer commandBuffer_{};
 
-        SimulationCore            simulationCore_;
-        InputSpace::InputCore     inputCore_;
-        ViewSpace::Renderer       rendererCore_;
-        ViewSpace::TextRenderer   textRendererCore_;
-        GameConfig                gameConfig_;
-        World                     world_{};
-        ContentSpace::ImageLoader imageLoader_;
-        CommandBuffer             commandBuffer_{};
+        GameConfig     gameConfig_;
+        SimulationCore simulationCore_;
 
+        InputSpace::InputCore&           outInputCore_;
+        PlatformSpace::Renderer&         outRenderer_;
+        PlatformSpace::TextRenderer&     outTextRenderer_;
+        PlatformSpace::TextureStore&     outTextureStore_;
         ContentSpace::GameContentLoader& outGameContentLoader_;
 
         int initializeGame();

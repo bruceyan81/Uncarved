@@ -24,7 +24,7 @@ namespace Uncarved::ApplicationSpace
         ApplicationCore(ApplicationCore&&) = delete;
         ApplicationCore& operator=(ApplicationCore&&) = delete;
 
-        ~ApplicationCore();
+        ~ApplicationCore() = default;
 
         int initializeApplication();
 
@@ -33,7 +33,5 @@ namespace Uncarved::ApplicationSpace
     private:
         ApplicationState                applicationState_{};
         ContentSpace::GameContentLoader gameContentLoader_{};
-        bool                            bIsSdlInitialized_{false};
-        bool                            bIsSdlTtfInitialized_{false};
     };
 } // namespace Uncarved::ApplicationSpace

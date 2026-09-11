@@ -1,7 +1,6 @@
 #include "Game.h"
 
 #include "Content/GameContentLoader.h"
-#include "Content/ImageLoader.h"
 #include "Input/Command.h"
 #include "Input/Input.h"
 
@@ -15,21 +14,20 @@
 namespace Uncarved::GameSpace
 {
     GameCore::GameCore(
-        SimulationCore&&            simulationCore,
-        InputSpace::InputCore&&     inputCore,
-        ViewSpace::Renderer&&       rendererCore,
-        ViewSpace::TextRenderer&&   textRendererCore,
-        GameConfig&&                gameConfig,
-        ContentSpace::ImageLoader&& imageLoader,
-
+        GameConfig&&                     gameConfig,
+        SimulationCore&&                 simulationCore,
+        InputSpace::InputCore&           outInputCore,
+        PlatformSpace::Renderer&         outRenderer,
+        PlatformSpace::TextRenderer&     outTextRenderer,
+        PlatformSpace::TextureStore&     outTextureStore,
         ContentSpace::GameContentLoader& outGameContentLoader
     )
-        : simulationCore_(std::move(simulationCore))
-        , inputCore_(std::move(inputCore))
-        , rendererCore_(std::move(rendererCore))
-        , textRendererCore_(std::move(textRendererCore))
-        , gameConfig_(std::move(gameConfig))
-        , imageLoader_(std::move(imageLoader))
+        : gameConfig_(std::move(gameConfig))
+        , simulationCore_(std::move(simulationCore))
+        , outInputCore_(outInputCore)
+        , outRenderer_(outRenderer)
+        , outTextRenderer_(outTextRenderer)
+        , outTextureStore_(outTextureStore)
         , outGameContentLoader_(outGameContentLoader)
     {
         gamePhase_ = GamePhase::InitGame;
@@ -107,11 +105,11 @@ namespace Uncarved::GameSpace
             if (!path.empty())
             {
                 actorTexturePaths.push_back(path);
-                imageLoader_.updateActorTexturePathCache(std::string{*viewTextureName}, std::move(path));
+                outTextureStore_.registerActorTexturePath(std::string{*viewTextureName}, std::move(path));
             }
         }
 
-        const auto& loadActorTextureResult = imageLoader_.loadActorTexture(actorTexturePaths);
+        const auto& loadActorTextureResult = outTextureStore_.loadActorTextures(actorTexturePaths);
 
         if (!loadActorTextureResult.isSucceeded())
         {
@@ -150,7 +148,7 @@ namespace Uncarved::GameSpace
 
     int GameCore::runGame()
     {
-        const std::size_t imageCount = imageLoader_.getIntroTextureCount();
+        const std::size_t imageCount = outTextureStore_.getIntroTextureCount();
         const std::size_t textCount = gameConfig_.introText_.size();
         const std::size_t introStepCount = std::max(imageCount, textCount);
 
@@ -171,12 +169,12 @@ namespace Uncarved::GameSpace
             {
                 case GameFlowState::Intro:
                 {
-                    if (!this->rendererCore_.clear())
+                    if (!this->outRenderer_.clear())
                     {
                         return 1;
                     }
 
-                    switch (this->inputCore_.pollInputRequest())
+                    switch (this->outInputCore_.pollInputRequest())
                     {
                         case InputSpace::Intention::Quit:
                             commandBuffer_.submit(QuitCommand{});
@@ -203,9 +201,15 @@ namespace Uncarved::GameSpace
                     if (imageCount > 0)
                     {
                         const std::size_t imageIndex = std::min(introStep, imageCount - 1);
-                        auto*             texturePtr = this->imageLoader_.getIntroTexture(imageIndex);
 
-                        if (!this->rendererCore_.renderTexture(texturePtr))
+                        const Texture* texture = outTextureStore_.getIntroTexture(imageIndex);
+
+                        if (texture == nullptr)
+                        {
+                            return 1;
+                        }
+
+                        if (!this->outRenderer_.renderTexture(*texture))
                         {
                             return 1;
                         }
@@ -215,20 +219,20 @@ namespace Uncarved::GameSpace
                     {
                         const std::size_t textIndex = std::min(introStep, textCount - 1);
 
-                        if (!this->textRendererCore_.drawText(gameConfig_.introText_[textIndex], 75.0f, 75.0f))
+                        if (!this->outTextRenderer_.drawText(gameConfig_.introText_[textIndex], 75.0f, 75.0f))
                         {
                             return 1;
                         }
                     }
 
-                    if (!this->rendererCore_.present())
+                    if (!this->outRenderer_.present())
                     {
                         return 1;
                     }
                 }
                 break;
                 case GameFlowState::Gameplay:
-                    const InputSpace::Intention intention = inputCore_.pollInputRequest();
+                    const InputSpace::Intention intention = outInputCore_.pollInputRequest();
 
                     simulationCore_.update(world_, intention, commandBuffer_);
 
@@ -239,7 +243,7 @@ namespace Uncarved::GameSpace
                         break;
                     }
 
-                    if (!this->rendererCore_.clear())
+                    if (!this->outRenderer_.clear())
                     {
                         return 1;
                     }
@@ -247,28 +251,35 @@ namespace Uncarved::GameSpace
                     for (const auto& actor : world_.getActors())
                     {
                         const auto& actorTextureName = actor.getViewTextureName();
-                        if (actorTextureName.has_value())
-                        {
-                            if (!rendererCore_.renderTexture(
-                                    imageLoader_.getActorTextureByName(*actorTextureName),
-                                    rendererCore_.createSpriteTransform(
-                                        actor.getNormalizedPivot(),
-                                        actor.getPosition(),
-                                        actor.getScale(),
-                                        actor.getRotationRadians()
-                                    )
-                                ))
-                            {
-                                return 1;
-                            }
-                        }
-                        else
+
+                        if (!actorTextureName.has_value())
                         {
                             continue;
                         }
+
+                        const Texture* texture = outTextureStore_.getActorTextureByName(*actorTextureName);
+
+                        if (texture == nullptr)
+                        {
+                            return 1;
+                        }
+
+                        if (!outRenderer_.renderTexture(
+                                *texture,
+                                PlatformSpace::SpriteTransform
+                                {
+                                    actor.getNormalizedPivot(),
+                                    actor.getPosition(),
+                                    actor.getScale(),
+                                    actor.getRotationRadians()
+                                }
+                            ))
+                        {
+                            return 1;
+                        }
                     }
 
-                    if (!this->rendererCore_.present())
+                    if (!this->outRenderer_.present())
                     {
                         return 1;
                     }
@@ -306,7 +317,13 @@ namespace Uncarved::GameSpace
     {
         for (const auto& command : commandBuffer_.getCommands())
         {
-            std::visit([this](const auto& targetCommand) { this->commitCommand(targetCommand); }, command);
+            std::visit(
+                [this](const auto& targetCommand)
+                {
+                    this->commitCommand(targetCommand);
+                },
+                command
+            );
         }
 
         commandBuffer_.clearCommands();

@@ -2,30 +2,40 @@
 
 #include "Command.h"
 
-#include <SDL3/SDL.h>
+#include "Platform/Event.h"
+#include "Platform/EventPump.h"
 
 namespace Uncarved::InputSpace
 {
+    InputCore::InputCore(PlatformSpace::EventPump& outEventPump) : outEventPump_(outEventPump)
+    {
+    }
+
+    InputCore::~InputCore() = default;
+
     Intention InputCore::pollInputRequest() const
     {
-        SDL_Event event{};
+        Event event{};
 
-        while (SDL_PollEvent(&event))
+        while (outEventPump_.pollEvent(event))
         {
-            if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+            if (event.type_ == EventType::Quit || event.type_ == EventType::WindowCloseRequested)
             {
                 return Intention::Quit;
             }
 
-            if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
+            if (event.type_ == EventType::KeyDown && !event.keyRepeat_)
             {
-                if (event.key.scancode == SDL_SCANCODE_RETURN || event.key.scancode == SDL_SCANCODE_SPACE)
+                if (event.keyScancode_.has_value()
+                    && (*(event.keyScancode_) == KeyboardScancode::Return
+                        || *(event.keyScancode_) == KeyboardScancode::Space))
                 {
                     return Intention::AdvanceIntro;
                 }
             }
 
-            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && event.button.button == SDL_BUTTON_LEFT)
+            if (event.type_ == EventType::MouseButtonDown && event.mouseButton_.has_value()
+                && event.mouseButton_ == MouseButton::Left)
             {
                 return Intention::AdvanceIntro;
             }
