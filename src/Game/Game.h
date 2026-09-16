@@ -14,10 +14,18 @@
 
 #include <string_view>
 
-namespace Uncarved::ContentSpace
+namespace Uncarved
 {
-    class GameContentLoader;
-} // namespace Uncarved::ContentSpace
+    namespace ContentSpace
+    {
+        class GameContentLoader;
+    }
+
+    namespace TimeSpace
+    {
+        class AppTime;
+    }
+} // namespace Uncarved
 
 namespace Uncarved::GameSpace
 {
@@ -44,6 +52,7 @@ namespace Uncarved::GameSpace
             GameConfig&&     gameConfig,
             SimulationCore&& simulationCore,
 
+            TimeSpace::AppTime&              outAppTime,
             InputSpace::InputCore&           outInputCore,
             PlatformSpace::Renderer&         outRenderer,
             PlatformSpace::TextRenderer&     outTextRenderer,
@@ -81,6 +90,7 @@ namespace Uncarved::GameSpace
         GameConfig     gameConfig_;
         SimulationCore simulationCore_;
 
+        TimeSpace::AppTime&              outAppTime_;
         InputSpace::InputCore&           outInputCore_;
         PlatformSpace::Renderer&         outRenderer_;
         PlatformSpace::TextRenderer&     outTextRenderer_;

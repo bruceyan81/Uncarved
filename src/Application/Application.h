@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Content/GameContentLoader.h"
+#include "Time/AppTime.h"
 
 namespace Uncarved::ApplicationSpace
 {
@@ -33,5 +34,6 @@ namespace Uncarved::ApplicationSpace
     private:
         ApplicationState                applicationState_{};
         ContentSpace::GameContentLoader gameContentLoader_{};
+        TimeSpace::AppTime              appTime_{};
     };
 } // namespace Uncarved::ApplicationSpace

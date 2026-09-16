@@ -3,6 +3,7 @@
 #include "Content/GameContentLoader.h"
 #include "Input/Command.h"
 #include "Input/Input.h"
+#include "Time/AppTime.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -14,8 +15,10 @@
 namespace Uncarved::GameSpace
 {
     GameCore::GameCore(
-        GameConfig&&                     gameConfig,
-        SimulationCore&&                 simulationCore,
+        GameConfig&&     gameConfig,
+        SimulationCore&& simulationCore,
+
+        TimeSpace::AppTime&              outAppTime,
         InputSpace::InputCore&           outInputCore,
         PlatformSpace::Renderer&         outRenderer,
         PlatformSpace::TextRenderer&     outTextRenderer,
@@ -24,6 +27,8 @@ namespace Uncarved::GameSpace
     )
         : gameConfig_(std::move(gameConfig))
         , simulationCore_(std::move(simulationCore))
+
+        , outAppTime_(outAppTime)
         , outInputCore_(outInputCore)
         , outRenderer_(outRenderer)
         , outTextRenderer_(outTextRenderer)
@@ -35,16 +40,16 @@ namespace Uncarved::GameSpace
 
     int GameCore::launch()
     {
-        if (this->gamePhase_ == GamePhase::InitGame)
+        if (gamePhase_ == GamePhase::InitGame)
         {
-            if (this->initializeGame() == 0)
+            if (initializeGame() == 0)
             {
-                this->gamePhase_ = GamePhase::RunGame;
-                if (this->runGame() == 0)
+                gamePhase_ = GamePhase::RunGame;
+                if (runGame() == 0)
                 {
-                    if (this->gamePhase_ == GamePhase::EndGame)
+                    if (gamePhase_ == GamePhase::EndGame)
                     {
-                        return this->endGame();
+                        return endGame();
                     }
                     else
                     {
@@ -81,7 +86,7 @@ namespace Uncarved::GameSpace
 
         world_.loadActors(outGameContentLoader_.getDefinitionalActors());
 
-        this->outGameContentLoader_.releaseLoadData();
+        outGameContentLoader_.releaseLoadData();
 
         gameState_.initialize(gameConfig_.health_, gameConfig_.score_);
 
@@ -122,14 +127,14 @@ namespace Uncarved::GameSpace
 
     ContentSpace::ContentResult GameCore::initializeSceneResource(std::string_view sceneName)
     {
-        const auto& checkResult = this->outGameContentLoader_.checkSceneResource(sceneName);
+        const auto& checkResult = outGameContentLoader_.checkSceneResource(sceneName);
 
         if (!checkResult.isSucceeded())
         {
             return checkResult;
         }
 
-        const auto& loadResult = this->outGameContentLoader_.loadSceneResource(sceneName);
+        const auto& loadResult = outGameContentLoader_.loadSceneResource(sceneName);
 
         if (!loadResult.isSucceeded())
         {
@@ -163,18 +168,20 @@ namespace Uncarved::GameSpace
 
         std::size_t introStep = 0;
 
-        while (this->gamePhase_ == GamePhase::RunGame)
+        while (gamePhase_ == GamePhase::RunGame)
         {
+            outAppTime_.update();
+
             switch (getGameFlowState())
             {
                 case GameFlowState::Intro:
                 {
-                    if (!this->outRenderer_.clear())
+                    if (!outRenderer_.clear())
                     {
                         return 1;
                     }
 
-                    switch (this->outInputCore_.pollInputRequest())
+                    switch (outInputCore_.pollInputRequest())
                     {
                         case InputSpace::Intention::Quit:
                             commandBuffer_.submit(QuitCommand{});
@@ -209,7 +216,7 @@ namespace Uncarved::GameSpace
                             return 1;
                         }
 
-                        if (!this->outRenderer_.renderTexture(*texture))
+                        if (!outRenderer_.renderTexture(*texture))
                         {
                             return 1;
                         }
@@ -219,19 +226,21 @@ namespace Uncarved::GameSpace
                     {
                         const std::size_t textIndex = std::min(introStep, textCount - 1);
 
-                        if (!this->outTextRenderer_.drawText(gameConfig_.introText_[textIndex], 75.0f, 75.0f))
+                        if (!outTextRenderer_.drawText(gameConfig_.introText_[textIndex], 75.0f, 75.0f))
                         {
                             return 1;
                         }
                     }
 
-                    if (!this->outRenderer_.present())
+                    if (!outRenderer_.present())
                     {
                         return 1;
                     }
                 }
                 break;
                 case GameFlowState::Gameplay:
+                    world_.updateTime(outAppTime_.getDeltaTime());
+
                     const InputSpace::Intention intention = outInputCore_.pollInputRequest();
 
                     simulationCore_.update(world_, intention, commandBuffer_);
@@ -243,7 +252,7 @@ namespace Uncarved::GameSpace
                         break;
                     }
 
-                    if (!this->outRenderer_.clear())
+                    if (!outRenderer_.clear())
                     {
                         return 1;
                     }
@@ -279,7 +288,7 @@ namespace Uncarved::GameSpace
                         }
                     }
 
-                    if (!this->outRenderer_.present())
+                    if (!outRenderer_.present())
                     {
                         return 1;
                     }
@@ -308,7 +317,7 @@ namespace Uncarved::GameSpace
 
         world_.loadActors(outGameContentLoader_.getDefinitionalActors());
 
-        this->outGameContentLoader_.releaseLoadData();
+        outGameContentLoader_.releaseLoadData();
 
         return {};
     }
@@ -320,7 +329,7 @@ namespace Uncarved::GameSpace
             std::visit(
                 [this](const auto& targetCommand)
                 {
-                    this->commitCommand(targetCommand);
+                    commitCommand(targetCommand);
                 },
                 command
             );

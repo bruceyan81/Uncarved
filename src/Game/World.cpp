@@ -60,6 +60,8 @@ namespace Uncarved::GameSpace
             nextWorld.addActor(definitionalActor);
         }
 
+        nextWorld.worldTime_ = worldTime_;
+
         *this = std::move(nextWorld);
     }
 
@@ -68,6 +70,11 @@ namespace Uncarved::GameSpace
         actors_.clear();
         actorIndexById_.clear();
         playerIndex_.reset();
+    }
+
+    void World::updateTime(TimeSpace::Duration deltaTime) noexcept
+    {
+        worldTime_.updateTime(deltaTime);
     }
 
     void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor)

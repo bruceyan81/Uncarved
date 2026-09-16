@@ -2,6 +2,7 @@
 
 #include "Object/Actor.h"
 #include "Object/DefinitionalActor.h"
+#include "Time/WorldTime.h"
 
 #include <glm/glm.hpp>
 
@@ -52,11 +53,20 @@ namespace Uncarved::GameSpace
 
         void clearWorld() noexcept;
 
+        void updateTime(TimeSpace::Duration deltaTime) noexcept;
+
+        const TimeSpace::WorldTime& getWorldTime() const noexcept
+        {
+            return worldTime_;
+        }
+
     private:
         std::optional<std::size_t>                            playerIndex_{};
         std::vector<ObjectSpace::Actor>                       actors_{};
         std::unordered_map<ObjectSpace::ActorId, std::size_t> actorIndexById_{};
 
         void addActor(const ObjectSpace::DefinitionalActor& definitionalActor);
+
+        TimeSpace::WorldTime worldTime_{};
     };
 } // namespace Uncarved::GameSpace

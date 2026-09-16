@@ -58,6 +58,8 @@ add_library(UncarvedCore STATIC
     src/Game/World.cpp
     src/Input/Input.cpp
     src/Object/Actor.cpp
+    src/Time/AppTime.cpp
+    src/Time/WorldTime.cpp
     src/View/Camera.cpp
 )
 

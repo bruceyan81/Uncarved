@@ -10,6 +10,7 @@
 #include "Platform/TextRuntime.h"
 #include "Platform/TextureStore.h"
 #include "Platform/Window.h"
+#include "Time/AppTime.h"
 
 #include <cstdint>
 #include <iostream>
@@ -177,6 +178,7 @@ namespace Uncarved::ApplicationSpace
             GameSpace::GameCore gameCore{
                 {gameConfig.health_, gameConfig.score_, introConfig.introText_},
                 GameSpace::SimulationCore{},
+                appTime_,
                 inputCore,
                 renderer,
                 textRenderer,
