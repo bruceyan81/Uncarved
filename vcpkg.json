@@ -10,8 +10,13 @@
         "png"
       ]
     },
-    "sdl3-ttf",
-    "sdl3-mixer"
+    {
+      "name": "sdl3-mixer",
+      "features": [
+        "mpg123"
+      ]
+    },
+    "sdl3-ttf"
   ],
   "overrides": [
     {

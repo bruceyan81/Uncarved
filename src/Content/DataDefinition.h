@@ -54,11 +54,12 @@ namespace Uncarved::ContentSpace::Definition
 
     struct GameConfigDefinition final
     {
-        std::string gameTitle_{};
-        std::string initialSceneName_{};
-        std::string fontPath_{};
-        int         health_{3};
-        int         score_{0};
+        std::string              gameTitle_{};
+        std::string              initialSceneName_{};
+        std::string              fontPath_{};
+        int                      health_{3};
+        int                      score_{0};
+        std::vector<std::string> gameplayBgmArray_{};
     };
 
     struct RenderingConfigDefinition final
@@ -74,5 +75,6 @@ namespace Uncarved::ContentSpace::Definition
     {
         std::vector<std::string> introImages_{};
         std::vector<std::string> introText_{};
+        std::vector<std::string> introBgmArray_{};
     };
 } // namespace Uncarved::ContentSpace::Definition

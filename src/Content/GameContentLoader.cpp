@@ -179,10 +179,14 @@ namespace Uncarved::ContentSpace
     const Fs::path gResourceRoot = "Resources";
 
     constexpr std::string_view kActorTemplatesDir = "ActorTemplates";
+    constexpr std::string_view kAudioDir = "Audio";
     constexpr std::string_view kFontsDir = "Fonts";
     constexpr std::string_view kImagesDir = "Images";
     constexpr std::string_view kScenesDir = "Scenes";
     constexpr std::string_view kTexturesDir = "Textures";
+
+    constexpr std::string_view kGameplayAudioDir = "Gameplay";
+    constexpr std::string_view kIntroAudioDir = "Intro";
 
     constexpr std::string_view kGameConfigFileName = "Game";
     constexpr std::string_view kRenderingConfigFileName = "Rendering";
@@ -193,6 +197,7 @@ namespace Uncarved::ContentSpace
     constexpr std::string_view kScenePostfix = ".scene";
     constexpr std::string_view kTemplatePostfix = ".template";
     constexpr std::string_view kTtfPostfix = ".ttf";
+    constexpr std::string_view kMp3Postfix = ".mp3";
 
     std::string GameContentLoader::createActorTexturePath(std::string_view textureName) const
     {
@@ -206,6 +211,34 @@ namespace Uncarved::ContentSpace
         texturePath = (gResourceRoot / kTexturesDir / textureName).replace_extension(kPngPostfix);
 
         return texturePath.string();
+    }
+
+    std::string GameContentLoader::createIntroBgmPath(std::string_view bgmName) const
+    {
+        Fs::path bgmPath;
+
+        if (bgmName.empty())
+        {
+            return bgmPath.string();
+        }
+
+        bgmPath = (gResourceRoot / kAudioDir / kIntroAudioDir / bgmName).replace_extension(kMp3Postfix);
+
+        return bgmPath.string();
+    }
+
+    std::string GameContentLoader::createGameplayBgmPath(std::string_view bgmName) const
+    {
+        Fs::path bgmPath;
+
+        if (bgmName.empty())
+        {
+            return bgmPath.string();
+        }
+
+        bgmPath = (gResourceRoot / kAudioDir / kGameplayAudioDir / bgmName).replace_extension(kMp3Postfix);
+
+        return bgmPath.string();
     }
 
     ContentResult GameContentLoader::checkResourceDirectory() const
@@ -286,6 +319,25 @@ namespace Uncarved::ContentSpace
         if (document.HasMember("score") && document["score"].IsInt())
         {
             tempGameConfigDefinition.score_ = document["score"].GetInt();
+        }
+
+        if (document.HasMember("gameplay_bgm") && document["gameplay_bgm"].IsArray())
+        {
+            const auto& gameplayBgmArray = document["gameplay_bgm"].GetArray();
+
+            tempGameConfigDefinition.gameplayBgmArray_.reserve(gameplayBgmArray.Size());
+
+            for (const auto& bgmName : gameplayBgmArray)
+            {
+                if (bgmName.IsString())
+                {
+                    tempGameConfigDefinition.gameplayBgmArray_.emplace_back(bgmName.GetString());
+                }
+            }
+        }
+        else
+        {
+            std::cout << "info: gameplay_bgm unspecified.";
         }
 
         gameConfigDefinition_ = std::move(tempGameConfigDefinition);
@@ -439,6 +491,25 @@ namespace Uncarved::ContentSpace
         else
         {
             return {ValidationError{"error: intro_text unspecified.", ValidationErrorType::InvalidData}};
+        }
+
+        if (document.HasMember("intro_bgm") && document["intro_bgm"].IsArray())
+        {
+            const auto& introBgmArray = document["intro_bgm"].GetArray();
+
+            tempIntroConfigDefinition.introBgmArray_.reserve(introBgmArray.Size());
+
+            for (const auto& bgmName : introBgmArray)
+            {
+                if (bgmName.IsString())
+                {
+                    tempIntroConfigDefinition.introBgmArray_.emplace_back(bgmName.GetString());
+                }
+            }
+        }
+        else
+        {
+            std::cout << "info: intro_bgm unspecified.";
         }
 
         introConfigDefinition_ = std::move(tempIntroConfigDefinition);

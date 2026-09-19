@@ -2,6 +2,9 @@
 
 #include "Game/Game.h"
 #include "Input/Input.h"
+#include "Platform/Audio/AudioDevice.h"
+#include "Platform/Audio/SoundSource.h"
+#include "Platform/Audio/SoundWaveStore.h"
 #include "Platform/EventPump.h"
 #include "Platform/FontLoader.h"
 #include "Platform/PlatformRuntime.h"
@@ -175,6 +178,22 @@ namespace Uncarved::ApplicationSpace
             PlatformSpace::EventPump eventPump{};
             InputSpace::InputCore    inputCore{eventPump};
 
+            PlatformSpace::AudioDevice audioDevice{};
+
+            if (!audioDevice.initialize())
+            {
+                return 1;
+            }
+
+            PlatformSpace::SoundWaveStore soundWaveStore{audioDevice};
+
+            PlatformSpace::SoundSource soundSource{audioDevice};
+
+            if (!soundSource.initialize())
+            {
+                return 1;
+            }
+
             GameSpace::GameCore gameCore{
                 {gameConfig.health_, gameConfig.score_, introConfig.introText_},
                 GameSpace::SimulationCore{},
@@ -183,6 +202,8 @@ namespace Uncarved::ApplicationSpace
                 renderer,
                 textRenderer,
                 textureStore,
+                soundSource,
+                soundWaveStore,
                 gameContentLoader_
             };
 

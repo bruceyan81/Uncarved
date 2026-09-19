@@ -64,3 +64,10 @@ Bundled license: `Resources/Fonts/OFL-NotoSans.txt`
 
 The bundled font binary is unmodified from the upstream release; only its
 filename has been changed for use within the project's resource layout.
+
+### Cinematic Piano BGM
+
+**Cinematic Piano BGM**
+Author: rosko vair
+Source: https://roskovair.itch.io/cinematic-piano-bgm
+License: Creative Commons Zero v1.0 Universal

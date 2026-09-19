@@ -27,6 +27,10 @@ namespace Uncarved::ContentSpace
 
         std::string createActorTexturePath(std::string_view textureName) const;
 
+        std::string createIntroBgmPath(std::string_view bgmName) const;
+
+        std::string createGameplayBgmPath(std::string_view bgmName) const;
+
         ContentResult checkResourceDirectory() const;
 
         ContentResult checkGameConfig() const;

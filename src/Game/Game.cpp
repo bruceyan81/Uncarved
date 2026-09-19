@@ -3,6 +3,8 @@
 #include "Content/GameContentLoader.h"
 #include "Input/Command.h"
 #include "Input/Input.h"
+#include "Platform/Audio/SoundSource.h"
+#include "Platform/Audio/SoundWaveStore.h"
 #include "Time/AppTime.h"
 
 #include <algorithm>
@@ -23,6 +25,8 @@ namespace Uncarved::GameSpace
         PlatformSpace::Renderer&         outRenderer,
         PlatformSpace::TextRenderer&     outTextRenderer,
         PlatformSpace::TextureStore&     outTextureStore,
+        PlatformSpace::SoundSource&      outSoundSource,
+        PlatformSpace::SoundWaveStore&   outSoundWaveStore,
         ContentSpace::GameContentLoader& outGameContentLoader
     )
         : gameConfig_(std::move(gameConfig))
@@ -33,6 +37,8 @@ namespace Uncarved::GameSpace
         , outRenderer_(outRenderer)
         , outTextRenderer_(outTextRenderer)
         , outTextureStore_(outTextureStore)
+        , outSoundSource_(outSoundSource)
+        , outSoundWaveStore_(outSoundWaveStore)
         , outGameContentLoader_(outGameContentLoader)
     {
         gamePhase_ = GamePhase::InitGame;
@@ -45,6 +51,7 @@ namespace Uncarved::GameSpace
             if (initializeGame() == 0)
             {
                 gamePhase_ = GamePhase::RunGame;
+
                 if (runGame() == 0)
                 {
                     if (gamePhase_ == GamePhase::EndGame)
@@ -70,6 +77,81 @@ namespace Uncarved::GameSpace
         {
             return 1;
         }
+    }
+
+    bool GameCore::transitionGameFlowState(GameFlowState gameFlowState)
+    {
+        if (gameFlowState_ == gameFlowState)
+        {
+            return true;
+        }
+
+        const std::vector<SoundWave*>* nextSoundWaves = nullptr;
+
+        switch (gameFlowState)
+        {
+            case GameFlowState::Intro:
+            {
+                nextSoundWaves = &outIntroSoundWaves_;
+            }
+            break;
+            case GameFlowState::Gameplay:
+            {
+                nextSoundWaves = &outGameplaySoundWaves_;
+            }
+            break;
+            default:
+                return false;
+        }
+
+        if (outSoundSource_.isPlaying() || outSoundSource_.isPaused())
+        {
+            if (!outSoundSource_.stop())
+            {
+                return false;
+            }
+        }
+
+        activeSoundWaves_ = nextSoundWaves;
+        activeSoundWaveIndex_ = 0;
+
+        if (!activeSoundWaves_->empty() && !playActiveSoundWave())
+        {
+            return false;
+        }
+
+        gameFlowState_ = gameFlowState;
+
+        return true;
+    }
+
+    bool GameCore::updateSoundPlayback()
+    {
+        if (activeSoundWaves_ == nullptr || activeSoundWaves_->empty())
+        {
+            return true;
+        }
+
+        if (outSoundSource_.isPlaying() || outSoundSource_.isPaused())
+        {
+            return true;
+        }
+
+        activeSoundWaveIndex_ = (activeSoundWaveIndex_ + 1) % activeSoundWaves_->size();
+
+        return playActiveSoundWave();
+    }
+
+    bool GameCore::playActiveSoundWave()
+    {
+        SoundWave* soundWave = (*activeSoundWaves_)[activeSoundWaveIndex_];
+
+        if (soundWave == nullptr)
+        {
+            return false;
+        }
+
+        return outSoundSource_.setSoundWave(*soundWave) && outSoundSource_.play();
     }
 
     int GameCore::initializeGame()
@@ -122,6 +204,40 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
+        const auto& introBgmArray = outGameContentLoader_.getIntroConfig().introBgmArray_;
+        std::vector<std::string> introBgmPaths{};
+        introBgmPaths.reserve(introBgmArray.size());
+
+        for (const auto& introBgmName : introBgmArray)
+        {
+            introBgmPaths.emplace_back(outGameContentLoader_.createIntroBgmPath(introBgmName));
+        }
+
+        const auto loadIntroBgmResult = outSoundWaveStore_.loadSoundWaves(introBgmPaths, outIntroSoundWaves_);
+
+        if (!loadIntroBgmResult.isSucceeded())
+        {
+            std::cerr << loadIntroBgmResult.getErrorMessage();
+            return 1;
+        }
+
+        const auto& gameplayBgmArray = outGameContentLoader_.getGameConfig().gameplayBgmArray_;
+        std::vector<std::string> gameplayBgmPaths{};
+        gameplayBgmPaths.reserve(gameplayBgmArray.size());
+
+        for (const auto& gameplayBgmName : gameplayBgmArray)
+        {
+            gameplayBgmPaths.emplace_back(outGameContentLoader_.createGameplayBgmPath(gameplayBgmName));
+        }
+
+        const auto loadGameplayBgmResult = outSoundWaveStore_.loadSoundWaves(gameplayBgmPaths, outGameplaySoundWaves_);
+
+        if (!loadGameplayBgmResult.isSucceeded())
+        {
+            std::cerr << loadGameplayBgmResult.getErrorMessage();
+            return 1;
+        }
+
         return 0;
     }
 
@@ -159,11 +275,17 @@ namespace Uncarved::GameSpace
 
         if (introStepCount == 0)
         {
-            setGameFlowState(GameFlowState::Gameplay);
+            if (!transitionGameFlowState(GameFlowState::Gameplay))
+            {
+                return 1;
+            }
         }
         else
         {
-            setGameFlowState(GameFlowState::Intro);
+            if (!transitionGameFlowState(GameFlowState::Intro))
+            {
+                return 1;
+            }
         }
 
         std::size_t introStep = 0;
@@ -171,6 +293,11 @@ namespace Uncarved::GameSpace
         while (gamePhase_ == GamePhase::RunGame)
         {
             outAppTime_.update();
+
+            if (!updateSoundPlayback())
+            {
+                return 1;
+            }
 
             switch (getGameFlowState())
             {
@@ -191,7 +318,10 @@ namespace Uncarved::GameSpace
                         case InputSpace::Intention::AdvanceIntro:
                             if (introStep + 1 >= introStepCount)
                             {
-                                setGameFlowState(GameFlowState::Gameplay);
+                                if (!transitionGameFlowState(GameFlowState::Gameplay))
+                                {
+                                    return 1;
+                                }
                             }
                             else
                             {
@@ -318,6 +448,14 @@ namespace Uncarved::GameSpace
         world_.loadActors(outGameContentLoader_.getDefinitionalActors());
 
         outGameContentLoader_.releaseLoadData();
+
+        if (!transitionGameFlowState(GameFlowState::Gameplay))
+        {
+            return {ContentSpace::ResourceError{
+                "error: failed to transition audio state.",
+                ContentSpace::ResourceErrorType::LoadFailed
+            }};
+        }
 
         return {};
     }

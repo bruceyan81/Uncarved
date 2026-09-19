@@ -22,6 +22,10 @@ find_package(SDL3_mixer CONFIG REQUIRED)
 # Platform
 
 add_library(UncarvedPlatform STATIC
+    src/Platform/Audio/AudioDevice.cpp
+    src/Platform/Audio/SoundSource.cpp
+    src/Platform/Audio/SoundWave.cpp
+    src/Platform/Audio/SoundWaveStore.cpp
     src/Platform/EventPump.cpp
     src/Platform/Graphics.cpp
     src/Platform/PlatformRuntime.cpp

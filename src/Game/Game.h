@@ -12,10 +12,14 @@
 #include "Platform/TextRenderer.h"
 #include "Platform/TextureStore.h"
 
+#include <cstddef>
 #include <string_view>
+#include <vector>
 
 namespace Uncarved
 {
+    class SoundWave;
+
     namespace ContentSpace
     {
         class GameContentLoader;
@@ -24,6 +28,12 @@ namespace Uncarved
     namespace TimeSpace
     {
         class AppTime;
+    }
+
+    namespace PlatformSpace
+    {
+        class SoundSource;
+        class SoundWaveStore;
     }
 } // namespace Uncarved
 
@@ -57,6 +67,8 @@ namespace Uncarved::GameSpace
             PlatformSpace::Renderer&         outRenderer,
             PlatformSpace::TextRenderer&     outTextRenderer,
             PlatformSpace::TextureStore&     outTextureStore,
+            PlatformSpace::SoundSource&      outSoundSource,
+            PlatformSpace::SoundWaveStore&   outSoundWaveStore,
             ContentSpace::GameContentLoader& outGameContentLoader
         );
 
@@ -75,10 +87,7 @@ namespace Uncarved::GameSpace
             return gameFlowState_;
         }
 
-        void setGameFlowState(GameFlowState gameFlowState) noexcept
-        {
-            gameFlowState_ = gameFlowState;
-        }
+        bool transitionGameFlowState(GameFlowState gameFlowState);
 
     private:
         GamePhase     gamePhase_{GamePhase::None};
@@ -95,9 +104,21 @@ namespace Uncarved::GameSpace
         PlatformSpace::Renderer&         outRenderer_;
         PlatformSpace::TextRenderer&     outTextRenderer_;
         PlatformSpace::TextureStore&     outTextureStore_;
+        PlatformSpace::SoundSource&      outSoundSource_;
+        PlatformSpace::SoundWaveStore&   outSoundWaveStore_;
         ContentSpace::GameContentLoader& outGameContentLoader_;
 
+        std::vector<SoundWave*> outIntroSoundWaves_{};
+        std::vector<SoundWave*> outGameplaySoundWaves_{};
+
+        const std::vector<SoundWave*>* activeSoundWaves_{nullptr};
+        std::size_t                    activeSoundWaveIndex_{};
+
         int initializeGame();
+
+        bool updateSoundPlayback();
+
+        bool playActiveSoundWave();
 
         ContentSpace::ContentResult initializeSceneResource(std::string_view sceneName);
 
