@@ -14,7 +14,7 @@ namespace Uncarved::GameSpace
     class CommandBuffer;
     class World;
 
-    class SimulationCore
+    class SimulationCore final
     {
     public:
         void update(const World& world, const InputSpace::Intention intention, CommandBuffer& commandBuffer);

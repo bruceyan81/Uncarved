@@ -1,7 +1,7 @@
 #pragma once
 
+#include <iosfwd>
 #include <memory>
-#include <string>
 
 namespace Uncarved::PlatformSpace
 {
@@ -23,7 +23,7 @@ namespace Uncarved::PlatformSpace
         bool initialize();
 
     private:
-        class Impl;
+        struct Impl;
         std::unique_ptr<Impl> impl_;
 
         friend class Renderer;

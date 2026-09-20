@@ -1,10 +1,14 @@
 #include "Game.h"
 
+#include "Content/ContentResult.h"
 #include "Content/GameContentLoader.h"
 #include "Input/Command.h"
 #include "Input/Input.h"
 #include "Platform/Audio/SoundSource.h"
 #include "Platform/Audio/SoundWaveStore.h"
+#include "Platform/Renderer.h"
+#include "Platform/TextRenderer.h"
+#include "Platform/TextureStore.h"
 #include "Time/AppTime.h"
 
 #include <algorithm>
@@ -125,35 +129,6 @@ namespace Uncarved::GameSpace
         return true;
     }
 
-    bool GameCore::updateSoundPlayback()
-    {
-        if (activeSoundWaves_ == nullptr || activeSoundWaves_->empty())
-        {
-            return true;
-        }
-
-        if (outSoundSource_.isPlaying() || outSoundSource_.isPaused())
-        {
-            return true;
-        }
-
-        activeSoundWaveIndex_ = (activeSoundWaveIndex_ + 1) % activeSoundWaves_->size();
-
-        return playActiveSoundWave();
-    }
-
-    bool GameCore::playActiveSoundWave()
-    {
-        SoundWave* soundWave = (*activeSoundWaves_)[activeSoundWaveIndex_];
-
-        if (soundWave == nullptr)
-        {
-            return false;
-        }
-
-        return outSoundSource_.setSoundWave(*soundWave) && outSoundSource_.play();
-    }
-
     int GameCore::initializeGame()
     {
         const auto& initialSceneName = outGameContentLoader_.getGameConfig().initialSceneName_;
@@ -204,7 +179,7 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
-        const auto& introBgmArray = outGameContentLoader_.getIntroConfig().introBgmArray_;
+        const auto&              introBgmArray = outGameContentLoader_.getIntroConfig().introBgmArray_;
         std::vector<std::string> introBgmPaths{};
         introBgmPaths.reserve(introBgmArray.size());
 
@@ -221,7 +196,7 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
-        const auto& gameplayBgmArray = outGameContentLoader_.getGameConfig().gameplayBgmArray_;
+        const auto&              gameplayBgmArray = outGameContentLoader_.getGameConfig().gameplayBgmArray_;
         std::vector<std::string> gameplayBgmPaths{};
         gameplayBgmPaths.reserve(gameplayBgmArray.size());
 
@@ -239,6 +214,35 @@ namespace Uncarved::GameSpace
         }
 
         return 0;
+    }
+
+    bool GameCore::updateSoundPlayback()
+    {
+        if (activeSoundWaves_ == nullptr || activeSoundWaves_->empty())
+        {
+            return true;
+        }
+
+        if (outSoundSource_.isPlaying() || outSoundSource_.isPaused())
+        {
+            return true;
+        }
+
+        activeSoundWaveIndex_ = (activeSoundWaveIndex_ + 1) % activeSoundWaves_->size();
+
+        return playActiveSoundWave();
+    }
+
+    bool GameCore::playActiveSoundWave()
+    {
+        SoundWave* soundWave = (*activeSoundWaves_)[activeSoundWaveIndex_];
+
+        if (soundWave == nullptr)
+        {
+            return false;
+        }
+
+        return outSoundSource_.setSoundWave(*soundWave) && outSoundSource_.play();
     }
 
     ContentSpace::ContentResult GameCore::initializeSceneResource(std::string_view sceneName)

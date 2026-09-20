@@ -10,17 +10,14 @@
 namespace Uncarved
 {
     class Texture;
-
-    namespace PlatformSpace
-    {
-        class TextureStore;
-        class TextRenderer;
-        class Window;
-    } // namespace PlatformSpace
 } // namespace Uncarved
 
 namespace Uncarved::PlatformSpace
 {
+    class TextureStore;
+    class TextRenderer;
+    class Window;
+
     struct SpriteTransform
     {
         std::optional<glm::fvec2> normalizedPivot_{};
@@ -41,7 +38,7 @@ namespace Uncarved::PlatformSpace
         std::uint8_t b_{};
     };
 
-    class Renderer
+    class Renderer final
     {
     public:
         explicit Renderer(Window& outWindow);

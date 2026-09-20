@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <iosfwd>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace Uncarved
@@ -41,7 +41,7 @@ namespace Uncarved::PlatformSpace
         std::size_t getIntroTextureCount() const noexcept;
 
     private:
-        class Impl;
+        struct Impl;
         std::unique_ptr<Impl> impl_;
     };
 } // namespace Uncarved::PlatformSpace

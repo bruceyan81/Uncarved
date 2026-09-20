@@ -5,7 +5,7 @@ namespace Uncarved::GameSpace
     class CommandBuffer;
     class World;
 
-    class AiController
+    class AiController final
     {
     public:
         void updateAi(const World& world, CommandBuffer& commandBuffer);

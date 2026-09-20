@@ -7,7 +7,7 @@
 
 namespace Uncarved::ViewSpace
 {
-    class CameraManager
+    class CameraManager final
     {
     public:
         CameraManager(

@@ -12,22 +12,6 @@ namespace Uncarved::PlatformSpace
         shutdown();
     }
 
-    void AudioDevice::Impl::shutdown()
-    {
-        if (bHasMixerDevice_ && mixer_ != nullptr)
-        {
-            MIX_DestroyMixer(mixer_);
-            mixer_ = nullptr;
-            bHasMixerDevice_ = false;
-        }
-
-        if (bIsMixInitialized_)
-        {
-            MIX_Quit();
-            bIsMixInitialized_ = false;
-        }
-    }
-
     bool AudioDevice::Impl::initialize()
     {
         if (!bIsMixInitialized_)
@@ -58,6 +42,22 @@ namespace Uncarved::PlatformSpace
 
         bHasMixerDevice_ = true;
         return true;
+    }
+
+    void AudioDevice::Impl::shutdown()
+    {
+        if (bHasMixerDevice_ && mixer_ != nullptr)
+        {
+            MIX_DestroyMixer(mixer_);
+            mixer_ = nullptr;
+            bHasMixerDevice_ = false;
+        }
+
+        if (bIsMixInitialized_)
+        {
+            MIX_Quit();
+            bIsMixInitialized_ = false;
+        }
     }
 
     MIX_Mixer* AudioDevice::Impl::getMixer() const noexcept

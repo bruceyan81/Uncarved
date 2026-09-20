@@ -9,7 +9,7 @@ namespace Uncarved::InputSpace
 {
     enum class Intention;
 
-    class InputCore
+    class InputCore final
     {
     public:
         explicit InputCore(PlatformSpace::EventPump& outEventPump);

@@ -22,7 +22,7 @@ namespace Uncarved::PlatformSpace
 
         SoundWaveCache soundWaveCache_;
 
-        Impl(AudioDevice& outAudioDevice) : outAudioDevice_(outAudioDevice)
+        explicit Impl(AudioDevice& outAudioDevice) : outAudioDevice_(outAudioDevice)
         {
         }
 

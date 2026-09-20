@@ -11,7 +11,7 @@ namespace Uncarved::PlatformSpace
 {
     class AudioDevice;
 
-    class SoundSource
+    class SoundSource final
     {
     public:
         explicit SoundSource(AudioDevice& outAudioDevice);

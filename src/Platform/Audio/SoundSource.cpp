@@ -16,7 +16,7 @@ namespace Uncarved::PlatformSpace
         AudioDevice& outAudioDevice_;
         MIX_Track*   mixTrack_{nullptr};
 
-        Impl(AudioDevice& outAudioDevice) : outAudioDevice_(outAudioDevice)
+        explicit Impl(AudioDevice& outAudioDevice) : outAudioDevice_(outAudioDevice)
         {
         }
 

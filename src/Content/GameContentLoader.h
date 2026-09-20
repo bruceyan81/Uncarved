@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ContentResult.h"
 #include "DataDefinition.h"
 
 #include "Object/DefinitionalActor.h"
@@ -12,6 +11,8 @@
 
 namespace Uncarved::ContentSpace
 {
+    struct ContentResult;
+
     class GameContentLoader final
     {
     public:

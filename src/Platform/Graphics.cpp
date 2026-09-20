@@ -82,9 +82,12 @@ namespace Uncarved
 
 namespace Uncarved::PlatformSpace
 {
-    class Window::Impl final
+    struct Window::Impl final
     {
-    public:
+        SDL_Window* windowPtr_{nullptr};
+        WindowSize  windowSize_{};
+        std::string windowTitle_{};
+
         Impl(WindowSize&& windowSize, std::string&& windowTitle)
             : windowSize_(std::move(windowSize))
             , windowTitle_(std::move(windowTitle))
@@ -119,11 +122,6 @@ namespace Uncarved::PlatformSpace
         {
             return windowPtr_;
         }
-
-    private:
-        SDL_Window* windowPtr_{nullptr};
-        WindowSize  windowSize_{};
-        std::string windowTitle_{};
     };
 
     Window::Window(WindowSize&& windowSize, std::string&& windowTitle)

@@ -6,12 +6,6 @@
 #include "GameState.h"
 #include "World.h"
 
-#include "Content/ContentResult.h"
-#include "Input/Input.h"
-#include "Platform/Renderer.h"
-#include "Platform/TextRenderer.h"
-#include "Platform/TextureStore.h"
-
 #include <cstddef>
 #include <string_view>
 #include <vector>
@@ -22,7 +16,13 @@ namespace Uncarved
 
     namespace ContentSpace
     {
+        struct ContentResult;
         class GameContentLoader;
+    }
+
+    namespace InputSpace
+    {
+        class InputCore;
     }
 
     namespace TimeSpace
@@ -32,8 +32,11 @@ namespace Uncarved
 
     namespace PlatformSpace
     {
+        class Renderer;
         class SoundSource;
         class SoundWaveStore;
+        class TextRenderer;
+        class TextureStore;
     }
 } // namespace Uncarved
 
@@ -55,7 +58,7 @@ namespace Uncarved::GameSpace
         Gameplay
     };
 
-    class GameCore
+    class GameCore final
     {
     public:
         GameCore(

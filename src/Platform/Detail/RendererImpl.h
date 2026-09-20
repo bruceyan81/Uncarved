@@ -10,6 +10,10 @@ namespace Uncarved::PlatformSpace
 
     struct Renderer::Impl final
     {
+        Window&       outWindow_;
+        SDL_Renderer* renderer_{nullptr};
+        Color         clearColor_{};
+
         explicit Impl(Window& outWindow);
         ~Impl();
 
@@ -21,9 +25,5 @@ namespace Uncarved::PlatformSpace
         bool present();
 
         SDL_Renderer* getRenderer() const noexcept;
-
-        Window&       outWindow_;
-        SDL_Renderer* renderer_{nullptr};
-        Color         clearColor_{};
     };
 } // namespace Uncarved::PlatformSpace

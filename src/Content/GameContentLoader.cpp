@@ -1,5 +1,7 @@
 #include "GameContentLoader.h"
 
+#include "ContentResult.h"
+
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 

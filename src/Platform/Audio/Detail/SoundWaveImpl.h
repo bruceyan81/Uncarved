@@ -8,9 +8,9 @@ namespace Uncarved
 {
     struct SoundWave::Impl final
     {
-        ~Impl();
-
         MIX_Audio* soundWave_{nullptr};
+
+        ~Impl();
 
         MIX_Audio* getSoundWave() const noexcept;
     };
