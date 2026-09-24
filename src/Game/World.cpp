@@ -1,6 +1,12 @@
 #include "World.h"
 
+#include <cstddef>
 #include <utility>
+
+namespace Uncarved::ViewSpace
+{
+    class Sprite;
+}
 
 namespace Uncarved::GameSpace
 {
@@ -49,7 +55,10 @@ namespace Uncarved::GameSpace
         return &actors_[it->second];
     }
 
-    void World::loadActors(std::span<const ObjectSpace::DefinitionalActor> definitionalActors)
+    std::optional<World> World::createReplacement(
+        std::span<const ObjectSpace::DefinitionalActor>           definitionalActors,
+        const std::unordered_map<std::string, ViewSpace::Sprite>& sprites
+    ) const
     {
         World nextWorld{};
 
@@ -57,12 +66,26 @@ namespace Uncarved::GameSpace
 
         for (const auto& definitionalActor : definitionalActors)
         {
-            nextWorld.addActor(definitionalActor);
+            const ViewSpace::Sprite* sprite = nullptr;
+
+            if (definitionalActor.viewSpriteName_)
+            {
+                const auto spriteIt = sprites.find(*definitionalActor.viewSpriteName_);
+
+                if (spriteIt == sprites.end())
+                {
+                    return std::nullopt;
+                }
+
+                sprite = &spriteIt->second;
+            }
+
+            nextWorld.addActor(definitionalActor, sprite);
         }
 
         nextWorld.worldTime_ = worldTime_;
 
-        *this = std::move(nextWorld);
+        return nextWorld;
     }
 
     void World::clearWorld() noexcept
@@ -77,18 +100,12 @@ namespace Uncarved::GameSpace
         worldTime_.updateTime(deltaTime);
     }
 
-    void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor)
+    void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor, const ViewSpace::Sprite* outSprite)
     {
         std::optional<glm::fvec2> normalizedPivot = std::nullopt;
         if (definitionalActor.normalizedPivotX_.has_value() && definitionalActor.normalizedPivotY_.has_value())
         {
             normalizedPivot = {*(definitionalActor.normalizedPivotX_), *(definitionalActor.normalizedPivotY_)};
-        }
-
-        std::optional<std::string> viewTextureName = std::nullopt;
-        if (definitionalActor.viewTextureName_.has_value())
-        {
-            viewTextureName = definitionalActor.viewTextureName_;
         }
 
         actors_.emplace_back(
@@ -99,7 +116,7 @@ namespace Uncarved::GameSpace
             glm::fvec2{definitionalActor.scaleX_, definitionalActor.scaleY_},
             definitionalActor.actorName_,
             normalizedPivot,
-            viewTextureName
+            outSprite
         );
 
         const std::size_t actorIndex = actors_.size() - 1;

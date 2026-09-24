@@ -6,12 +6,14 @@
 
 #include "Content/ContentResult.h"
 
+#include <glm/glm.hpp>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -203,35 +205,36 @@ namespace Uncarved::PlatformSpace
         return SDL_RenderTexture(renderer_, texture.impl_->getTexture(), nullptr, nullptr);
     }
 
-    bool Renderer::Impl::renderTexture(const Texture& texture, const SpriteTransform& spriteTransform)
+    bool Renderer::Impl::renderTexture(const Texture& texture, const SpriteDrawTransform& spriteDrawTransform)
     {
         if (renderer_ == nullptr || texture.impl_->getTexture() == nullptr)
         {
             return false;
         }
 
-        const float textureWidth = spriteTransform.scale_.x * (texture.getWidth());
-        const float textureHeight = spriteTransform.scale_.y * (texture.getHeight());
+        const float textureWidth = spriteDrawTransform.screenSizePixels_.x;
+        const float textureHeight = spriteDrawTransform.screenSizePixels_.y;
 
-        SDL_FRect dstRect{spriteTransform.position_.x, spriteTransform.position_.y, textureWidth, textureHeight};
+        const glm::fvec2 normalizedPivot = spriteDrawTransform.normalizedPivotPoint_.value_or(glm::fvec2{0.0f, 0.0f});
+        const float      pivotX = textureWidth * normalizedPivot.x;
+        const float      pivotY = textureHeight * normalizedPivot.y;
 
-        const auto normalizedPivot = spriteTransform.normalizedPivot_;
+        SDL_FRect dstRect{
+            spriteDrawTransform.screenPositionPixels_.x - pivotX,
+            spriteDrawTransform.screenPositionPixels_.y - pivotY,
+            textureWidth,
+            textureHeight
+        };
 
-        SDL_FPoint rotationCenter{};
-
-        if (normalizedPivot.has_value())
-        {
-            rotationCenter.x = textureWidth * (*normalizedPivot).x;
-            rotationCenter.y = textureHeight * (*normalizedPivot).y;
-        }
+        SDL_FPoint rotationCenter{pivotX, pivotY};
 
         return SDL_RenderTextureRotated(
             renderer_,
             texture.impl_->getTexture(),
             nullptr,
             &dstRect,
-            spriteTransform.getRotationDegrees(),
-            normalizedPivot ? &rotationCenter : nullptr,
+            spriteDrawTransform.getRotationDegrees(),
+            &rotationCenter,
             SDL_FLIP_NONE
         );
     }
@@ -239,6 +242,19 @@ namespace Uncarved::PlatformSpace
     bool Renderer::Impl::present()
     {
         return SDL_RenderPresent(renderer_);
+    }
+
+    std::optional<glm::ivec2> Renderer::Impl::getViewportPixels() const
+    {
+        int height{0};
+        int width{0};
+
+        if (!SDL_GetRenderOutputSize(renderer_, &height, &width) || height < 0 || width < 0)
+        {
+            return std::nullopt;
+        }
+
+        return glm::ivec2{height, width};
     }
 
     SDL_Renderer* Renderer::Impl::getRenderer() const noexcept
@@ -272,14 +288,19 @@ namespace Uncarved::PlatformSpace
         return impl_->renderTexture(texture);
     }
 
-    bool Renderer::renderTexture(const Texture& texture, const SpriteTransform& spriteTransform)
+    bool Renderer::renderTexture(const Texture& texture, const SpriteDrawTransform& spriteDrawTransform)
     {
-        return impl_->renderTexture(texture, spriteTransform);
+        return impl_->renderTexture(texture, spriteDrawTransform);
     }
 
     bool Renderer::present()
     {
         return impl_->present();
+    }
+
+    std::optional<glm::ivec2> Renderer::getViewportPixels() const
+    {
+        return impl_->getViewportPixels();
     }
 } // namespace Uncarved::PlatformSpace
 

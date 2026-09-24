@@ -17,7 +17,7 @@ namespace Uncarved::ObjectSpace
         float rotationRadians_{};
 
         std::string                actorName_{};
-        std::optional<std::string> viewTextureName_{};
+        std::optional<std::string> viewSpriteName_{};
         std::optional<float>       normalizedPivotX_;
         std::optional<float>       normalizedPivotY_;
     };

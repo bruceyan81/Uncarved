@@ -18,11 +18,11 @@ namespace Uncarved::PlatformSpace
     class TextRenderer;
     class Window;
 
-    struct SpriteTransform
+    struct SpriteDrawTransform
     {
-        std::optional<glm::fvec2> normalizedPivot_{};
-        glm::fvec2                position_{};
-        glm::fvec2                scale_{1.0f, 1.0f};
+        std::optional<glm::fvec2> normalizedPivotPoint_{};
+        glm::fvec2                screenPositionPixels_{};
+        glm::fvec2                screenSizePixels_{1.0f, 1.0f};
         double                    rotationRadians_{};
 
         double getRotationDegrees() const noexcept
@@ -59,9 +59,11 @@ namespace Uncarved::PlatformSpace
 
         bool renderTexture(const Texture& texture);
 
-        bool renderTexture(const Texture& texture, const SpriteTransform& spriteTransform);
+        bool renderTexture(const Texture& texture, const SpriteDrawTransform& spriteTransform);
 
         bool present();
+
+        std::optional<glm::ivec2> getViewportPixels() const;
 
     private:
         struct Impl;

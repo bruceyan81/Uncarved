@@ -6,6 +6,8 @@
 #include "GameState.h"
 #include "World.h"
 
+#include "View/Camera2D.h"
+
 #include <cstddef>
 #include <string_view>
 #include <vector>
@@ -17,8 +19,9 @@ namespace Uncarved
     namespace ContentSpace
     {
         struct ContentResult;
+
         class GameContentLoader;
-    }
+    } // namespace ContentSpace
 
     namespace InputSpace
     {
@@ -37,7 +40,7 @@ namespace Uncarved
         class SoundWaveStore;
         class TextRenderer;
         class TextureStore;
-    }
+    } // namespace PlatformSpace
 } // namespace Uncarved
 
 namespace Uncarved::GameSpace
@@ -62,8 +65,9 @@ namespace Uncarved::GameSpace
     {
     public:
         GameCore(
-            GameConfig&&     gameConfig,
-            SimulationCore&& simulationCore,
+            GameConfig&&          gameConfig,
+            SimulationCore&&      simulationCore,
+            ViewSpace::Camera2D&& camera2d,
 
             TimeSpace::AppTime&              outAppTime,
             InputSpace::InputCore&           outInputCore,
@@ -99,8 +103,9 @@ namespace Uncarved::GameSpace
         World         world_{};
         CommandBuffer commandBuffer_{};
 
-        GameConfig     gameConfig_;
-        SimulationCore simulationCore_;
+        GameConfig          gameConfig_;
+        SimulationCore      simulationCore_;
+        ViewSpace::Camera2D camera2d_;
 
         TimeSpace::AppTime&              outAppTime_;
         InputSpace::InputCore&           outInputCore_;
@@ -125,13 +130,13 @@ namespace Uncarved::GameSpace
 
         ContentSpace::ContentResult initializeSceneResource(std::string_view sceneName);
 
-        int unloadScene();
-
         int runGame();
 
         int endGame();
 
         ContentSpace::ContentResult processSceneTransition(std::string_view nextSceneName);
+
+        ContentSpace::ContentResult loadWorldTextures(const World& world);
 
         void commitCommands() noexcept;
 

@@ -49,7 +49,7 @@ namespace Uncarved::ContentSpace::Definition
         std::optional<std::string> actorName_;
         std::optional<float>       normalizedPivotX_;
         std::optional<float>       normalizedPivotY_;
-        std::optional<std::string> viewTextureName_;
+        std::optional<std::string> viewSpriteName_;
     };
 
     struct GameConfigDefinition final
@@ -64,11 +64,12 @@ namespace Uncarved::ContentSpace::Definition
 
     struct RenderingConfigDefinition final
     {
-        int xResolution_{640};
-        int yResolution_{360};
-        int clearColorR_{0};
-        int clearColorG_{0};
-        int clearColorB_{0};
+        float cameraOrthoWidth_{0.0f};
+        int   xResolution_{640};
+        int   yResolution_{360};
+        int   clearColorR_{0};
+        int   clearColorG_{0};
+        int   clearColorB_{0};
     };
 
     struct IntroConfigDefinition final

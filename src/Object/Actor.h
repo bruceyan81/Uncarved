@@ -1,5 +1,7 @@
 #pragma once
 
+#include "View/Sprite.h"
+
 #include <glm/glm.hpp>
 
 #include <cstdint>
@@ -10,7 +12,7 @@
 namespace Uncarved::GameSpace
 {
     class World;
-}
+} // namespace Uncarved::GameSpace
 
 namespace Uncarved::ObjectSpace
 {
@@ -20,14 +22,15 @@ namespace Uncarved::ObjectSpace
     {
     public:
         Actor(
-            bool                       bBlocking,
-            float                      rotationRadians,
-            glm::ivec2                 position,
-            glm::ivec2                 velocity,
-            glm::fvec2                 scale,
-            std::string                actorName,
-            std::optional<glm::fvec2>  normalizedPivot,
-            std::optional<std::string> viewTextureName
+            bool                      bBlocking,
+            float                     rotationRadians,
+            glm::ivec2                position,
+            glm::ivec2                velocity,
+            glm::fvec2                scale,
+            std::string               actorName,
+            std::optional<glm::fvec2> normalizedPivot,
+
+            const ViewSpace::Sprite* outSprite
         );
 
         Actor(const Actor&) = delete;
@@ -78,12 +81,12 @@ namespace Uncarved::ObjectSpace
 
         const std::optional<glm::fvec2>& getNormalizedPivot() const noexcept
         {
-            return normalizedPivot_;
+            return normalizedPivotPoint_;
         }
 
-        const std::optional<std::string>& getViewTextureName() const noexcept
+        const ViewSpace::Sprite* getSprite() const noexcept
         {
-            return viewTextureName_;
+            return outSprite_;
         }
 
         ~Actor() = default;
@@ -92,15 +95,16 @@ namespace Uncarved::ObjectSpace
         inline static ActorId    actorCount_ = 0;
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
-        bool                       bBlocking_;
-        float                      rotationRadians_;
-        ActorId                    id_;
-        glm::ivec2                 position_;
-        glm::ivec2                 velocity_;
-        glm::fvec2                 scale_;
-        std::string                actorName_;
-        std::optional<glm::fvec2>  normalizedPivot_;
-        std::optional<std::string> viewTextureName_;
+        bool                      bBlocking_;
+        float                     rotationRadians_;
+        ActorId                   id_;
+        glm::ivec2                position_;
+        glm::ivec2                velocity_;
+        glm::fvec2                scale_;
+        std::string               actorName_;
+        std::optional<glm::fvec2> normalizedPivotPoint_;
+
+        const ViewSpace::Sprite* outSprite_;
 
         friend class GameSpace::World;
 

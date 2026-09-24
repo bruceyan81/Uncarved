@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstddef>
-#include <iosfwd>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Uncarved

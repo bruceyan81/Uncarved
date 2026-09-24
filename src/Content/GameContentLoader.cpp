@@ -49,9 +49,9 @@ namespace Uncarved
                 patch.actorName_ = it->value.GetString();
             }
 
-            if (const auto it = rawActor.FindMember("view_texture"); it != rawActor.MemberEnd() && it->value.IsString())
+            if (const auto it = rawActor.FindMember("view_sprite"); it != rawActor.MemberEnd() && it->value.IsString())
             {
-                patch.viewTextureName_ = it->value.GetString();
+                patch.viewSpriteName_ = it->value.GetString();
             }
 
             if (const auto it = rawActor.FindMember("transform_scale_x");
@@ -147,9 +147,9 @@ namespace Uncarved
                 outDefinition.normalizedPivotY_ = *outPatch.normalizedPivotY_;
             }
 
-            if (outPatch.viewTextureName_)
+            if (outPatch.viewSpriteName_)
             {
-                outDefinition.viewTextureName_ = *outPatch.viewTextureName_;
+                outDefinition.viewSpriteName_ = *outPatch.viewSpriteName_;
             }
         }
 
@@ -193,10 +193,12 @@ namespace Uncarved::ContentSpace
     constexpr std::string_view kGameConfigFileName = "Game";
     constexpr std::string_view kRenderingConfigFileName = "Rendering";
     constexpr std::string_view kIntroConfigFileName = "Intro";
+    constexpr std::string_view kSpritesFileName = "Sprites";
 
     constexpr std::string_view kConfigFilePostfix = ".config";
     constexpr std::string_view kPngPostfix = ".png";
     constexpr std::string_view kScenePostfix = ".scene";
+    constexpr std::string_view kSpritePostfix = ".sprite";
     constexpr std::string_view kTemplatePostfix = ".template";
     constexpr std::string_view kTtfPostfix = ".ttf";
     constexpr std::string_view kMp3Postfix = ".mp3";
@@ -354,7 +356,7 @@ namespace Uncarved::ContentSpace
 
         if (!Fs::exists(renderingConfigPath))
         {
-            return {FileError{"info: Resources/Rendering.config missing.", FileErrorType::InvalidPath}};
+            return {FileError{"error: Resources/Rendering.config is missing.", FileErrorType::InvalidPath}};
         }
 
         return {};
@@ -372,15 +374,27 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {ParseError{"info: Resources/Rendering.config has parse error.", ParseErrorType::ParseFailed}};
+            return {ParseError{"error: Resources/Rendering.config has parse error.", ParseErrorType::ParseFailed}};
         }
 
         if (!document.IsObject())
         {
-            return {ParseError{"info: Resources/Rendering.config is not Object.", ParseErrorType::InvalidStructure}};
+            return {ParseError{"error: Resources/Rendering.config is not Object.", ParseErrorType::InvalidStructure}};
         }
 
         Definition::RenderingConfigDefinition tempRenderingConfigDefinition{};
+
+        if (document.HasMember("camera_ortho_width") && document["camera_ortho_width"].IsNumber())
+        {
+            tempRenderingConfigDefinition.cameraOrthoWidth_ = document["camera_ortho_width"].GetFloat();
+        }
+        else
+        {
+            return {ValidationError{
+                "error: Resources/Rendering.config has invalid camera_ortho_width.",
+                ValidationErrorType::InvalidData
+            }};
+        }
 
         if (document.HasMember("x_resolution") && document["x_resolution"].IsInt())
         {
@@ -515,6 +529,100 @@ namespace Uncarved::ContentSpace
         }
 
         introConfigDefinition_ = std::move(tempIntroConfigDefinition);
+
+        return {};
+    }
+
+    ContentResult GameContentLoader::checkSprites() const
+    {
+        const Fs::path spritePath = (gResourceRoot / kSpritesFileName).replace_extension(kSpritePostfix);
+
+        if (!Fs::exists(spritePath) || !Fs::is_regular_file(spritePath))
+        {
+            return {FileError{"error: Resources/Sprites.sprite is missing.", FileErrorType::InvalidPath}};
+        }
+
+        return {};
+    }
+
+    ContentResult GameContentLoader::loadSprites()
+    {
+        std::ifstream inputFileStream{(gResourceRoot / kSpritesFileName).replace_extension(kSpritePostfix)};
+
+        rapidjson::IStreamWrapper streamWrapper{inputFileStream};
+
+        rapidjson::Document document;
+
+        document.ParseStream(streamWrapper);
+
+        if (document.HasParseError())
+        {
+            return {ParseError{
+                "error: Resources/Sprites.sprite has parse error.",
+                ParseErrorType::ParseFailed
+            }};
+        }
+
+        if (!document.IsObject())
+        {
+            return {ParseError{
+                "error: Resources/Sprites.sprite is not Object.",
+                ParseErrorType::InvalidStructure
+            }};
+        }
+
+        if (!document.HasMember("sprites") || !document["sprites"].IsObject())
+        {
+            return {ValidationError{
+                "error: Resources/Sprites.sprite has invalid sprites.",
+                ValidationErrorType::InvalidData
+            }};
+        }
+
+        const auto& sprites = document["sprites"];
+
+        std::unordered_map<std::string, ViewSpace::Sprite> tempSpritesByName{};
+        tempSpritesByName.reserve(sprites.MemberCount());
+
+        for (auto spriteIt = sprites.MemberBegin(); spriteIt != sprites.MemberEnd(); ++spriteIt)
+        {
+            const auto& sprite = spriteIt->value;
+
+            if (!sprite.IsObject())
+            {
+                return {ValidationError{"error: sprite is not Object.", ValidationErrorType::InvalidData}};
+            }
+
+            const auto textureIt = sprite.FindMember("texture");
+            const auto pixelsPerWUIt = sprite.FindMember("pixels_per_world_unit");
+
+            if (textureIt == sprite.MemberEnd() || !textureIt->value.IsString())
+            {
+                return {ValidationError{"error: sprite's texture is not String.", ValidationErrorType::InvalidData}};
+            }
+
+            if (pixelsPerWUIt == sprite.MemberEnd() || !pixelsPerWUIt->value.IsNumber())
+            {
+                return {ValidationError{
+                    "error: sprite's pixels_per_world_unit is not number.",
+                    ValidationErrorType::InvalidData
+                }};
+            }
+
+            auto spriteValue = ViewSpace::Sprite::createSprite(
+                std::string{textureIt->value.GetString()},
+                pixelsPerWUIt->value.GetFloat()
+            );
+
+            if (!spriteValue)
+            {
+                return {ValidationError{"error: sprite has invalid data.", ValidationErrorType::InvalidData}};
+            }
+
+            tempSpritesByName.emplace(spriteIt->name.GetString(), std::move(*spriteValue));
+        }
+
+        sprites_ = std::move(tempSpritesByName);
 
         return {};
     }

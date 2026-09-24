@@ -5,14 +5,15 @@
 namespace Uncarved::ObjectSpace
 {
     Actor::Actor(
-        bool                       bBlocking,
-        float                      rotationRadians,
-        glm::ivec2                 position,
-        glm::ivec2                 velocity,
-        glm::fvec2                 scale,
-        std::string                actorName,
-        std::optional<glm::fvec2>  normalizedPivot,
-        std::optional<std::string> viewTextureName
+        bool                      bBlocking,
+        float                     rotationRadians,
+        glm::ivec2                position,
+        glm::ivec2                velocity,
+        glm::fvec2                scale,
+        std::string               actorName,
+        std::optional<glm::fvec2> normalizedPivot,
+
+        const ViewSpace::Sprite* outSprite
     )
         : bBlocking_(bBlocking)
         , rotationRadians_(rotationRadians)
@@ -20,8 +21,8 @@ namespace Uncarved::ObjectSpace
         , velocity_(std::move(velocity))
         , scale_(std::move(scale))
         , actorName_(std::move(actorName))
-        , normalizedPivot_(std::move(normalizedPivot))
-        , viewTextureName_(std::move(viewTextureName))
+        , normalizedPivotPoint_(std::move(normalizedPivot))
+        , outSprite_(outSprite)
     {
         id_ = actorCount_++;
     }
@@ -34,8 +35,8 @@ namespace Uncarved::ObjectSpace
         , velocity_(std::move(other.velocity_))
         , scale_(std::move(other.scale_))
         , actorName_(std::move(other.actorName_))
-        , normalizedPivot_(std::move(other.normalizedPivot_))
-        , viewTextureName_(std::move(other.viewTextureName_))
+        , normalizedPivotPoint_(std::move(other.normalizedPivotPoint_))
+        , outSprite_(other.outSprite_)
     {
     }
 } // namespace Uncarved::ObjectSpace

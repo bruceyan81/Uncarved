@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#include "Content/ContentResult.h"
 #include "Game/Game.h"
 #include "Input/Input.h"
 #include "Platform/Audio/AudioDevice.h"
@@ -14,9 +15,12 @@
 #include "Platform/TextureStore.h"
 #include "Platform/Window.h"
 #include "Time/AppTime.h"
+#include "View/Camera2D.h"
 
 #include <cstdint>
 #include <iostream>
+#include <string>
+#include <utility>
 
 namespace Uncarved::ApplicationSpace
 {
@@ -53,18 +57,18 @@ namespace Uncarved::ApplicationSpace
 
         const auto renderingConfigCheckResult = gameContentLoader_.checkRenderingConfig();
 
-        if (renderingConfigCheckResult.isSucceeded())
+        if (!renderingConfigCheckResult.isSucceeded())
         {
-            const auto renderingConfigLoadResult = gameContentLoader_.loadRenderingConfig();
-
-            if (!renderingConfigLoadResult.isSucceeded())
-            {
-                std::cout << renderingConfigLoadResult.getErrorMessage();
-            }
+            std::cerr << renderingConfigCheckResult.getErrorMessage();
+            return 1;
         }
-        else
+
+        const auto renderingConfigLoadResult = gameContentLoader_.loadRenderingConfig();
+
+        if (!renderingConfigLoadResult.isSucceeded())
         {
-            std::cout << renderingConfigCheckResult.getErrorMessage();
+            std::cerr << renderingConfigLoadResult.getErrorMessage();
+            return 1;
         }
 
         const auto introConfigCheckResult = gameContentLoader_.checkIntroConfig();
@@ -80,6 +84,22 @@ namespace Uncarved::ApplicationSpace
         if (!introConfigLoadResult.isSucceeded())
         {
             std::cerr << introConfigLoadResult.getErrorMessage();
+            return 1;
+        }
+
+        const auto spritesCheckResult = gameContentLoader_.checkSprites();
+
+        if (!spritesCheckResult.isSucceeded())
+        {
+            std::cerr << spritesCheckResult.getErrorMessage();
+            return 1;
+        }
+
+        const auto spritesLoadResult = gameContentLoader_.loadSprites();
+
+        if (!spritesLoadResult.isSucceeded())
+        {
+            std::cerr << spritesLoadResult.getErrorMessage();
             return 1;
         }
 
@@ -194,9 +214,17 @@ namespace Uncarved::ApplicationSpace
                 return 1;
             }
 
+            auto camera2d = ViewSpace::Camera2D::createCamera2D(renderingConfig.cameraOrthoWidth_);
+
+            if (!camera2d.has_value())
+            {
+                return 1;
+            }
+
             GameSpace::GameCore gameCore{
                 {gameConfig.health_, gameConfig.score_, introConfig.introText_},
                 GameSpace::SimulationCore{},
+                std::move(*camera2d),
                 appTime_,
                 inputCore,
                 renderer,

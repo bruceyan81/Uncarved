@@ -8,6 +8,7 @@
 
 #include <optional>
 #include <span>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -49,7 +50,10 @@ namespace Uncarved::GameSpace
 
         const ObjectSpace::Actor* getActorById(ObjectSpace::ActorId id) const noexcept;
 
-        void loadActors(std::span<const ObjectSpace::DefinitionalActor> definitionalActors);
+        std::optional<World> createReplacement(
+            std::span<const ObjectSpace::DefinitionalActor>                definitionalActors,
+            const std::unordered_map<std::string, ViewSpace::Sprite>& spritesByName
+        ) const;
 
         void clearWorld() noexcept;
 
@@ -65,7 +69,7 @@ namespace Uncarved::GameSpace
         std::vector<ObjectSpace::Actor>                       actors_{};
         std::unordered_map<ObjectSpace::ActorId, std::size_t> actorIndexById_{};
 
-        void addActor(const ObjectSpace::DefinitionalActor& definitionalActor);
+        void addActor(const ObjectSpace::DefinitionalActor& definitionalActor, const ViewSpace::Sprite* outSprite);
 
         TimeSpace::WorldTime worldTime_{};
     };

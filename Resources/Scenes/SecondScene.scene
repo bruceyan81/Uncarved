@@ -2,7 +2,7 @@
   "actors": [
     {
       "blocking": false,
-      "view_texture": "Character",
+      "view_sprite": "Character",
       "transform_scale_x": 1.0,
       "transform_scale_y": 1.0,
       "transform_rotation_radians": 0.0,

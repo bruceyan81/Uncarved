@@ -1,0 +1,8 @@
+{
+  "sprites": {
+    "Character": {
+      "texture": "Character",
+      "pixels_per_world_unit": 32.0
+    }
+  }
+}

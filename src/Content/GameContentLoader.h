@@ -3,6 +3,7 @@
 #include "DataDefinition.h"
 
 #include "Object/DefinitionalActor.h"
+#include "View/Sprite.h"
 
 #include <string>
 #include <string_view>
@@ -46,6 +47,10 @@ namespace Uncarved::ContentSpace
 
         ContentResult loadIntroConfig();
 
+        ContentResult checkSprites() const;
+
+        ContentResult loadSprites();
+
         ContentResult checkActorTemplate(std::string_view actorName) const;
 
         ContentResult loadActorTemplate(std::string_view actorName);
@@ -81,6 +86,11 @@ namespace Uncarved::ContentSpace
             return definitionalActors_;
         }
 
+        const std::unordered_map<std::string, ViewSpace::Sprite>& getSprites() const noexcept
+        {
+            return sprites_;
+        }
+
     private:
         Definition::GameConfigDefinition      gameConfigDefinition_;
         Definition::RenderingConfigDefinition renderingConfigDefinition_;
@@ -88,6 +98,8 @@ namespace Uncarved::ContentSpace
 
         std::vector<Definition::ActorDataPatch>     rawActors_;
         std::vector<ObjectSpace::DefinitionalActor> definitionalActors_;
+
+        std::unordered_map<std::string, ViewSpace::Sprite>          sprites_;
 
         std::unordered_map<std::string, Definition::ActorDataPatch> actorTemplatePatchesByName_;
     };

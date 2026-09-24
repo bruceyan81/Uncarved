@@ -8,12 +8,17 @@
 #include "Platform/Audio/SoundWaveStore.h"
 #include "Platform/Renderer.h"
 #include "Platform/TextRenderer.h"
+#include "Platform/Texture.h"
 #include "Platform/TextureStore.h"
 #include "Time/AppTime.h"
+#include "View/Sprite.h"
+
+#include <glm/glm.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -21,8 +26,9 @@
 namespace Uncarved::GameSpace
 {
     GameCore::GameCore(
-        GameConfig&&     gameConfig,
-        SimulationCore&& simulationCore,
+        GameConfig&&          gameConfig,
+        SimulationCore&&      simulationCore,
+        ViewSpace::Camera2D&& camera2d,
 
         TimeSpace::AppTime&              outAppTime,
         InputSpace::InputCore&           outInputCore,
@@ -35,6 +41,7 @@ namespace Uncarved::GameSpace
     )
         : gameConfig_(std::move(gameConfig))
         , simulationCore_(std::move(simulationCore))
+        , camera2d_(std::move(camera2d))
 
         , outAppTime_(outAppTime)
         , outInputCore_(outInputCore)
@@ -141,43 +148,27 @@ namespace Uncarved::GameSpace
             return 1;
         }
 
-        world_.loadActors(outGameContentLoader_.getDefinitionalActors());
+        auto initialWorld =
+            world_.createReplacement(outGameContentLoader_.getDefinitionalActors(), outGameContentLoader_.getSprites());
 
-        outGameContentLoader_.releaseLoadData();
-
-        gameState_.initialize(gameConfig_.health_, gameConfig_.score_);
-
-        std::vector<std::string> actorTexturePaths{};
-
-        const auto& actors = world_.getActors();
-
-        actorTexturePaths.reserve(actors.size());
-
-        for (auto& actor : world_.getActors())
+        if (!initialWorld.has_value())
         {
-            const auto& viewTextureName = actor.getViewTextureName();
-
-            if (!viewTextureName.has_value())
-            {
-                continue;
-            }
-
-            std::string path = outGameContentLoader_.createActorTexturePath(*viewTextureName);
-
-            if (!path.empty())
-            {
-                actorTexturePaths.push_back(path);
-                outTextureStore_.registerActorTexturePath(std::string{*viewTextureName}, std::move(path));
-            }
+            return 1;
         }
 
-        const auto& loadActorTextureResult = outTextureStore_.loadActorTextures(actorTexturePaths);
+        const auto& loadActorTextureResult = loadWorldTextures(*initialWorld);
 
         if (!loadActorTextureResult.isSucceeded())
         {
             std::cerr << loadActorTextureResult.getErrorMessage();
             return 1;
         }
+
+        world_ = std::move(*initialWorld);
+
+        outGameContentLoader_.releaseLoadData();
+
+        gameState_.initialize(gameConfig_.health_, gameConfig_.score_);
 
         const auto&              introBgmArray = outGameContentLoader_.getIntroConfig().introBgmArray_;
         std::vector<std::string> introBgmPaths{};
@@ -262,13 +253,6 @@ namespace Uncarved::GameSpace
         }
 
         return {};
-    }
-
-    int GameCore::unloadScene()
-    {
-        world_.clearWorld();
-
-        return 0;
     }
 
     int GameCore::runGame()
@@ -391,29 +375,51 @@ namespace Uncarved::GameSpace
                         return 1;
                     }
 
+                    const auto viewportPixels = outRenderer_.getViewportPixels();
+
+                    if (!viewportPixels.has_value())
+                    {
+                        return 1;
+                    }
+
+                    if (viewportPixels->x == 0 || viewportPixels->y == 0)
+                    {
+                        continue;
+                    }
+
+                    const float viewportPixelsPerWU = camera2d_.getViewportPixelsPerWorldUnit(viewportPixels->x);
+
                     for (const auto& actor : world_.getActors())
                     {
-                        const auto& actorTextureName = actor.getViewTextureName();
+                        const auto* sprite = actor.getSprite();
 
-                        if (!actorTextureName.has_value())
+                        if (sprite == nullptr)
                         {
                             continue;
                         }
 
-                        const Texture* texture = outTextureStore_.getActorTextureByName(*actorTextureName);
+                        const Texture* texture = outTextureStore_.getActorTextureByName(sprite->getTextureName());
 
                         if (texture == nullptr)
                         {
                             return 1;
                         }
 
+                        const glm::fvec2 screenPositionPixels =
+                            camera2d_.projectWorldToViewport(glm::fvec2{actor.getPosition()}, *viewportPixels);
+
+                        const float screenSizeWidth = texture->getWidth() / actor.getSprite()->getPixelsPerWorldUnit()
+                            * actor.getScale().x * viewportPixelsPerWU;
+
+                        const float screenSizeHeight = texture->getHeight() / actor.getSprite()->getPixelsPerWorldUnit()
+                            * actor.getScale().y * viewportPixelsPerWU;
+
                         if (!outRenderer_.renderTexture(
                                 *texture,
-                                PlatformSpace::SpriteTransform
-                                {
+                                PlatformSpace::SpriteDrawTransform{
                                     actor.getNormalizedPivot(),
-                                    actor.getPosition(),
-                                    actor.getScale(),
+                                    screenPositionPixels,
+                                    glm::fvec2{screenSizeWidth, screenSizeHeight},
                                     actor.getRotationRadians()
                                 }
                             ))
@@ -447,9 +453,25 @@ namespace Uncarved::GameSpace
             return initialResult;
         }
 
-        unloadScene();
+        auto nextWorld =
+            world_.createReplacement(outGameContentLoader_.getDefinitionalActors(), outGameContentLoader_.getSprites());
 
-        world_.loadActors(outGameContentLoader_.getDefinitionalActors());
+        if (!nextWorld.has_value())
+        {
+            return {ContentSpace::ResourceError{
+                "error: failed to resolve actor sprites.",
+                ContentSpace::ResourceErrorType::LoadFailed
+            }};
+        }
+
+        const auto textureResult = loadWorldTextures(*nextWorld);
+
+        if (!textureResult.isSucceeded())
+        {
+            return textureResult;
+        }
+
+        world_ = std::move(*nextWorld);
 
         outGameContentLoader_.releaseLoadData();
 
@@ -462,6 +484,36 @@ namespace Uncarved::GameSpace
         }
 
         return {};
+    }
+
+    ContentSpace::ContentResult GameCore::loadWorldTextures(const World& world)
+    {
+        const auto& actors = world.getActors();
+
+        std::vector<std::string> texturePaths{};
+
+        texturePaths.reserve(actors.size());
+
+        for (const auto& actor : actors)
+        {
+            const ViewSpace::Sprite* actorSprite = actor.getSprite();
+
+            if (actorSprite == nullptr)
+            {
+                continue;
+            }
+
+            const std::string& textureName = actorSprite->getTextureName();
+            std::string  path = outGameContentLoader_.createActorTexturePath(textureName);
+
+            if (!path.empty())
+            {
+                texturePaths.push_back(path);
+                outTextureStore_.registerActorTexturePath(std::string{textureName}, std::move(path));
+            }
+        }
+
+        return outTextureStore_.loadActorTextures(texturePaths);
     }
 
     void GameCore::commitCommands() noexcept

@@ -1,6 +1,6 @@
 {
   "blocking": true,
-  "view_texture": "b",
+  "view_sprite": "b",
   "vel_x": 0,
   "vel_y": 0
 }

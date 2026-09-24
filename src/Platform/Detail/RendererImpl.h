@@ -2,7 +2,10 @@
 
 #include "Platform/Renderer.h"
 
+#include <glm/glm.hpp>
 #include <SDL3/SDL.h>
+
+#include <optional>
 
 namespace Uncarved::PlatformSpace
 {
@@ -21,8 +24,9 @@ namespace Uncarved::PlatformSpace
         void setClearColor(const Color& color);
         bool clear();
         bool renderTexture(const Texture& texture);
-        bool renderTexture(const Texture& texture, const SpriteTransform& transform);
+        bool renderTexture(const Texture& texture, const SpriteDrawTransform& transform);
         bool present();
+        std::optional<glm::ivec2> getViewportPixels() const;
 
         SDL_Renderer* getRenderer() const noexcept;
     };
