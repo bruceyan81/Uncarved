@@ -105,6 +105,7 @@ foreach(target IN ITEMS UncarvedCore UncarvedPlatform Uncarved)
             /W4
             /permissive-
             /Zc:__cplusplus
+            /utf-8
         )
     else()
         target_compile_options(${target} PRIVATE
