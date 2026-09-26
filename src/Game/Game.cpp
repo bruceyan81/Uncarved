@@ -11,6 +11,7 @@
 #include "Platform/Texture.h"
 #include "Platform/TextureStore.h"
 #include "Time/AppTime.h"
+#include "View/SceneRenderer.h"
 #include "View/Sprite.h"
 
 #include <glm/glm.hpp>
@@ -35,6 +36,7 @@ namespace Uncarved::GameSpace
         PlatformSpace::Renderer&         outRenderer,
         PlatformSpace::TextRenderer&     outTextRenderer,
         PlatformSpace::TextureStore&     outTextureStore,
+        ViewSpace::SceneRenderer&        outSceneRenderer,
         PlatformSpace::SoundSource&      outSoundSource,
         PlatformSpace::SoundWaveStore&   outSoundWaveStore,
         ContentSpace::GameContentLoader& outGameContentLoader
@@ -49,6 +51,7 @@ namespace Uncarved::GameSpace
         , outTextRenderer_(outTextRenderer)
         , outTextureStore_(outTextureStore)
         , outSoundSource_(outSoundSource)
+        , outSceneRenderer_(outSceneRenderer)
         , outSoundWaveStore_(outSoundWaveStore)
         , outGameContentLoader_(outGameContentLoader)
     {
@@ -356,7 +359,9 @@ namespace Uncarved::GameSpace
                     }
                 }
                 break;
+
                 case GameFlowState::Gameplay:
+                {
                     world_.updateTime(outAppTime_.getDeltaTime());
 
                     const InputSpace::Intention intention = outInputCore_.pollInputRequest();
@@ -375,65 +380,17 @@ namespace Uncarved::GameSpace
                         return 1;
                     }
 
-                    const auto viewportPixels = outRenderer_.getViewportPixels();
-
-                    if (!viewportPixels.has_value())
+                    if (!outSceneRenderer_.render(world_, camera2d_))
                     {
                         return 1;
-                    }
-
-                    if (viewportPixels->x == 0 || viewportPixels->y == 0)
-                    {
-                        continue;
-                    }
-
-                    const float viewportPixelsPerWU = camera2d_.getViewportPixelsPerWorldUnit(viewportPixels->x);
-
-                    for (const auto& actor : world_.getActors())
-                    {
-                        const auto* sprite = actor.getSprite();
-
-                        if (sprite == nullptr)
-                        {
-                            continue;
-                        }
-
-                        const Texture* texture = outTextureStore_.getActorTextureByName(sprite->getTextureName());
-
-                        if (texture == nullptr)
-                        {
-                            return 1;
-                        }
-
-                        const glm::fvec2 screenPositionPixels =
-                            camera2d_.projectWorldToViewport(glm::fvec2{actor.getPosition()}, *viewportPixels);
-
-                        const float screenSizeWidth = texture->getWidth() / actor.getSprite()->getPixelsPerWorldUnit()
-                            * actor.getScale().x * viewportPixelsPerWU;
-
-                        const float screenSizeHeight = texture->getHeight() / actor.getSprite()->getPixelsPerWorldUnit()
-                            * actor.getScale().y * viewportPixelsPerWU;
-
-                        if (!outRenderer_.renderTexture(
-                                *texture,
-                                PlatformSpace::SpriteDrawTransform{
-                                    actor.getNormalizedPivot(),
-                                    screenPositionPixels,
-                                    glm::fvec2{screenSizeWidth, screenSizeHeight},
-                                    actor.getRotationRadians()
-                                }
-                            ))
-                        {
-                            return 1;
-                        }
                     }
 
                     if (!outRenderer_.present())
                     {
                         return 1;
                     }
-
-                    break;
+                }
+                break;
             }
         }
         return 0;
@@ -504,7 +461,7 @@ namespace Uncarved::GameSpace
             }
 
             const std::string& textureName = actorSprite->getTextureName();
-            std::string  path = outGameContentLoader_.createActorTexturePath(textureName);
+            std::string        path = outGameContentLoader_.createActorTexturePath(textureName);
 
             if (!path.empty())
             {

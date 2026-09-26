@@ -2,7 +2,9 @@
   "sprites": {
     "Character": {
       "texture": "Character",
-      "pixels_per_world_unit": 32.0
+      "pixels_per_world_unit": 32.0,
+      "normalized_pivot_x": 0.5,
+      "normalized_pivot_y": 0.5
     }
   }
 }

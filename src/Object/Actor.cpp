@@ -5,13 +5,13 @@
 namespace Uncarved::ObjectSpace
 {
     Actor::Actor(
-        bool                      bBlocking,
-        float                     rotationRadians,
-        glm::ivec2                position,
-        glm::ivec2                velocity,
-        glm::fvec2                scale,
-        std::string               actorName,
-        std::optional<glm::fvec2> normalizedPivot,
+        bool        bBlocking,
+        float       rotationRadians,
+        glm::ivec2  position,
+        glm::ivec2  velocity,
+        int         zOrder,
+        glm::fvec2  scale,
+        std::string actorName,
 
         const ViewSpace::Sprite* outSprite
     )
@@ -19,9 +19,9 @@ namespace Uncarved::ObjectSpace
         , rotationRadians_(rotationRadians)
         , position_(std::move(position))
         , velocity_(std::move(velocity))
+        , zOrder_(std::move(zOrder))
         , scale_(std::move(scale))
         , actorName_(std::move(actorName))
-        , normalizedPivotPoint_(std::move(normalizedPivot))
         , outSprite_(outSprite)
     {
         id_ = actorCount_++;
@@ -33,9 +33,9 @@ namespace Uncarved::ObjectSpace
         , id_(std::exchange(other.id_, kInvalidId_))
         , position_(std::move(other.position_))
         , velocity_(std::move(other.velocity_))
+        , zOrder_(std::move(other.zOrder_))
         , scale_(std::move(other.scale_))
         , actorName_(std::move(other.actorName_))
-        , normalizedPivotPoint_(std::move(other.normalizedPivotPoint_))
         , outSprite_(other.outSprite_)
     {
     }

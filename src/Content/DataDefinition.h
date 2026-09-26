@@ -44,11 +44,10 @@ namespace Uncarved::ContentSpace::Definition
         std::optional<int>         y_;
         std::optional<int>         velX_;
         std::optional<int>         velY_;
+        std::optional<int>         zOrder_;
         std::optional<float>       scaleX_;
         std::optional<float>       scaleY_;
         std::optional<std::string> actorName_;
-        std::optional<float>       normalizedPivotX_;
-        std::optional<float>       normalizedPivotY_;
         std::optional<std::string> viewSpriteName_;
     };
 

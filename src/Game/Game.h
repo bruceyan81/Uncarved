@@ -41,6 +41,12 @@ namespace Uncarved
         class TextRenderer;
         class TextureStore;
     } // namespace PlatformSpace
+
+    namespace ViewSpace
+    {
+        class SceneRenderer;
+    } // namespace ViewSpace
+
 } // namespace Uncarved
 
 namespace Uncarved::GameSpace
@@ -74,6 +80,7 @@ namespace Uncarved::GameSpace
             PlatformSpace::Renderer&         outRenderer,
             PlatformSpace::TextRenderer&     outTextRenderer,
             PlatformSpace::TextureStore&     outTextureStore,
+            ViewSpace::SceneRenderer&        outSceneRenderer,
             PlatformSpace::SoundSource&      outSoundSource,
             PlatformSpace::SoundWaveStore&   outSoundWaveStore,
             ContentSpace::GameContentLoader& outGameContentLoader
@@ -112,6 +119,7 @@ namespace Uncarved::GameSpace
         PlatformSpace::Renderer&         outRenderer_;
         PlatformSpace::TextRenderer&     outTextRenderer_;
         PlatformSpace::TextureStore&     outTextureStore_;
+        ViewSpace::SceneRenderer&        outSceneRenderer_;
         PlatformSpace::SoundSource&      outSoundSource_;
         PlatformSpace::SoundWaveStore&   outSoundWaveStore_;
         ContentSpace::GameContentLoader& outGameContentLoader_;

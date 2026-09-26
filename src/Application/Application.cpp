@@ -16,6 +16,7 @@
 #include "Platform/Window.h"
 #include "Time/AppTime.h"
 #include "View/Camera2D.h"
+#include "View/SceneRenderer.h"
 
 #include <cstdint>
 #include <iostream>
@@ -221,6 +222,8 @@ namespace Uncarved::ApplicationSpace
                 return 1;
             }
 
+            ViewSpace::SceneRenderer sceneRenderer{renderer, textureStore};
+
             GameSpace::GameCore gameCore{
                 {gameConfig.health_, gameConfig.score_, introConfig.introText_},
                 GameSpace::SimulationCore{},
@@ -230,6 +233,7 @@ namespace Uncarved::ApplicationSpace
                 renderer,
                 textRenderer,
                 textureStore,
+                sceneRenderer,
                 soundSource,
                 soundWaveStore,
                 gameContentLoader_

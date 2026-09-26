@@ -65,6 +65,7 @@ add_library(UncarvedCore STATIC
     src/Time/AppTime.cpp
     src/Time/WorldTime.cpp
     src/View/Camera2D.cpp
+    src/View/SceneRenderer.cpp
 )
 
 target_link_libraries(UncarvedCore

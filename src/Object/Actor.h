@@ -6,7 +6,6 @@
 
 #include <cstdint>
 #include <limits>
-#include <optional>
 #include <string>
 
 namespace Uncarved::GameSpace
@@ -22,13 +21,13 @@ namespace Uncarved::ObjectSpace
     {
     public:
         Actor(
-            bool                      bBlocking,
-            float                     rotationRadians,
-            glm::ivec2                position,
-            glm::ivec2                velocity,
-            glm::fvec2                scale,
-            std::string               actorName,
-            std::optional<glm::fvec2> normalizedPivot,
+            bool        bBlocking,
+            float       rotationRadians,
+            glm::ivec2  position,
+            glm::ivec2  velocity,
+            int         zOrder,
+            glm::fvec2  scale,
+            std::string actorName,
 
             const ViewSpace::Sprite* outSprite
         );
@@ -69,6 +68,11 @@ namespace Uncarved::ObjectSpace
             return velocity_;
         }
 
+        int getZOrder() const noexcept
+        {
+            return zOrder_;
+        }
+
         const glm::fvec2& getScale() const noexcept
         {
             return scale_;
@@ -77,11 +81,6 @@ namespace Uncarved::ObjectSpace
         const std::string& getActorName() const noexcept
         {
             return actorName_;
-        }
-
-        const std::optional<glm::fvec2>& getNormalizedPivot() const noexcept
-        {
-            return normalizedPivotPoint_;
         }
 
         const ViewSpace::Sprite* getSprite() const noexcept
@@ -95,14 +94,14 @@ namespace Uncarved::ObjectSpace
         inline static ActorId    actorCount_ = 0;
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
-        bool                      bBlocking_;
-        float                     rotationRadians_;
-        ActorId                   id_;
-        glm::ivec2                position_;
-        glm::ivec2                velocity_;
-        glm::fvec2                scale_;
-        std::string               actorName_;
-        std::optional<glm::fvec2> normalizedPivotPoint_;
+        bool        bBlocking_;
+        float       rotationRadians_;
+        ActorId     id_;
+        glm::ivec2  position_;
+        glm::ivec2  velocity_;
+        int         zOrder_;
+        glm::fvec2  scale_;
+        std::string actorName_;
 
         const ViewSpace::Sprite* outSprite_;
 

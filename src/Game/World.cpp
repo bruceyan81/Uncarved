@@ -102,20 +102,14 @@ namespace Uncarved::GameSpace
 
     void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor, const ViewSpace::Sprite* outSprite)
     {
-        std::optional<glm::fvec2> normalizedPivot = std::nullopt;
-        if (definitionalActor.normalizedPivotX_.has_value() && definitionalActor.normalizedPivotY_.has_value())
-        {
-            normalizedPivot = {*(definitionalActor.normalizedPivotX_), *(definitionalActor.normalizedPivotY_)};
-        }
-
         actors_.emplace_back(
             definitionalActor.bBlocking_,
             definitionalActor.rotationRadians_,
             glm::ivec2{definitionalActor.x_, definitionalActor.y_},
             glm::ivec2{definitionalActor.velX_, definitionalActor.velY_},
+            definitionalActor.zOrder_,
             glm::fvec2{definitionalActor.scaleX_, definitionalActor.scaleY_},
             definitionalActor.actorName_,
-            normalizedPivot,
             outSprite
         );
 

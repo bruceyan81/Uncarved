@@ -6,8 +6,6 @@
       "transform_scale_x": 1.0,
       "transform_scale_y": 1.0,
       "transform_rotation_radians": 0.0,
-      "view_normalized_pivot_x": 0.0,
-      "view_normalized_pivot_y": 0.0,
       "name": "player",
       "x": 0,
       "y": 0,

@@ -54,6 +54,12 @@ namespace Uncarved
                 patch.viewSpriteName_ = it->value.GetString();
             }
 
+            if (const auto it = rawActor.FindMember("z_order");
+                it != rawActor.MemberEnd() && it->value.IsInt())
+            {
+                patch.zOrder_ = it->value.GetInt();
+            }
+
             if (const auto it = rawActor.FindMember("transform_scale_x");
                 it != rawActor.MemberEnd() && it->value.IsNumber())
             {
@@ -70,18 +76,6 @@ namespace Uncarved
                 it != rawActor.MemberEnd() && it->value.IsNumber())
             {
                 patch.rotationRadians_ = it->value.GetFloat();
-            }
-
-            if (const auto it = rawActor.FindMember("view_normalized_pivot_x");
-                it != rawActor.MemberEnd() && it->value.IsNumber())
-            {
-                patch.normalizedPivotX_ = it->value.GetFloat();
-            }
-
-            if (const auto it = rawActor.FindMember("view_normalized_pivot_y");
-                it != rawActor.MemberEnd() && it->value.IsNumber())
-            {
-                patch.normalizedPivotY_ = it->value.GetFloat();
             }
 
             return patch;
@@ -122,6 +116,11 @@ namespace Uncarved
                 outDefinition.velY_ = *outPatch.velY_;
             }
 
+            if (outPatch.zOrder_)
+            {
+                outDefinition.zOrder_ = *outPatch.zOrder_;
+            }
+
             if (outPatch.scaleX_)
             {
                 outDefinition.scaleX_ = *outPatch.scaleX_;
@@ -135,16 +134,6 @@ namespace Uncarved
             if (outPatch.actorName_)
             {
                 outDefinition.actorName_ = *outPatch.actorName_;
-            }
-
-            if (outPatch.normalizedPivotX_)
-            {
-                outDefinition.normalizedPivotX_ = *outPatch.normalizedPivotX_;
-            }
-
-            if (outPatch.normalizedPivotY_)
-            {
-                outDefinition.normalizedPivotY_ = *outPatch.normalizedPivotY_;
             }
 
             if (outPatch.viewSpriteName_)
@@ -594,12 +583,13 @@ namespace Uncarved::ContentSpace
             }
 
             const auto textureIt = sprite.FindMember("texture");
-            const auto pixelsPerWUIt = sprite.FindMember("pixels_per_world_unit");
 
             if (textureIt == sprite.MemberEnd() || !textureIt->value.IsString())
             {
                 return {ValidationError{"error: sprite's texture is not String.", ValidationErrorType::InvalidData}};
             }
+
+            const auto pixelsPerWUIt = sprite.FindMember("pixels_per_world_unit");
 
             if (pixelsPerWUIt == sprite.MemberEnd() || !pixelsPerWUIt->value.IsNumber())
             {
@@ -609,9 +599,45 @@ namespace Uncarved::ContentSpace
                 }};
             }
 
+            const auto normalizedPivotXIt = sprite.FindMember("normalized_pivot_x");
+            const auto normalizedPivotYIt = sprite.FindMember("normalized_pivot_y");
+            float      normalizedPivotX = 0.5f;
+            float      normalizedPivotY = 0.5f;
+
+            if (normalizedPivotXIt != sprite.MemberEnd())
+            {
+                if (!normalizedPivotXIt->value.IsNumber())
+                {
+                    return {ValidationError{
+                        "error: sprite's normalized_pivot_x is not number.",
+                        ValidationErrorType::InvalidData
+                    }};
+                }
+
+                normalizedPivotX = normalizedPivotXIt->value.GetFloat();
+            }
+
+            if (normalizedPivotYIt != sprite.MemberEnd())
+            {
+                if (!normalizedPivotYIt->value.IsNumber())
+                {
+                    return {ValidationError{
+                        "error: sprite's normalized_pivot_y is not number.",
+                        ValidationErrorType::InvalidData
+                    }};
+                }
+
+                normalizedPivotY = normalizedPivotYIt->value.GetFloat();
+            }
+
             auto spriteValue = ViewSpace::Sprite::createSprite(
-                std::string{textureIt->value.GetString()},
-                pixelsPerWUIt->value.GetFloat()
+                textureIt->value.GetString(),
+                pixelsPerWUIt->value.GetFloat(),
+                glm::fvec2
+                {
+                    normalizedPivotX,
+                    normalizedPivotY
+                }
             );
 
             if (!spriteValue)

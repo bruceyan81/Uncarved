@@ -212,12 +212,18 @@ namespace Uncarved::PlatformSpace
             return false;
         }
 
-        const float textureWidth = spriteDrawTransform.screenSizePixels_.x;
-        const float textureHeight = spriteDrawTransform.screenSizePixels_.y;
+        const bool bFlipHorizontal = spriteDrawTransform.screenSizePixels_.x < 0.0f;
+        const bool bFlipVertical = spriteDrawTransform.screenSizePixels_.y < 0.0f;
 
-        const glm::fvec2 normalizedPivot = spriteDrawTransform.normalizedPivotPoint_.value_or(glm::fvec2{0.0f, 0.0f});
-        const float      pivotX = textureWidth * normalizedPivot.x;
-        const float      pivotY = textureHeight * normalizedPivot.y;
+        const float textureWidth = std::abs(spriteDrawTransform.screenSizePixels_.x);
+        const float textureHeight = std::abs(spriteDrawTransform.screenSizePixels_.y);
+
+        const glm::fvec2 normalizedPivot = spriteDrawTransform.normalizedPivotPoint_;
+        const float      pivotX =
+            bFlipHorizontal ? textureWidth * (1.0f - normalizedPivot.x) : textureWidth * normalizedPivot.x;
+
+        const float pivotY =
+            bFlipVertical ? textureHeight * (1.0f - normalizedPivot.y) : textureHeight * normalizedPivot.y;
 
         SDL_FRect dstRect{
             spriteDrawTransform.screenPositionPixels_.x - pivotX,
@@ -228,6 +234,25 @@ namespace Uncarved::PlatformSpace
 
         SDL_FPoint rotationCenter{pivotX, pivotY};
 
+        auto flipFlag = [&bFlipHorizontal, &bFlipVertical]() {
+            if (bFlipHorizontal && bFlipVertical)
+            {
+                return SDL_FLIP_HORIZONTAL_AND_VERTICAL;
+            }
+
+            if (bFlipHorizontal)
+            {
+                return SDL_FLIP_HORIZONTAL;
+            }
+
+            if (bFlipVertical)
+            {
+                return SDL_FLIP_VERTICAL;
+            }
+
+            return SDL_FLIP_NONE;
+        };
+
         return SDL_RenderTextureRotated(
             renderer_,
             texture.impl_->getTexture(),
@@ -235,7 +260,7 @@ namespace Uncarved::PlatformSpace
             &dstRect,
             spriteDrawTransform.getRotationDegrees(),
             &rotationCenter,
-            SDL_FLIP_NONE
+            flipFlag()
         );
     }
 

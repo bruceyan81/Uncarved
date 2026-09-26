@@ -12,13 +12,12 @@ namespace Uncarved::ObjectSpace
         int   y_{};
         int   velX_{};
         int   velY_{};
+        int   zOrder_{0};
         float scaleX_{1.0f};
         float scaleY_{1.0f};
         float rotationRadians_{};
 
         std::string                actorName_{};
         std::optional<std::string> viewSpriteName_{};
-        std::optional<float>       normalizedPivotX_;
-        std::optional<float>       normalizedPivotY_;
     };
 } // namespace Uncarved::ObjectSpace
