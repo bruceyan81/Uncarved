@@ -71,42 +71,42 @@ namespace Uncarved
             const ContentSpace::Definition::ActorDataPatch& outPatch
         )
         {
-            if (outPatch.rotationRadians_)
+            if (outPatch.rotationRadians_.has_value())
             {
                 outDefinition.rotationRadians_ = *outPatch.rotationRadians_;
             }
 
-            if (outPatch.x_)
+            if (outPatch.x_.has_value())
             {
                 outDefinition.x_ = *outPatch.x_;
             }
 
-            if (outPatch.y_)
+            if (outPatch.y_.has_value())
             {
                 outDefinition.y_ = *outPatch.y_;
             }
 
-            if (outPatch.zOrder_)
+            if (outPatch.zOrder_.has_value())
             {
                 outDefinition.zOrder_ = *outPatch.zOrder_;
             }
 
-            if (outPatch.scaleX_)
+            if (outPatch.scaleX_.has_value())
             {
                 outDefinition.scaleX_ = *outPatch.scaleX_;
             }
 
-            if (outPatch.scaleY_)
+            if (outPatch.scaleY_.has_value())
             {
                 outDefinition.scaleY_ = *outPatch.scaleY_;
             }
 
-            if (outPatch.actorName_)
+            if (outPatch.actorName_.has_value())
             {
                 outDefinition.actorName_ = *outPatch.actorName_;
             }
 
-            if (outPatch.viewSpriteName_)
+            if (outPatch.viewSpriteName_.has_value())
             {
                 outDefinition.viewSpriteName_ = *outPatch.viewSpriteName_;
             }

@@ -271,15 +271,15 @@ namespace Uncarved::PlatformSpace
 
     std::optional<glm::ivec2> Renderer::Impl::getViewportPixels() const
     {
-        int height{0};
         int width{0};
+        int height{0};
 
-        if (!SDL_GetRenderOutputSize(renderer_, &height, &width) || height < 0 || width < 0)
+        if (!SDL_GetRenderOutputSize(renderer_, &width, &height) || width < 0 || height < 0)
         {
             return std::nullopt;
         }
 
-        return glm::ivec2{height, width};
+        return glm::ivec2{width, height};
     }
 
     SDL_Renderer* Renderer::Impl::getRenderer() const noexcept
