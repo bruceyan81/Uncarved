@@ -21,10 +21,8 @@ namespace Uncarved::ObjectSpace
     {
     public:
         Actor(
-            bool        bBlocking,
             float       rotationRadians,
             glm::ivec2  position,
-            glm::ivec2  velocity,
             int         zOrder,
             glm::fvec2  scale,
             std::string actorName,
@@ -48,11 +46,6 @@ namespace Uncarved::ObjectSpace
             return id_;
         }
 
-        bool getBlocking() const noexcept
-        {
-            return bBlocking_;
-        }
-
         float getRotationRadians() const noexcept
         {
             return rotationRadians_;
@@ -61,11 +54,6 @@ namespace Uncarved::ObjectSpace
         const glm::ivec2& getPosition() const noexcept
         {
             return position_;
-        }
-
-        const glm::ivec2& getVelocity() const noexcept
-        {
-            return velocity_;
         }
 
         int getZOrder() const noexcept
@@ -94,11 +82,9 @@ namespace Uncarved::ObjectSpace
         inline static ActorId    actorCount_ = 0;
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
-        bool        bBlocking_;
         float       rotationRadians_;
         ActorId     id_;
         glm::ivec2  position_;
-        glm::ivec2  velocity_;
         int         zOrder_;
         glm::fvec2  scale_;
         std::string actorName_;
@@ -106,15 +92,5 @@ namespace Uncarved::ObjectSpace
         const ViewSpace::Sprite* outSprite_;
 
         friend class GameSpace::World;
-
-        void moveBy(const glm::ivec2& delta)
-        {
-            position_ += delta;
-        }
-
-        void setVelocity(const glm::ivec2& newVelocity)
-        {
-            velocity_ = newVelocity;
-        }
     };
 } // namespace Uncarved::ObjectSpace

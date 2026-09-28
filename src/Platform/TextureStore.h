@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,19 +25,13 @@ namespace Uncarved::PlatformSpace
 
         ~TextureStore();
 
-        ContentSpace::ContentResult loadIntroTextures(const std::vector<std::string>& texturePaths);
-
         ContentSpace::ContentResult loadActorTextures(const std::vector<std::string>& texturePaths);
-
-        const Texture* getIntroTexture(std::size_t index) const noexcept;
 
         void registerActorTexturePath(std::string&& textureName, std::string&& texturePath);
 
         const Texture* getActorTextureByName(const std::string& textureName) const noexcept;
 
         const Texture* getActorTextureByPath(const std::string& texturePath) const noexcept;
-
-        std::size_t getIntroTextureCount() const noexcept;
 
     private:
         struct Impl;

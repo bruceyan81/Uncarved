@@ -1,18 +1,13 @@
 {
   "actors": [
     {
-      "blocking": false,
       "view_sprite": "Character",
       "transform_scale_x": 0.3,
       "transform_scale_y": 0.3,
       "transform_rotation_radians": 0.0,
-      "name": "player",
+      "name": "Character",
       "x": 0,
-      "y": 0,
-      "vel_x": 0,
-      "vel_y": 0,
-      "nearby_dialogue": "",
-      "contact_dialogue": ""
+      "y": 0
     }
   ]
 }

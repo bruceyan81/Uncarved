@@ -335,56 +335,16 @@ namespace Uncarved::PlatformSpace
     {
         Renderer& outRenderer_;
 
-        using IntroTextureCache = std::vector<Texture>;
         using ActorTextureCache = std::unordered_map<std::string, Texture>;
 
         using ActorTexturePathCache = std::unordered_map<std::string, std::string>;
 
-        IntroTextureCache introTextureCache_;
         ActorTextureCache actorTextureCache_;
 
         ActorTexturePathCache actorTexturePathCache_;
 
         explicit Impl(Renderer& outRenderer) : outRenderer_(outRenderer)
         {
-        }
-
-        ContentSpace::ContentResult loadIntroTextures(const std::vector<std::string>& texturePaths)
-        {
-            if (texturePaths.empty())
-            {
-                return {};
-            }
-
-            IntroTextureCache loadedTextureCache{};
-
-            loadedTextureCache.reserve(texturePaths.size());
-            introTextureCache_.reserve(introTextureCache_.size() + texturePaths.size());
-
-            for (const auto& texturePath : texturePaths)
-            {
-                auto textureImpl = std::make_unique<Texture::Impl>(nullptr);
-                textureImpl->texture_ = IMG_LoadTexture(outRenderer_.impl_->getRenderer(), texturePath.c_str());
-
-                Texture texture{std::move(textureImpl)};
-
-                if (texture.impl_->getTexture() == nullptr)
-                {
-                    loadedTextureCache.clear();
-
-                    return {ContentSpace::ResourceError{
-                        "error: failed to load texture " + texturePath + ": " + SDL_GetError(),
-                        ContentSpace::ResourceErrorType::LoadFailed
-                    }};
-                }
-
-                loadedTextureCache.emplace_back(std::move(texture));
-            }
-
-            introTextureCache_.clear();
-            introTextureCache_ = std::move(loadedTextureCache);
-
-            return {};
         }
 
         ContentSpace::ContentResult loadActorTextures(const std::vector<std::string>& texturePaths)
@@ -428,16 +388,6 @@ namespace Uncarved::PlatformSpace
             return {};
         }
 
-        const Texture* getIntroTexture(std::size_t index) const noexcept
-        {
-            if (index >= introTextureCache_.size())
-            {
-                return nullptr;
-            }
-
-            return &introTextureCache_[index];
-        }
-
         void updateActorTexturePathCache(std::string&& textureName, std::string&& texturePath)
         {
             actorTexturePathCache_.emplace(std::move(textureName), std::move(texturePath));
@@ -470,10 +420,6 @@ namespace Uncarved::PlatformSpace
             return nullptr;
         }
 
-        std::size_t getIntroTextureCount() const noexcept
-        {
-            return introTextureCache_.size();
-        }
     };
 
     TextureStore::TextureStore(Renderer& outRenderer) : impl_(std::make_unique<Impl>(outRenderer))
@@ -482,19 +428,9 @@ namespace Uncarved::PlatformSpace
 
     TextureStore::~TextureStore() = default;
 
-    ContentSpace::ContentResult TextureStore::loadIntroTextures(const std::vector<std::string>& texturePaths)
-    {
-        return impl_->loadIntroTextures(texturePaths);
-    }
-
     ContentSpace::ContentResult TextureStore::loadActorTextures(const std::vector<std::string>& texturePaths)
     {
         return impl_->loadActorTextures(texturePaths);
-    }
-
-    const Texture* TextureStore::getIntroTexture(std::size_t index) const noexcept
-    {
-        return impl_->getIntroTexture(index);
     }
 
     void TextureStore::registerActorTexturePath(std::string&& textureName, std::string&& texturePath)
@@ -512,8 +448,4 @@ namespace Uncarved::PlatformSpace
         return impl_->getActorTextureByPath(texturePath);
     }
 
-    std::size_t TextureStore::getIntroTextureCount() const noexcept
-    {
-        return impl_->getIntroTextureCount();
-    }
 } // namespace Uncarved::PlatformSpace

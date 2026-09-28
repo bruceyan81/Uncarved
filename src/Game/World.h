@@ -32,30 +32,12 @@ namespace Uncarved::GameSpace
             return actors_;
         }
 
-        const ObjectSpace::Actor* getPlayer() const noexcept
-        {
-            if (playerIndex_)
-            {
-                return &actors_[playerIndex_.value()];
-            }
-            else
-            {
-                return nullptr;
-            }
-        }
-
-        bool moveActorBy(ObjectSpace::ActorId actorId, const glm::ivec2& delta) noexcept;
-
-        bool setActorVelocity(ObjectSpace::ActorId actorId, const glm::ivec2& velocity) noexcept;
-
         const ObjectSpace::Actor* getActorById(ObjectSpace::ActorId id) const noexcept;
 
         std::optional<World> createReplacement(
             std::span<const ObjectSpace::DefinitionalActor>                definitionalActors,
             const std::unordered_map<std::string, ViewSpace::Sprite>& spritesByName
         ) const;
-
-        void clearWorld() noexcept;
 
         void updateTime(TimeSpace::Duration deltaTime) noexcept;
 
@@ -65,7 +47,6 @@ namespace Uncarved::GameSpace
         }
 
     private:
-        std::optional<std::size_t>                            playerIndex_{};
         std::vector<ObjectSpace::Actor>                       actors_{};
         std::unordered_map<ObjectSpace::ActorId, std::size_t> actorIndexById_{};
 

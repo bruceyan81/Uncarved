@@ -19,11 +19,6 @@ namespace Uncarved
         {
             ContentSpace::Definition::ActorDataPatch patch{};
 
-            if (const auto it = rawActor.FindMember("blocking"); it != rawActor.MemberEnd() && it->value.IsBool())
-            {
-                patch.bBlocking_ = it->value.GetBool();
-            }
-
             if (const auto it = rawActor.FindMember("x"); it != rawActor.MemberEnd() && it->value.IsInt())
             {
                 patch.x_ = it->value.GetInt();
@@ -32,16 +27,6 @@ namespace Uncarved
             if (const auto it = rawActor.FindMember("y"); it != rawActor.MemberEnd() && it->value.IsInt())
             {
                 patch.y_ = it->value.GetInt();
-            }
-
-            if (const auto it = rawActor.FindMember("vel_x"); it != rawActor.MemberEnd() && it->value.IsInt())
-            {
-                patch.velX_ = it->value.GetInt();
-            }
-
-            if (const auto it = rawActor.FindMember("vel_y"); it != rawActor.MemberEnd() && it->value.IsInt())
-            {
-                patch.velY_ = it->value.GetInt();
             }
 
             if (const auto it = rawActor.FindMember("name"); it != rawActor.MemberEnd() && it->value.IsString())
@@ -86,11 +71,6 @@ namespace Uncarved
             const ContentSpace::Definition::ActorDataPatch& outPatch
         )
         {
-            if (outPatch.bBlocking_)
-            {
-                outDefinition.bBlocking_ = *outPatch.bBlocking_;
-            }
-
             if (outPatch.rotationRadians_)
             {
                 outDefinition.rotationRadians_ = *outPatch.rotationRadians_;
@@ -104,16 +84,6 @@ namespace Uncarved
             if (outPatch.y_)
             {
                 outDefinition.y_ = *outPatch.y_;
-            }
-
-            if (outPatch.velX_)
-            {
-                outDefinition.velX_ = *outPatch.velX_;
-            }
-
-            if (outPatch.velY_)
-            {
-                outDefinition.velY_ = *outPatch.velY_;
             }
 
             if (outPatch.zOrder_)
@@ -170,18 +140,12 @@ namespace Uncarved::ContentSpace
     const Fs::path gResourceRoot = "Resources";
 
     constexpr std::string_view kActorTemplatesDir = "ActorTemplates";
-    constexpr std::string_view kAudioDir = "Audio";
     constexpr std::string_view kFontsDir = "Fonts";
-    constexpr std::string_view kImagesDir = "Images";
     constexpr std::string_view kScenesDir = "Scenes";
     constexpr std::string_view kTexturesDir = "Textures";
 
-    constexpr std::string_view kGameplayAudioDir = "Gameplay";
-    constexpr std::string_view kIntroAudioDir = "Intro";
-
     constexpr std::string_view kGameConfigFileName = "Game";
     constexpr std::string_view kRenderingConfigFileName = "Rendering";
-    constexpr std::string_view kIntroConfigFileName = "Intro";
     constexpr std::string_view kSpritesFileName = "Sprites";
 
     constexpr std::string_view kConfigFilePostfix = ".config";
@@ -190,7 +154,6 @@ namespace Uncarved::ContentSpace
     constexpr std::string_view kSpritePostfix = ".sprite";
     constexpr std::string_view kTemplatePostfix = ".template";
     constexpr std::string_view kTtfPostfix = ".ttf";
-    constexpr std::string_view kMp3Postfix = ".mp3";
 
     std::string GameContentLoader::createActorTexturePath(std::string_view textureName) const
     {
@@ -204,34 +167,6 @@ namespace Uncarved::ContentSpace
         texturePath = (gResourceRoot / kTexturesDir / textureName).replace_extension(kPngPostfix);
 
         return texturePath.string();
-    }
-
-    std::string GameContentLoader::createIntroBgmPath(std::string_view bgmName) const
-    {
-        Fs::path bgmPath;
-
-        if (bgmName.empty())
-        {
-            return bgmPath.string();
-        }
-
-        bgmPath = (gResourceRoot / kAudioDir / kIntroAudioDir / bgmName).replace_extension(kMp3Postfix);
-
-        return bgmPath.string();
-    }
-
-    std::string GameContentLoader::createGameplayBgmPath(std::string_view bgmName) const
-    {
-        Fs::path bgmPath;
-
-        if (bgmName.empty())
-        {
-            return bgmPath.string();
-        }
-
-        bgmPath = (gResourceRoot / kAudioDir / kGameplayAudioDir / bgmName).replace_extension(kMp3Postfix);
-
-        return bgmPath.string();
     }
 
     ContentResult GameContentLoader::checkResourceDirectory() const
@@ -302,35 +237,6 @@ namespace Uncarved::ContentSpace
         if (document.HasMember("game_title") && document["game_title"].IsString())
         {
             tempGameConfigDefinition.gameTitle_ = std::move(document["game_title"].GetString());
-        }
-
-        if (document.HasMember("health") && document["health"].IsInt())
-        {
-            tempGameConfigDefinition.health_ = document["health"].GetInt();
-        }
-
-        if (document.HasMember("score") && document["score"].IsInt())
-        {
-            tempGameConfigDefinition.score_ = document["score"].GetInt();
-        }
-
-        if (document.HasMember("gameplay_bgm") && document["gameplay_bgm"].IsArray())
-        {
-            const auto& gameplayBgmArray = document["gameplay_bgm"].GetArray();
-
-            tempGameConfigDefinition.gameplayBgmArray_.reserve(gameplayBgmArray.Size());
-
-            for (const auto& bgmName : gameplayBgmArray)
-            {
-                if (bgmName.IsString())
-                {
-                    tempGameConfigDefinition.gameplayBgmArray_.emplace_back(bgmName.GetString());
-                }
-            }
-        }
-        else
-        {
-            std::cout << "info: gameplay_bgm unspecified.";
         }
 
         gameConfigDefinition_ = std::move(tempGameConfigDefinition);
@@ -419,105 +325,6 @@ namespace Uncarved::ContentSpace
         }
 
         renderingConfigDefinition_ = std::move(tempRenderingConfigDefinition);
-
-        return {};
-    }
-
-    ContentResult GameContentLoader::checkIntroConfig() const
-    {
-        const Fs::path introConfigPath = (gResourceRoot / kIntroConfigFileName).replace_extension(kConfigFilePostfix);
-
-        if (!Fs::exists(introConfigPath) || !Fs::is_regular_file(introConfigPath))
-        {
-            return {FileError{"error: Resources/Intro.config missing.", FileErrorType::InvalidPath}};
-        }
-
-        return {};
-    }
-
-    ContentResult GameContentLoader::loadIntroConfig()
-    {
-        std::ifstream inputFileStream{(gResourceRoot / kIntroConfigFileName).replace_extension(kConfigFilePostfix)};
-
-        rapidjson::IStreamWrapper streamWrapper{inputFileStream};
-
-        rapidjson::Document document;
-
-        document.ParseStream(streamWrapper);
-
-        if (document.HasParseError())
-        {
-            return {ParseError{"error: Resources/Intro.config has parse error.", ParseErrorType::ParseFailed}};
-        }
-
-        if (!document.IsObject())
-        {
-            return {ParseError{"error: Resources/Intro.config is not Object.", ParseErrorType::InvalidStructure}};
-        }
-
-        Definition::IntroConfigDefinition tempIntroConfigDefinition{};
-
-        if (document.HasMember("intro_image") && document["intro_image"].IsArray())
-        {
-            const auto& introImageArray = document["intro_image"].GetArray();
-
-            tempIntroConfigDefinition.introImages_.reserve(introImageArray.Size());
-
-            for (const auto& introImageName : introImageArray)
-            {
-                if (introImageName.IsString())
-                {
-                    Fs::path imagePath =
-                        (gResourceRoot / kImagesDir / introImageName.GetString()).replace_extension(kPngPostfix);
-
-                    tempIntroConfigDefinition.introImages_.emplace_back(imagePath.string());
-                }
-            }
-        }
-        else
-        {
-            std::cout << "info: intro_image unspecified.";
-        }
-
-        if (document.HasMember("intro_text") && document["intro_text"].IsArray())
-        {
-            const auto& introTextArray = document["intro_text"].GetArray();
-
-            tempIntroConfigDefinition.introText_.reserve(introTextArray.Size());
-
-            for (const auto& text : introTextArray)
-            {
-                if (text.IsString())
-                {
-                    tempIntroConfigDefinition.introText_.emplace_back(text.GetString());
-                }
-            }
-        }
-        else
-        {
-            return {ValidationError{"error: intro_text unspecified.", ValidationErrorType::InvalidData}};
-        }
-
-        if (document.HasMember("intro_bgm") && document["intro_bgm"].IsArray())
-        {
-            const auto& introBgmArray = document["intro_bgm"].GetArray();
-
-            tempIntroConfigDefinition.introBgmArray_.reserve(introBgmArray.Size());
-
-            for (const auto& bgmName : introBgmArray)
-            {
-                if (bgmName.IsString())
-                {
-                    tempIntroConfigDefinition.introBgmArray_.emplace_back(bgmName.GetString());
-                }
-            }
-        }
-        else
-        {
-            std::cout << "info: intro_bgm unspecified.";
-        }
-
-        introConfigDefinition_ = std::move(tempIntroConfigDefinition);
 
         return {};
     }

@@ -10,39 +10,6 @@ namespace Uncarved::ViewSpace
 
 namespace Uncarved::GameSpace
 {
-    bool World::moveActorBy(ObjectSpace::ActorId actorId, const glm::ivec2& delta) noexcept
-    {
-        auto actorIt = actorIndexById_.find(actorId);
-
-        if (actorIt == actorIndexById_.end())
-        {
-            return false;
-        }
-
-        auto& actor = actors_[actorIt->second];
-
-        actor.moveBy(delta);
-
-        return true;
-    }
-
-    bool World::setActorVelocity(ObjectSpace::ActorId actorId, const glm::ivec2& velocity) noexcept
-    {
-
-        auto actorIt = actorIndexById_.find(actorId);
-
-        if (actorIt == actorIndexById_.end())
-        {
-            return false;
-        }
-
-        auto& actor = actors_[actorIt->second];
-
-        actor.setVelocity(velocity);
-
-        return true;
-    }
-
     const ObjectSpace::Actor* World::getActorById(ObjectSpace::ActorId id) const noexcept
     {
         const auto it = actorIndexById_.find(id);
@@ -88,13 +55,6 @@ namespace Uncarved::GameSpace
         return nextWorld;
     }
 
-    void World::clearWorld() noexcept
-    {
-        actors_.clear();
-        actorIndexById_.clear();
-        playerIndex_.reset();
-    }
-
     void World::updateTime(TimeSpace::Duration deltaTime) noexcept
     {
         worldTime_.updateTime(deltaTime);
@@ -103,10 +63,8 @@ namespace Uncarved::GameSpace
     void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor, const ViewSpace::Sprite* outSprite)
     {
         actors_.emplace_back(
-            definitionalActor.bBlocking_,
             definitionalActor.rotationRadians_,
             glm::ivec2{definitionalActor.x_, definitionalActor.y_},
-            glm::ivec2{definitionalActor.velX_, definitionalActor.velY_},
             definitionalActor.zOrder_,
             glm::fvec2{definitionalActor.scaleX_, definitionalActor.scaleY_},
             definitionalActor.actorName_,
@@ -118,9 +76,5 @@ namespace Uncarved::GameSpace
 
         actorIndexById_[actor.getId()] = actorIndex;
 
-        if (actor.getActorName() == "player")
-        {
-            playerIndex_ = actorIndex;
-        }
     }
 } // namespace Uncarved::GameSpace

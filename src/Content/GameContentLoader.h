@@ -29,10 +29,6 @@ namespace Uncarved::ContentSpace
 
         std::string createActorTexturePath(std::string_view textureName) const;
 
-        std::string createIntroBgmPath(std::string_view bgmName) const;
-
-        std::string createGameplayBgmPath(std::string_view bgmName) const;
-
         ContentResult checkResourceDirectory() const;
 
         ContentResult checkGameConfig() const;
@@ -42,10 +38,6 @@ namespace Uncarved::ContentSpace
         ContentResult checkRenderingConfig() const;
 
         ContentResult loadRenderingConfig();
-
-        ContentResult checkIntroConfig() const;
-
-        ContentResult loadIntroConfig();
 
         ContentResult checkSprites() const;
 
@@ -76,11 +68,6 @@ namespace Uncarved::ContentSpace
             return renderingConfigDefinition_;
         }
 
-        const Definition::IntroConfigDefinition& getIntroConfig() const noexcept
-        {
-            return introConfigDefinition_;
-        }
-
         const std::vector<ObjectSpace::DefinitionalActor>& getDefinitionalActors() const noexcept
         {
             return definitionalActors_;
@@ -94,8 +81,6 @@ namespace Uncarved::ContentSpace
     private:
         Definition::GameConfigDefinition      gameConfigDefinition_;
         Definition::RenderingConfigDefinition renderingConfigDefinition_;
-        Definition::IntroConfigDefinition     introConfigDefinition_;
-
         std::vector<Definition::ActorDataPatch>     rawActors_;
         std::vector<ObjectSpace::DefinitionalActor> definitionalActors_;
 

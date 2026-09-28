@@ -1,29 +1,13 @@
 #pragma once
 
-#include "Object/Actor.h"
-
-#include <glm/glm.hpp>
-
 #include <variant>
 
 namespace Uncarved::GameSpace
 {
-    struct MoveActorCommand final
-    {
-        ObjectSpace::ActorId actorId_;
-        glm::ivec2           delta_;
-    };
-
-    struct SetActorVelocityCommand final
-    {
-        ObjectSpace::ActorId actorId_;
-        glm::ivec2           velocity_;
-    };
-
-    struct QuitCommand final
+    struct ExitRuntimeCommand final
     {
         // placeholder
     };
 
-    using RuntimeCommand = std::variant<MoveActorCommand, SetActorVelocityCommand, QuitCommand>;
+    using RuntimeCommand = std::variant<ExitRuntimeCommand>;
 } // namespace Uncarved::GameSpace

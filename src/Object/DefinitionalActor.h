@@ -7,11 +7,8 @@ namespace Uncarved::ObjectSpace
 {
     struct DefinitionalActor final
     {
-        bool  bBlocking_{false};
         int   x_{};
         int   y_{};
-        int   velX_{};
-        int   velY_{};
         int   zOrder_{0};
         float scaleX_{1.0f};
         float scaleY_{1.0f};

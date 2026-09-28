@@ -54,11 +54,8 @@ target_compile_features(UncarvedPlatform PUBLIC cxx_std_20)
 add_library(UncarvedCore STATIC
     src/Application/Application.cpp
     src/Content/GameContentLoader.cpp
-    src/Game/AiController.cpp
-    src/Game/GameSimulation.cpp
     src/Game/CommandBuffer.cpp
-    src/Game/Game.cpp
-    src/Game/GameState.cpp
+    src/Game/Runtime.cpp
     src/Game/World.cpp
     src/Input/Input.cpp
     src/Object/Actor.cpp

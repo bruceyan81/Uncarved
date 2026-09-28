@@ -23,22 +23,6 @@ namespace Uncarved::InputSpace
             {
                 return Intention::Quit;
             }
-
-            if (event.type_ == EventType::KeyDown && !event.keyRepeat_)
-            {
-                if (event.keyScancode_.has_value()
-                    && (*(event.keyScancode_) == KeyboardScancode::Return
-                        || *(event.keyScancode_) == KeyboardScancode::Space))
-                {
-                    return Intention::AdvanceIntro;
-                }
-            }
-
-            if (event.type_ == EventType::MouseButtonDown && event.mouseButton_.has_value()
-                && event.mouseButton_ == MouseButton::Left)
-            {
-                return Intention::AdvanceIntro;
-            }
         }
 
         return Intention::None;
