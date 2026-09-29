@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Object/Transform2D.h"
+
 #include <iostream>
 #include <optional>
 #include <string>
@@ -34,23 +36,28 @@ namespace Uncarved::ContentSpace::Definition
         }
     };
 
+    struct Transform2DPatch final
+    {
+        std::optional<float> positionX_{};
+        std::optional<float> positionY_{};
+        std::optional<float> rotationRadians_{};
+        std::optional<float> scaleX_{};
+        std::optional<float> scaleY_{};
+    };
+
     struct ActorDataPatch final
     {
-        std::optional<float>       rotationRadians_;
-        std::optional<int>         x_;
-        std::optional<int>         y_;
+        Transform2DPatch           transform2dPatch_;
         std::optional<int>         zOrder_;
-        std::optional<float>       scaleX_;
-        std::optional<float>       scaleY_;
         std::optional<std::string> actorName_;
         std::optional<std::string> viewSpriteName_;
     };
 
     struct GameConfigDefinition final
     {
-        std::string              gameTitle_{};
-        std::string              initialSceneName_{};
-        std::string              fontPath_{};
+        std::string gameTitle_{};
+        std::string initialSceneName_{};
+        std::string fontPath_{};
     };
 
     struct RenderingConfigDefinition final

@@ -2,6 +2,8 @@
 
 #include "ContentResult.h"
 
+#include "Object/Transform2D.h"
+
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
@@ -17,53 +19,87 @@ namespace Uncarved
     {
         ContentSpace::Definition::ActorDataPatch makeActorDataPatch(const rapidjson::Value& rawActor)
         {
-            ContentSpace::Definition::ActorDataPatch patch{};
+            ContentSpace::Definition::Transform2DPatch transform2dPatch{};
 
-            if (const auto it = rawActor.FindMember("x"); it != rawActor.MemberEnd() && it->value.IsInt())
+            if (const auto it = rawActor.FindMember("x"); it != rawActor.MemberEnd() && it->value.IsNumber())
             {
-                patch.x_ = it->value.GetInt();
+                transform2dPatch.positionX_ = it->value.GetFloat();
             }
 
-            if (const auto it = rawActor.FindMember("y"); it != rawActor.MemberEnd() && it->value.IsInt())
+            if (const auto it = rawActor.FindMember("y"); it != rawActor.MemberEnd() && it->value.IsNumber())
             {
-                patch.y_ = it->value.GetInt();
-            }
-
-            if (const auto it = rawActor.FindMember("name"); it != rawActor.MemberEnd() && it->value.IsString())
-            {
-                patch.actorName_ = it->value.GetString();
-            }
-
-            if (const auto it = rawActor.FindMember("view_sprite"); it != rawActor.MemberEnd() && it->value.IsString())
-            {
-                patch.viewSpriteName_ = it->value.GetString();
-            }
-
-            if (const auto it = rawActor.FindMember("z_order");
-                it != rawActor.MemberEnd() && it->value.IsInt())
-            {
-                patch.zOrder_ = it->value.GetInt();
-            }
-
-            if (const auto it = rawActor.FindMember("transform_scale_x");
-                it != rawActor.MemberEnd() && it->value.IsNumber())
-            {
-                patch.scaleX_ = it->value.GetFloat();
-            }
-
-            if (const auto it = rawActor.FindMember("transform_scale_y");
-                it != rawActor.MemberEnd() && it->value.IsNumber())
-            {
-                patch.scaleY_ = it->value.GetFloat();
+                transform2dPatch.positionY_ = it->value.GetFloat();
             }
 
             if (const auto it = rawActor.FindMember("transform_rotation_radians");
                 it != rawActor.MemberEnd() && it->value.IsNumber())
             {
-                patch.rotationRadians_ = it->value.GetFloat();
+                transform2dPatch.rotationRadians_ = it->value.GetFloat();
             }
 
-            return patch;
+            if (const auto it = rawActor.FindMember("transform_scale_x");
+                it != rawActor.MemberEnd() && it->value.IsNumber())
+            {
+                transform2dPatch.scaleX_ = it->value.GetFloat();
+            }
+
+            if (const auto it = rawActor.FindMember("transform_scale_y");
+                it != rawActor.MemberEnd() && it->value.IsNumber())
+            {
+                transform2dPatch.scaleY_ = it->value.GetFloat();
+            }
+
+            ContentSpace::Definition::ActorDataPatch actorPatch{};
+
+            actorPatch.transform2dPatch_ = transform2dPatch;
+
+            if (const auto it = rawActor.FindMember("z_order"); it != rawActor.MemberEnd() && it->value.IsInt())
+            {
+                actorPatch.zOrder_ = it->value.GetInt();
+            }
+
+            if (const auto it = rawActor.FindMember("name"); it != rawActor.MemberEnd() && it->value.IsString())
+            {
+                actorPatch.actorName_ = it->value.GetString();
+            }
+
+            if (const auto it = rawActor.FindMember("view_sprite"); it != rawActor.MemberEnd() && it->value.IsString())
+            {
+                actorPatch.viewSpriteName_ = it->value.GetString();
+            }
+
+            return actorPatch;
+        }
+
+        void applyTransform2DPatch(
+            ObjectSpace::Transform2D&                         outTransform2d,
+            const ContentSpace::Definition::Transform2DPatch& patch
+        )
+        {
+            if (patch.positionX_.has_value())
+            {
+                outTransform2d.position_.x = *(patch.positionX_);
+            }
+
+            if (patch.positionY_.has_value())
+            {
+                outTransform2d.position_.y = *(patch.positionY_);
+            }
+
+            if (patch.rotationRadians_.has_value())
+            {
+                outTransform2d.rotationRadians_ = *patch.rotationRadians_;
+            }
+
+            if (patch.scaleX_.has_value())
+            {
+                outTransform2d.scale_.x = *(patch.scaleX_);
+            }
+
+            if (patch.scaleY_.has_value())
+            {
+                outTransform2d.scale_.y = *(patch.scaleY_);
+            }
         }
 
         void applyActorDataPatch(
@@ -71,34 +107,11 @@ namespace Uncarved
             const ContentSpace::Definition::ActorDataPatch& outPatch
         )
         {
-            if (outPatch.rotationRadians_.has_value())
-            {
-                outDefinition.rotationRadians_ = *outPatch.rotationRadians_;
-            }
-
-            if (outPatch.x_.has_value())
-            {
-                outDefinition.x_ = *outPatch.x_;
-            }
-
-            if (outPatch.y_.has_value())
-            {
-                outDefinition.y_ = *outPatch.y_;
-            }
+            applyTransform2DPatch(outDefinition.transform2d_, outPatch.transform2dPatch_);
 
             if (outPatch.zOrder_.has_value())
             {
                 outDefinition.zOrder_ = *outPatch.zOrder_;
-            }
-
-            if (outPatch.scaleX_.has_value())
-            {
-                outDefinition.scaleX_ = *outPatch.scaleX_;
-            }
-
-            if (outPatch.scaleY_.has_value())
-            {
-                outDefinition.scaleY_ = *outPatch.scaleY_;
             }
 
             if (outPatch.actorName_.has_value())
@@ -353,18 +366,12 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {ParseError{
-                "error: Resources/Sprites.sprite has parse error.",
-                ParseErrorType::ParseFailed
-            }};
+            return {ParseError{"error: Resources/Sprites.sprite has parse error.", ParseErrorType::ParseFailed}};
         }
 
         if (!document.IsObject())
         {
-            return {ParseError{
-                "error: Resources/Sprites.sprite is not Object.",
-                ParseErrorType::InvalidStructure
-            }};
+            return {ParseError{"error: Resources/Sprites.sprite is not Object.", ParseErrorType::InvalidStructure}};
         }
 
         if (!document.HasMember("sprites") || !document["sprites"].IsObject())
@@ -440,11 +447,7 @@ namespace Uncarved::ContentSpace
             auto spriteValue = ViewSpace::Sprite::createSprite(
                 textureIt->value.GetString(),
                 pixelsPerWUIt->value.GetFloat(),
-                glm::fvec2
-                {
-                    normalizedPivotX,
-                    normalizedPivotY
-                }
+                glm::fvec2{normalizedPivotX, normalizedPivotY}
             );
 
             if (!spriteValue)

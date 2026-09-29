@@ -63,10 +63,8 @@ namespace Uncarved::GameSpace
     void World::addActor(const ObjectSpace::DefinitionalActor& definitionalActor, const ViewSpace::Sprite* outSprite)
     {
         actors_.emplace_back(
-            definitionalActor.rotationRadians_,
-            glm::ivec2{definitionalActor.x_, definitionalActor.y_},
+            definitionalActor.transform2d_,
             definitionalActor.zOrder_,
-            glm::fvec2{definitionalActor.scaleX_, definitionalActor.scaleY_},
             definitionalActor.actorName_,
             outSprite
         );
@@ -75,6 +73,5 @@ namespace Uncarved::GameSpace
         const auto&       actor = actors_.back();
 
         actorIndexById_[actor.getId()] = actorIndex;
-
     }
 } // namespace Uncarved::GameSpace

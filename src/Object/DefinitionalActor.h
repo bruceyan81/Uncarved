@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Object/Transform2D.h"
+
 #include <optional>
 #include <string>
 
@@ -7,13 +9,8 @@ namespace Uncarved::ObjectSpace
 {
     struct DefinitionalActor final
     {
-        int   x_{};
-        int   y_{};
-        int   zOrder_{0};
-        float scaleX_{1.0f};
-        float scaleY_{1.0f};
-        float rotationRadians_{};
-
+        ObjectSpace::Transform2D   transform2d_{};
+        int                        zOrder_{0};
         std::string                actorName_{};
         std::optional<std::string> viewSpriteName_{};
     };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Transform2D.h"
+
 #include "View/Sprite.h"
 
 #include <glm/glm.hpp>
@@ -21,10 +23,8 @@ namespace Uncarved::ObjectSpace
     {
     public:
         Actor(
-            float       rotationRadians,
-            glm::ivec2  position,
+            Transform2D transform2d,
             int         zOrder,
-            glm::fvec2  scale,
             std::string actorName,
 
             const ViewSpace::Sprite* outSprite
@@ -41,29 +41,19 @@ namespace Uncarved::ObjectSpace
             return this->id_ == other.id_;
         }
 
+        const Transform2D& getTransform2d() const noexcept
+        {
+            return transform2d_;
+        }
+
         ActorId getId() const noexcept
         {
             return id_;
         }
 
-        float getRotationRadians() const noexcept
-        {
-            return rotationRadians_;
-        }
-
-        const glm::ivec2& getPosition() const noexcept
-        {
-            return position_;
-        }
-
         int getZOrder() const noexcept
         {
             return zOrder_;
-        }
-
-        const glm::fvec2& getScale() const noexcept
-        {
-            return scale_;
         }
 
         const std::string& getActorName() const noexcept
@@ -82,11 +72,9 @@ namespace Uncarved::ObjectSpace
         inline static ActorId    actorCount_ = 0;
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
-        float       rotationRadians_;
+        Transform2D transform2d_{};
         ActorId     id_;
-        glm::ivec2  position_;
         int         zOrder_;
-        glm::fvec2  scale_;
         std::string actorName_;
 
         const ViewSpace::Sprite* outSprite_;

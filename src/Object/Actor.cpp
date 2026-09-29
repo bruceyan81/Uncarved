@@ -5,18 +5,14 @@
 namespace Uncarved::ObjectSpace
 {
     Actor::Actor(
-        float       rotationRadians,
-        glm::ivec2  position,
+        Transform2D transform2d,
         int         zOrder,
-        glm::fvec2  scale,
         std::string actorName,
 
         const ViewSpace::Sprite* outSprite
     )
-        : rotationRadians_(rotationRadians)
-        , position_(std::move(position))
+        : transform2d_(transform2d)
         , zOrder_(std::move(zOrder))
-        , scale_(std::move(scale))
         , actorName_(std::move(actorName))
 
         , outSprite_(outSprite)
@@ -25,11 +21,9 @@ namespace Uncarved::ObjectSpace
     }
 
     Actor::Actor(Actor&& other) noexcept
-        : rotationRadians_(other.rotationRadians_)
+        : transform2d_(other.transform2d_)
         , id_(std::exchange(other.id_, kInvalidId_))
-        , position_(std::move(other.position_))
         , zOrder_(std::move(other.zOrder_))
-        , scale_(std::move(other.scale_))
         , actorName_(std::move(other.actorName_))
 
         , outSprite_(other.outSprite_)
