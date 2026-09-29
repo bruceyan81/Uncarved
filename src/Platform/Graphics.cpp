@@ -212,11 +212,11 @@ namespace Uncarved::PlatformSpace
             return false;
         }
 
-        const bool bFlipHorizontal = spriteDrawTransform.screenSizePixels_.x < 0.0f;
-        const bool bFlipVertical = spriteDrawTransform.screenSizePixels_.y < 0.0f;
+        const bool bFlipHorizontal = spriteDrawTransform.viewportSizePixels_.x < 0.0f;
+        const bool bFlipVertical = spriteDrawTransform.viewportSizePixels_.y < 0.0f;
 
-        const float textureWidth = std::abs(spriteDrawTransform.screenSizePixels_.x);
-        const float textureHeight = std::abs(spriteDrawTransform.screenSizePixels_.y);
+        const float textureWidth = std::abs(spriteDrawTransform.viewportSizePixels_.x);
+        const float textureHeight = std::abs(spriteDrawTransform.viewportSizePixels_.y);
 
         const glm::fvec2 normalizedPivot = spriteDrawTransform.normalizedPivotPoint_;
         const float      pivotX =
@@ -226,8 +226,8 @@ namespace Uncarved::PlatformSpace
             bFlipVertical ? textureHeight * (1.0f - normalizedPivot.y) : textureHeight * normalizedPivot.y;
 
         SDL_FRect dstRect{
-            spriteDrawTransform.screenPositionPixels_.x - pivotX,
-            spriteDrawTransform.screenPositionPixels_.y - pivotY,
+            spriteDrawTransform.viewportPositionPixels_.x - pivotX,
+            spriteDrawTransform.viewportPositionPixels_.y - pivotY,
             textureWidth,
             textureHeight
         };
@@ -258,7 +258,7 @@ namespace Uncarved::PlatformSpace
             texture.impl_->getTexture(),
             nullptr,
             &dstRect,
-            spriteDrawTransform.getRotationDegrees(),
+            -spriteDrawTransform.getRotationDegrees(),
             &rotationCenter,
             flipFlag()
         );

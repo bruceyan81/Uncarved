@@ -57,7 +57,7 @@ namespace Uncarved::ViewSpace
         return viewportWidthPixels / orthoWidth_;
     }
 
-    glm::fvec2 Camera2D::projectWorldToViewport(
+    glm::fvec2 Camera2D::worldToViewport(
         const glm::fvec2& worldPosition,
         const glm::ivec2& viewportSizePixels
     ) const noexcept

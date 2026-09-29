@@ -403,12 +403,12 @@ namespace Uncarved::ContentSpace
                 return {ValidationError{"error: sprite's texture is not String.", ValidationErrorType::InvalidData}};
             }
 
-            const auto pixelsPerWUIt = sprite.FindMember("pixels_per_world_unit");
+            const auto texturePixelsPerWUIt = sprite.FindMember("texture_pixels_per_world_unit");
 
-            if (pixelsPerWUIt == sprite.MemberEnd() || !pixelsPerWUIt->value.IsNumber())
+            if (texturePixelsPerWUIt == sprite.MemberEnd() || !texturePixelsPerWUIt->value.IsNumber())
             {
                 return {ValidationError{
-                    "error: sprite's pixels_per_world_unit is not number.",
+                    "error: sprite's texture_pixels_per_world_unit is not number.",
                     ValidationErrorType::InvalidData
                 }};
             }
@@ -446,7 +446,7 @@ namespace Uncarved::ContentSpace
 
             auto spriteValue = ViewSpace::Sprite::createSprite(
                 textureIt->value.GetString(),
-                pixelsPerWUIt->value.GetFloat(),
+                texturePixelsPerWUIt->value.GetFloat(),
                 glm::fvec2{normalizedPivotX, normalizedPivotY}
             );
 

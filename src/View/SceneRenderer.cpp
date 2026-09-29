@@ -67,13 +67,13 @@ namespace Uncarved::ViewSpace
 
             const auto& transform2d = actor.getTransform2d();
 
-            const glm::fvec2 screenPositionPixels =
-                outCamera2d.projectWorldToViewport(glm::fvec2{transform2d.position_}, *viewportPixels);
+            const glm::fvec2 viewportPositionPixels =
+                outCamera2d.worldToViewport(transform2d.position_, *viewportPixels);
 
-            const float screenSizeWidth = texture->getWidth() / actor.getSprite()->getPixelsPerWorldUnit()
+            const float screenSizeWidth = texture->getWidth() / actor.getSprite()->getTexturePixelsPerWorldUnit()
                 * transform2d.scale_.x * viewportPixelsPerWU;
 
-            const float screenSizeHeight = texture->getHeight() / actor.getSprite()->getPixelsPerWorldUnit()
+            const float screenSizeHeight = texture->getHeight() / actor.getSprite()->getTexturePixelsPerWorldUnit()
                 * transform2d.scale_.y * viewportPixelsPerWU;
 
             records_.emplace_back(
@@ -82,7 +82,7 @@ namespace Uncarved::ViewSpace
                     PlatformSpace::SpriteDrawTransform
                     {
                         sprite->getNormalizedPivot(),
-                        screenPositionPixels,
+                        viewportPositionPixels,
                         glm::fvec2{screenSizeWidth, screenSizeHeight},
                         transform2d.rotationRadians_
                     },

@@ -21,8 +21,8 @@ namespace Uncarved::PlatformSpace
     struct SpriteDrawTransform
     {
         glm::fvec2 normalizedPivotPoint_{};
-        glm::fvec2 screenPositionPixels_{};
-        glm::fvec2 screenSizePixels_{1.0f, 1.0f};
+        glm::fvec2 viewportPositionPixels_{};
+        glm::fvec2 viewportSizePixels_{1.0f, 1.0f};
         double     rotationRadians_{};
 
         double getRotationDegrees() const noexcept
