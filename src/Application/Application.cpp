@@ -2,7 +2,7 @@
 
 #include "Content/ContentResult.h"
 #include "Game/Runtime.h"
-#include "Input/Input.h"
+#include "Input/InputSystem.h"
 #include "Platform/EventPump.h"
 #include "Platform/PlatformRuntime.h"
 #include "Platform/Renderer.h"
@@ -128,8 +128,6 @@ namespace Uncarved::ApplicationSpace
         );
 
         PlatformSpace::TextureStore textureStore{renderer};
-        PlatformSpace::EventPump    eventPump{};
-        InputSpace::InputCore       inputCore{eventPump};
 
         auto camera2d = ViewSpace::Camera2D::createCamera2D(renderingConfig.cameraOrthoWidth_);
 
@@ -140,10 +138,14 @@ namespace Uncarved::ApplicationSpace
 
         ViewSpace::SceneRenderer sceneRenderer{renderer, textureStore};
 
+        PlatformSpace::EventPump eventPump{};
+        InputSpace::InputSystem inputSystem{};
+
         GameSpace::RuntimeCore runtimeCore{
             std::move(*camera2d),
             appTime_,
-            inputCore,
+            inputSystem,
+            eventPump,
             renderer,
             textureStore,
             sceneRenderer,

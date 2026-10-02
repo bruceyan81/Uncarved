@@ -4,7 +4,7 @@
 
 namespace Uncarved
 {
-    class Event;
+    class PlatformEvent;
 }
 
 namespace Uncarved::PlatformSpace
@@ -16,7 +16,7 @@ namespace Uncarved::PlatformSpace
 
         ~EventPump();
 
-        bool pollEvent(Event& event);
+        bool pollEvent(PlatformEvent& platformEvent);
 
     private:
         struct Impl;

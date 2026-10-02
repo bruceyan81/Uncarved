@@ -15,7 +15,7 @@ namespace Uncarved::ContentSpace
 
 namespace Uncarved::InputSpace
 {
-    class InputCore;
+    class InputSystem;
 } // namespace Uncarved::InputSpace
 
 namespace Uncarved::TimeSpace
@@ -25,6 +25,7 @@ namespace Uncarved::TimeSpace
 
 namespace Uncarved::PlatformSpace
 {
+    class EventPump;
     class Renderer;
     class TextureStore;
 } // namespace Uncarved::PlatformSpace
@@ -49,10 +50,11 @@ namespace Uncarved::GameSpace
     {
     public:
         RuntimeCore(
-            ViewSpace::Camera2D&&            camera2d,
+            ViewSpace::Camera2D&& camera2d,
 
             TimeSpace::AppTime&              outAppTime,
-            InputSpace::InputCore&           outInputCore,
+            InputSpace::InputSystem&         outInputSystem,
+            PlatformSpace::EventPump&        outEventPump,
             PlatformSpace::Renderer&         outRenderer,
             PlatformSpace::TextureStore&     outTextureStore,
             ViewSpace::SceneRenderer&        outSceneRenderer,
@@ -76,7 +78,8 @@ namespace Uncarved::GameSpace
         ViewSpace::Camera2D camera2d_;
 
         TimeSpace::AppTime&              outAppTime_;
-        InputSpace::InputCore&           outInputCore_;
+        InputSpace::InputSystem&         outInputSystem_;
+        PlatformSpace::EventPump&        outEventPump_;
         PlatformSpace::Renderer&         outRenderer_;
         PlatformSpace::TextureStore&     outTextureStore_;
         ViewSpace::SceneRenderer&        outSceneRenderer_;
@@ -85,7 +88,7 @@ namespace Uncarved::GameSpace
         ContentSpace::ContentResult loadScene(std::string_view sceneName);
         ContentSpace::ContentResult loadWorldTextures(const World& world);
 
-        void                        commitCommands() noexcept;
-        void                        commitCommand(const ExitRuntimeCommand& command) noexcept;
+        void commitCommands() noexcept;
+        void commitCommand(const ExitRuntimeCommand& command) noexcept;
     };
 } // namespace Uncarved::GameSpace

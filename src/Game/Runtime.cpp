@@ -2,8 +2,9 @@
 
 #include "Content/ContentResult.h"
 #include "Content/GameContentLoader.h"
-#include "Input/Command.h"
-#include "Input/Input.h"
+#include "Input/InputSystem.h"
+#include "Platform/EventPump.h"
+#include "Platform/PlatformEvent.h"
 #include "Platform/Renderer.h"
 #include "Platform/TextureStore.h"
 #include "Time/AppTime.h"
@@ -19,10 +20,11 @@
 namespace Uncarved::GameSpace
 {
     RuntimeCore::RuntimeCore(
-        ViewSpace::Camera2D&&            camera2d,
+        ViewSpace::Camera2D&& camera2d,
 
         TimeSpace::AppTime&              outAppTime,
-        InputSpace::InputCore&           outInputCore,
+        InputSpace::InputSystem&         outInputSystem,
+        PlatformSpace::EventPump&        outEventPump,
         PlatformSpace::Renderer&         outRenderer,
         PlatformSpace::TextureStore&     outTextureStore,
         ViewSpace::SceneRenderer&        outSceneRenderer,
@@ -31,7 +33,8 @@ namespace Uncarved::GameSpace
         : camera2d_(std::move(camera2d))
 
         , outAppTime_(outAppTime)
-        , outInputCore_(outInputCore)
+        , outInputSystem_(outInputSystem)
+        , outEventPump_(outEventPump)
         , outRenderer_(outRenderer)
         , outTextureStore_(outTextureStore)
         , outSceneRenderer_(outSceneRenderer)
@@ -62,9 +65,27 @@ namespace Uncarved::GameSpace
             outAppTime_.update();
             world_.updateTime(outAppTime_.getDeltaTime());
 
-            if (outInputCore_.pollInputRequest() == InputSpace::Intention::Quit)
+            outInputSystem_.beginFrame();
+
+            PlatformEvent platformEvent{};
+
+            while (outEventPump_.pollEvent(platformEvent))
             {
-                commandBuffer_.submit(ExitRuntimeCommand{});
+                switch (platformEvent.type_)
+                {
+                    case PlatformEventType::Quit:
+                    case PlatformEventType::WindowCloseRequested:
+                        commandBuffer_.submit(ExitRuntimeCommand{});
+                        break;
+
+                    case PlatformEventType::KeyPressed:
+                    case PlatformEventType::KeyReleased:
+                    case PlatformEventType::KeyRepeat:
+                        outInputSystem_.processPlatformEvent(platformEvent);
+                        break;
+                    default:
+                        break;
+                }
             }
 
             commitCommands();

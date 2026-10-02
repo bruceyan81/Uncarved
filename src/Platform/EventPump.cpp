@@ -1,6 +1,6 @@
 #include "EventPump.h"
 
-#include "Event.h"
+#include "PlatformEvent.h"
 
 #include <SDL3/SDL.h>
 
@@ -43,40 +43,60 @@ namespace Uncarved::PlatformSpace
             }
         }
 
-        void translateEvent(Event& event, const SDL_Event& sdlEvent)
+        void translatePlatformEvent(PlatformEvent& platformEvent, const SDL_Event& sdlEvent)
         {
-            event = {};
+            platformEvent = {};
 
             switch (sdlEvent.type)
             {
                 case SDL_EventType::SDL_EVENT_QUIT:
-                    event.type_ = EventType::Quit;
-                    break;
+                {
+                    platformEvent.type_ = PlatformEventType::Quit;
+                }
+                break;
+
                 case SDL_EventType::SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-                    event.type_ = EventType::WindowCloseRequested;
-                    break;
+                {
+                    platformEvent.type_ = PlatformEventType::WindowCloseRequested;
+                }
+                break;
+
                 case SDL_EventType::SDL_EVENT_KEY_DOWN:
-                    event.type_ = EventType::KeyDown;
-                    event.keyScancode_ = translateScancode(sdlEvent.key.scancode);
-                    event.keyRepeat_ = sdlEvent.key.repeat;
-                    break;
+                {
+                    platformEvent.keyScancode_ = translateScancode(sdlEvent.key.scancode);
+                    platformEvent.type_ = sdlEvent.key.repeat ? PlatformEventType::KeyRepeat : PlatformEventType::KeyPressed;
+                }
+                break;
+
+                case SDL_EventType::SDL_EVENT_KEY_UP:
+                {
+                    platformEvent.keyScancode_ = translateScancode(sdlEvent.key.scancode);
+                    platformEvent.type_ = PlatformEventType::KeyReleased;
+                }
+                break;
+
                 case SDL_EventType::SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    event.type_ = EventType::MouseButtonDown;
-                    event.mouseButton_ = translateMouseButton(sdlEvent.button);
-                    break;
+                {
+                    platformEvent.type_ = PlatformEventType::MouseButtonDown;
+                    platformEvent.mouseButton_ = translateMouseButton(sdlEvent.button);
+                }
+                break;
+
                 default:
-                    event.type_ = EventType::None;
-                    break;
+                {
+                    platformEvent.type_ = PlatformEventType::None;
+                }
+                break;
             }
         }
 
-        bool pollEvent(Event& event)
+        bool pollEvent(PlatformEvent& platformEvent)
         {
             SDL_Event sdlEvent{};
 
             if (SDL_PollEvent(&sdlEvent))
             {
-                translateEvent(event, sdlEvent);
+                translatePlatformEvent(platformEvent, sdlEvent);
             }
             else
             {
@@ -93,8 +113,8 @@ namespace Uncarved::PlatformSpace
 
     EventPump::~EventPump() = default;
 
-    bool EventPump::pollEvent(Event& event)
+    bool EventPump::pollEvent(PlatformEvent& platformEvent)
     {
-        return impl_->pollEvent(event);
+        return impl_->pollEvent(platformEvent);
     }
 } // namespace Uncarved::PlatformSpace

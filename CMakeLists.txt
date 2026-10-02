@@ -57,7 +57,7 @@ add_library(UncarvedCore STATIC
     src/Game/CommandBuffer.cpp
     src/Game/Runtime.cpp
     src/Game/World.cpp
-    src/Input/Input.cpp
+    src/Input/InputSystem.cpp
     src/Object/Actor.cpp
     src/Time/AppTime.cpp
     src/Time/WorldTime.cpp
