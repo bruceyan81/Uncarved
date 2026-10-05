@@ -3,6 +3,7 @@
 #include "Content/ContentResult.h"
 #include "Game/Runtime.h"
 #include "Input/InputSystem.h"
+#include "Logging/Log.h"
 #include "Platform/EventPump.h"
 #include "Platform/PlatformRuntime.h"
 #include "Platform/Renderer.h"
@@ -20,7 +21,19 @@ namespace Uncarved::ApplicationSpace
 {
     ApplicationCore::ApplicationCore()
     {
+        if (!Log::initialize())
+        {
+            std::cerr << "Log initialization failure.";
+        }
+
+        UC_LOG(gLogCore, LogVerbosity::Info, "Log initialized");
         applicationState_ = ApplicationState::Init;
+    }
+
+    ApplicationCore::~ApplicationCore()
+    {
+        UC_LOG(gLogCore, LogVerbosity::Info, "Log shutdown.");
+        Log::shutdown();
     }
 
     int ApplicationCore::initializeApplication()

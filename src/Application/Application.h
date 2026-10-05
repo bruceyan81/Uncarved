@@ -25,7 +25,7 @@ namespace Uncarved::ApplicationSpace
         ApplicationCore(ApplicationCore&&) = delete;
         ApplicationCore& operator=(ApplicationCore&&) = delete;
 
-        ~ApplicationCore() = default;
+        ~ApplicationCore();
 
         int initializeApplication();
 

@@ -7,6 +7,8 @@ project(Uncarved
 
 # Third Party
 
+find_package(spdlog CONFIG REQUIRED)
+
 find_package(glm CONFIG REQUIRED)
 
 find_path(RAPIDJSON_INCLUDE_DIR
@@ -18,6 +20,24 @@ find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_mixer CONFIG REQUIRED)
+
+# Logging
+
+add_library(UncarvedLogging STATIC
+    src/Logging/Log.cpp
+    src/Logging/LogCategories.cpp
+)
+
+target_link_libraries(UncarvedLogging
+    PRIVATE
+        spdlog::spdlog
+)
+
+target_include_directories(UncarvedLogging PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+target_compile_features(UncarvedLogging PUBLIC cxx_std_20)
 
 # Platform
 
@@ -41,6 +61,7 @@ target_link_libraries(UncarvedPlatform
         $<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image-shared>,SDL3_image::SDL3_image-shared,SDL3_image::SDL3_image-static>
         SDL3_ttf::SDL3_ttf
         $<IF:$<TARGET_EXISTS:SDL3_mixer::SDL3_mixer>,SDL3_mixer::SDL3_mixer,SDL3_mixer::SDL3_mixer-static>
+        UncarvedLogging
 )
 
 target_include_directories(UncarvedPlatform PUBLIC
@@ -69,6 +90,8 @@ target_link_libraries(UncarvedCore
     PUBLIC
         glm::glm
         UncarvedPlatform
+    PRIVATE
+        UncarvedLogging
 )
 
 target_include_directories(UncarvedCore PUBLIC
@@ -89,11 +112,12 @@ add_executable(Uncarved
 
 target_link_libraries(Uncarved PRIVATE
     UncarvedCore
+    UncarvedLogging
 )
 
 target_compile_features(Uncarved PRIVATE cxx_std_20)
 
-foreach(target IN ITEMS UncarvedCore UncarvedPlatform Uncarved)
+foreach(target IN ITEMS UncarvedCore UncarvedPlatform UncarvedLogging Uncarved)
     set_target_properties(${target} PROPERTIES
         CXX_EXTENSIONS OFF
     )
@@ -103,6 +127,7 @@ foreach(target IN ITEMS UncarvedCore UncarvedPlatform Uncarved)
             /W4
             /permissive-
             /Zc:__cplusplus
+            /Zc:preprocessor
             /utf-8
         )
     else()

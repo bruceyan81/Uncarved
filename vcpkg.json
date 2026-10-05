@@ -16,7 +16,8 @@
         "mpg123"
       ]
     },
-    "sdl3-ttf"
+    "sdl3-ttf",
+    "spdlog"
   ],
   "overrides": [
     {
@@ -42,6 +43,10 @@
     {
       "name": "sdl3-mixer",
       "version": "3.2.4"
+    },
+    {
+      "name": "spdlog",
+      "version": "1.17.0#1"
     }
   ]
 }
