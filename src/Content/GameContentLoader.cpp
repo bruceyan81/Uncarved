@@ -311,7 +311,7 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            UC_LOG(gLogContent, LogVerbosity::Info, "info: Resources/Rendering.config has not x_resolution.");
+            UC_LOG(gLogContent, LogVerbosity::Info, "Resources/Rendering.config has not x_resolution.");
         }
 
         if (document.HasMember("y_resolution") && document["y_resolution"].IsInt())
@@ -320,7 +320,7 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            UC_LOG(gLogContent, LogVerbosity::Info, "info: Resources/Rendering.config has not y_resolution.");
+            UC_LOG(gLogContent, LogVerbosity::Info, "Resources/Rendering.config has not y_resolution.");
         }
 
         if (document.HasMember("clear_color_r") && document["clear_color_r"].IsInt())
