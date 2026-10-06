@@ -1,9 +1,9 @@
 #include "AudioDevice.h"
 #include "Detail/AudioDeviceImpl.h"
 
-#include <SDL3_mixer/SDL_mixer.h>
+#include "Logging/Log.h"
 
-#include <iostream>
+#include <SDL3_mixer/SDL_mixer.h>
 
 namespace Uncarved::PlatformSpace
 {
@@ -18,7 +18,7 @@ namespace Uncarved::PlatformSpace
         {
             if (!MIX_Init())
             {
-                std::cerr << "MIX_Init failed: " << SDL_GetError() << '\n';
+                UC_LOG(gLogAudio, LogVerbosity::Error, "MIX_Init failed: {}", SDL_GetError());
                 return false;
             }
             else

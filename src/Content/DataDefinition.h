@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Logging/Log.h"
 #include "Object/Transform2D.h"
 
-#include <iostream>
 #include <optional>
 #include <string>
 
@@ -32,7 +32,7 @@ namespace Uncarved::ContentSpace::Definition
 
         void showErrorMessage() const noexcept
         {
-            std::cout << message_;
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", message_);
         }
     };
 

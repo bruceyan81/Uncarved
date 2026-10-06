@@ -1,8 +1,9 @@
 #include "PlatformRuntime.h"
 
+#include "Logging/Log.h"
+
 #include <SDL3/SDL.h>
 
-#include <iostream>
 #include <memory>
 
 namespace Uncarved::PlatformSpace
@@ -27,7 +28,7 @@ namespace Uncarved::PlatformSpace
 
             if (!bIsSDLInitialized_)
             {
-                std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
+                UC_LOG(gLogPlatform, LogVerbosity::Error, "SDL_Init failed: {}", SDL_GetError());
                 shutdown();
                 return false;
             }

@@ -3,6 +3,7 @@
 #include "Content/ContentResult.h"
 #include "Content/GameContentLoader.h"
 #include "Input/InputSystem.h"
+#include "Logging/Log.h"
 #include "Platform/EventPump.h"
 #include "Platform/PlatformEvent.h"
 #include "Platform/Renderer.h"
@@ -11,7 +12,6 @@
 #include "View/SceneRenderer.h"
 #include "View/Sprite.h"
 
-#include <iostream>
 #include <string>
 #include <utility>
 #include <variant>
@@ -54,7 +54,7 @@ namespace Uncarved::GameSpace
 
         if (!loadSceneResult.isSucceeded())
         {
-            std::cerr << loadSceneResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", loadSceneResult.getErrorMessage());
             return 1;
         }
 

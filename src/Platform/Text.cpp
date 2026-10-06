@@ -6,11 +6,11 @@
 #include "TextRuntime.h"
 
 #include "Content/ContentResult.h"
+#include "Logging/Log.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -154,7 +154,7 @@ namespace Uncarved::PlatformSpace
 
             if (textEngine_ == nullptr)
             {
-                std::cerr << "TTF_CreateRendererTextEngine failed: " << SDL_GetError() << '\n';
+                UC_LOG(gLogRender, LogVerbosity::Error, "TTF_CreateRendererTextEngine failed: {}", SDL_GetError());
                 return false;
             }
 
@@ -173,13 +173,13 @@ namespace Uncarved::PlatformSpace
 
             if (text_ == nullptr)
             {
-                std::cerr << "TTF_CreateText failed: " << SDL_GetError() << '\n';
+                UC_LOG(gLogRender, LogVerbosity::Error, "TTF_CreateText failed: {}", SDL_GetError());
                 return false;
             }
 
             if (!TTF_SetTextColor(text_, 0, 0, 0, 255))
             {
-                std::cerr << "TTF_SetTextColor failed: " << SDL_GetError() << '\n';
+                UC_LOG(gLogRender, LogVerbosity::Error, "TTF_SetTextColor failed: {}", SDL_GetError());
                 TTF_DestroyText(text_);
                 text_ = nullptr;
                 return false;

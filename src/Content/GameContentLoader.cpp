@@ -2,6 +2,8 @@
 
 #include "ContentResult.h"
 
+#include "Logging/Log.h"
+
 #include "Object/Transform2D.h"
 
 #include <rapidjson/document.h>
@@ -10,7 +12,6 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <iostream>
 #include <utility>
 
 namespace Uncarved
@@ -310,7 +311,7 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            std::cout << "info: Resources/Rendering.config has not x_resolution.";
+            UC_LOG(gLogContent, LogVerbosity::Info, "info: Resources/Rendering.config has not x_resolution.");
         }
 
         if (document.HasMember("y_resolution") && document["y_resolution"].IsInt())
@@ -319,7 +320,7 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            std::cout << "info: Resources/Rendering.config has not y_resolution.";
+            UC_LOG(gLogContent, LogVerbosity::Info, "info: Resources/Rendering.config has not y_resolution.");
         }
 
         if (document.HasMember("clear_color_r") && document["clear_color_r"].IsInt())

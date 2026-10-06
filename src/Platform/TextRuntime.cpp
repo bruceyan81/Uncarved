@@ -1,9 +1,10 @@
 #include "TextRuntime.h"
 
+#include "Logging/Log.h"
+
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include <iostream>
 #include <memory>
 
 namespace Uncarved::PlatformSpace
@@ -32,7 +33,7 @@ namespace Uncarved::PlatformSpace
 
             if (!bIsSDLTtfInitialized_)
             {
-                std::cerr << "TTF_Init failed: " << SDL_GetError() << '\n';
+                UC_LOG(gLogPlatform, LogVerbosity::Error, "TTF_Init failed: {}", SDL_GetError());
                 return false;
             }
 

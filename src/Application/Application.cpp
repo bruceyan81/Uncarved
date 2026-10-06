@@ -42,7 +42,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!resourceDirectoryResult.isSucceeded())
         {
-            std::cerr << resourceDirectoryResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", resourceDirectoryResult.getErrorMessage());
             return 1;
         }
 
@@ -50,7 +50,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!gameConfigCheckResult.isSucceeded())
         {
-            std::cerr << gameConfigCheckResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", gameConfigCheckResult.getErrorMessage());
             return 1;
         }
 
@@ -58,7 +58,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!gameConfigLoadResult.isSucceeded())
         {
-            std::cerr << gameConfigLoadResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", gameConfigLoadResult.getErrorMessage());
             return 1;
         }
 
@@ -66,7 +66,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!renderingConfigCheckResult.isSucceeded())
         {
-            std::cerr << renderingConfigCheckResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", renderingConfigCheckResult.getErrorMessage());
             return 1;
         }
 
@@ -74,7 +74,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!renderingConfigLoadResult.isSucceeded())
         {
-            std::cerr << renderingConfigLoadResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", renderingConfigLoadResult.getErrorMessage());
             return 1;
         }
 
@@ -82,7 +82,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!spritesCheckResult.isSucceeded())
         {
-            std::cerr << spritesCheckResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", spritesCheckResult.getErrorMessage());
             return 1;
         }
 
@@ -90,7 +90,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!spritesLoadResult.isSucceeded())
         {
-            std::cerr << spritesLoadResult.getErrorMessage();
+            UC_LOG(gLogContent, LogVerbosity::Error, "{}", spritesLoadResult.getErrorMessage());
             return 1;
         }
 

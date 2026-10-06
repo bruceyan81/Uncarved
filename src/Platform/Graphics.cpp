@@ -5,13 +5,13 @@
 #include "Window.h"
 
 #include "Content/ContentResult.h"
+#include "Logging/Log.h"
 
 #include <glm/glm.hpp>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
 #include <cstddef>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -113,7 +113,7 @@ namespace Uncarved::PlatformSpace
 
             if (windowPtr_ == nullptr)
             {
-                std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << '\n';
+                UC_LOG(gLogPlatform, LogVerbosity::Error, "SDL_CreateWindow failed: {}", SDL_GetError());
                 return false;
             }
 
@@ -165,13 +165,13 @@ namespace Uncarved::PlatformSpace
 
         if (renderer_ == nullptr)
         {
-            std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << '\n';
+            UC_LOG(gLogRender, LogVerbosity::Error, "SDL_CreateRenderer failed: {}", SDL_GetError());
             return false;
         }
 
         if (!SDL_SetRenderVSync(renderer_, 1))
         {
-            std::cerr << "SDL_SetRenderVSync failed: " << SDL_GetError() << '\n';
+            UC_LOG(gLogRender, LogVerbosity::Error, "SDL_SetRenderVSync failed: {}", SDL_GetError());
             SDL_DestroyRenderer(renderer_);
             renderer_ = nullptr;
             return false;

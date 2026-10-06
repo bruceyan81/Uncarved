@@ -5,9 +5,9 @@
 #include "Detail/SoundWaveImpl.h"
 #include "SoundWave.h"
 
-#include <SDL3_mixer/SDL_mixer.h>
+#include "Logging/Log.h"
 
-#include <iostream>
+#include <SDL3_mixer/SDL_mixer.h>
 
 namespace Uncarved::PlatformSpace
 {
@@ -36,7 +36,7 @@ namespace Uncarved::PlatformSpace
 
                 if (mixTrack_ == nullptr)
                 {
-                    std::cerr << "MIX_Track failed: " << SDL_GetError() << '\n';
+                    UC_LOG(gLogAudio, LogVerbosity::Error, "MIX_Track failed: {}", SDL_GetError());
                     MIX_DestroyTrack(mixTrack_);
                     return false;
                 }
@@ -47,7 +47,7 @@ namespace Uncarved::PlatformSpace
             }
             else
             {
-                std::cerr << "Mixer is nullptr." << '\n';
+                UC_LOG(gLogAudio, LogVerbosity::Error, "Mixer is nullptr.");
                 return false;
             }
         }
