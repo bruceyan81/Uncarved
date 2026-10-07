@@ -73,7 +73,8 @@ target_compile_features(UncarvedPlatform PUBLIC cxx_std_20)
 # Core
 
 add_library(UncarvedCore STATIC
-    src/Application/Application.cpp
+    src/Application/ApplicationCore.cpp
+    src/Application/EntryPoint.cpp
     src/Content/GameContentLoader.cpp
     src/Game/CommandBuffer.cpp
     src/Game/Runtime.cpp
@@ -104,20 +105,21 @@ target_include_directories(UncarvedCore SYSTEM PRIVATE
 
 target_compile_features(UncarvedCore PUBLIC cxx_std_20)
 
-# Boot
+# Sandbox
 
-add_executable(Uncarved
-    src/Main.cpp
+add_subdirectory(Sandbox)
+
+set_property(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    PROPERTY VS_STARTUP_PROJECT Sandbox
 )
 
-target_link_libraries(Uncarved PRIVATE
+foreach(target IN ITEMS
     UncarvedCore
+    UncarvedPlatform
     UncarvedLogging
+    Sandbox
 )
-
-target_compile_features(Uncarved PRIVATE cxx_std_20)
-
-foreach(target IN ITEMS UncarvedCore UncarvedPlatform UncarvedLogging Uncarved)
     set_target_properties(${target} PROPERTIES
         CXX_EXTENSIONS OFF
     )
@@ -138,17 +140,3 @@ foreach(target IN ITEMS UncarvedCore UncarvedPlatform UncarvedLogging Uncarved)
         )
     endif()
 endforeach()
-
-add_custom_target(SyncResources ALL
-    COMMAND ${CMAKE_COMMAND} -E rm -rf
-        "$<TARGET_FILE_DIR:Uncarved>/Resources"
-
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_SOURCE_DIR}/Resources"
-        "$<TARGET_FILE_DIR:Uncarved>/Resources"
-
-    COMMENT "Syncing Resources."
-    VERBATIM
-)
-
-add_dependencies(Uncarved SyncResources)

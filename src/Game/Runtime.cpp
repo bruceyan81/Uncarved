@@ -1,5 +1,7 @@
 #include "Runtime.h"
 
+#include "Application/Application.h"
+#include "Application/RuntimeContext.h"
 #include "Content/ContentResult.h"
 #include "Content/GameContentLoader.h"
 #include "Input/InputSystem.h"
@@ -28,7 +30,8 @@ namespace Uncarved::GameSpace
         PlatformSpace::Renderer&         outRenderer,
         PlatformSpace::TextureStore&     outTextureStore,
         ViewSpace::SceneRenderer&        outSceneRenderer,
-        ContentSpace::GameContentLoader& outGameContentLoader
+        ContentSpace::GameContentLoader& outGameContentLoader,
+        ApplicationSpace::Application&   outApplication
     )
         : camera2d_(std::move(camera2d))
 
@@ -39,6 +42,7 @@ namespace Uncarved::GameSpace
         , outTextureStore_(outTextureStore)
         , outSceneRenderer_(outSceneRenderer)
         , outGameContentLoader_(outGameContentLoader)
+        , outApplication_(outApplication)
     {
         runtimeState_ = RuntimeState::Init;
     }
@@ -59,6 +63,10 @@ namespace Uncarved::GameSpace
         }
 
         runtimeState_ = RuntimeState::Running;
+
+        ApplicationSpace::RuntimeContext runtimeContext{world_, outInputSystem_, outAppTime_};
+
+        outApplication_.onInitialize(runtimeContext);
 
         while (runtimeState_ == RuntimeState::Running)
         {
@@ -95,12 +103,16 @@ namespace Uncarved::GameSpace
                 break;
             }
 
+            outApplication_.onUpdate(runtimeContext);
+
             if (!outRenderer_.clear() || !outSceneRenderer_.render(world_, camera2d_) || !outRenderer_.present())
             {
+                outApplication_.onShutdown(runtimeContext);
                 return 1;
             }
         }
 
+        outApplication_.onShutdown(runtimeContext);
         return runtimeState_ == RuntimeState::End ? 0 : 1;
     }
 

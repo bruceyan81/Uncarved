@@ -1,3 +1,5 @@
+#include "ApplicationCore.h"
+
 #include "Application.h"
 
 #include "Content/ContentResult.h"
@@ -19,22 +21,12 @@
 
 namespace Uncarved::ApplicationSpace
 {
-    ApplicationCore::ApplicationCore()
+    ApplicationCore::ApplicationCore(std::unique_ptr<Application> application) : application_(std::move(application))
     {
-        if (!Log::initialize())
-        {
-            std::cerr << "Log initialization failure.";
-        }
-
-        UC_LOG(gLogCore, LogVerbosity::Info, "Log initialized");
         applicationState_ = ApplicationState::Init;
     }
 
-    ApplicationCore::~ApplicationCore()
-    {
-        UC_LOG(gLogCore, LogVerbosity::Info, "Log shutdown.");
-        Log::shutdown();
-    }
+    ApplicationCore::~ApplicationCore() = default;
 
     int ApplicationCore::initializeApplication()
     {
@@ -162,7 +154,8 @@ namespace Uncarved::ApplicationSpace
             renderer,
             textureStore,
             sceneRenderer,
-            gameContentLoader_
+            gameContentLoader_,
+            *application_
         };
 
         if (runtimeCore.launch() == 0)

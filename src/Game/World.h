@@ -33,9 +33,10 @@ namespace Uncarved::GameSpace
         }
 
         const ObjectSpace::Actor* getActorById(ObjectSpace::ActorId id) const noexcept;
+        ObjectSpace::Actor*       getActorById(ObjectSpace::ActorId id) noexcept;
 
         std::optional<World> createReplacement(
-            std::span<const ObjectSpace::DefinitionalActor>                definitionalActors,
+            std::span<const ObjectSpace::DefinitionalActor>           definitionalActors,
             const std::unordered_map<std::string, ViewSpace::Sprite>& spritesByName
         ) const;
 

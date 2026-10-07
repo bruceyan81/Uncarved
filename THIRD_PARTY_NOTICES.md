@@ -13,7 +13,7 @@ information under:
 `<build-dir>/vcpkg_installed/<triplet>/share/<port>/copyright`
 
 Some third-party assets are bundled directly with the project under
-`Resources/`. These assets remain subject to their respective license terms,
+`Sandbox/Resources/`. These assets remain subject to their respective license terms,
 and applicable license texts are distributed alongside them.
 
 The notices below are provided for attribution and convenience.
@@ -57,10 +57,10 @@ Project: notofonts/latin-greek-cyrillic
 Release: `NotoSans-v2.015`
 Upstream commit: `c4a321e123e4d4ff315f57f4e0adf294fe3a95be`
 Upstream file: `NotoSans/googlefonts/variable-ttf/NotoSans[wdth,wght].ttf`
-Bundled file: `Resources/Fonts/NotoSans.ttf`
+Bundled file: `Sandbox/Resources/Fonts/NotoSans.ttf`
 Copyright: Copyright 2022 The Noto Project Authors
 License: SIL Open Font License, Version 1.1
-Bundled license: `Resources/Fonts/OFL-NotoSans.txt`
+Bundled license: `Sandbox/Resources/Fonts/OFL-NotoSans.txt`
 
 The bundled font binary is unmodified from the upstream release; only its
 filename has been changed for use within the project's resource layout.

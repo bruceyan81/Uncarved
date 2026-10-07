@@ -45,6 +45,7 @@ namespace Uncarved
     };
 
     extern const LogCategory gLogCore;
+    extern const LogCategory gApplicationCore;
     extern const LogCategory gLogPlatform;
     extern const LogCategory gLogContent;
     extern const LogCategory gLogRender;

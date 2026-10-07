@@ -5,7 +5,13 @@
 
 #include "View/Camera2D.h"
 
+#include <memory>
 #include <string_view>
+
+namespace Uncarved::ApplicationSpace
+{
+    class Application;
+}
 
 namespace Uncarved::ContentSpace
 {
@@ -58,7 +64,8 @@ namespace Uncarved::GameSpace
             PlatformSpace::Renderer&         outRenderer,
             PlatformSpace::TextureStore&     outTextureStore,
             ViewSpace::SceneRenderer&        outSceneRenderer,
-            ContentSpace::GameContentLoader& outGameContentLoader
+            ContentSpace::GameContentLoader& outGameContentLoader,
+            ApplicationSpace::Application&   outApplication
         );
 
         RuntimeCore(const RuntimeCore&) = delete;
@@ -84,6 +91,7 @@ namespace Uncarved::GameSpace
         PlatformSpace::TextureStore&     outTextureStore_;
         ViewSpace::SceneRenderer&        outSceneRenderer_;
         ContentSpace::GameContentLoader& outGameContentLoader_;
+        ApplicationSpace::Application&   outApplication_;
 
         ContentSpace::ContentResult loadScene(std::string_view sceneName);
         ContentSpace::ContentResult loadWorldTextures(const World& world);

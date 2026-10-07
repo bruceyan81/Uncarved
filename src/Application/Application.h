@@ -1,39 +1,20 @@
 #pragma once
 
-#include "Content/GameContentLoader.h"
-#include "Time/AppTime.h"
+#include <memory>
 
 namespace Uncarved::ApplicationSpace
 {
-    enum class ApplicationState
-    {
-        None,
-        Init,
-        Running,
-        End,
-        Count
-    };
+    struct RuntimeContext;
 
-    class ApplicationCore final
+    class Application
     {
     public:
-        ApplicationCore();
+        virtual ~Application() = default;
 
-        ApplicationCore(const ApplicationCore&) = delete;
-        ApplicationCore& operator=(const ApplicationCore&) = delete;
-
-        ApplicationCore(ApplicationCore&&) = delete;
-        ApplicationCore& operator=(ApplicationCore&&) = delete;
-
-        ~ApplicationCore();
-
-        int initializeApplication();
-
-        int launch();
-
-    private:
-        ApplicationState                applicationState_{};
-        ContentSpace::GameContentLoader gameContentLoader_{};
-        TimeSpace::AppTime              appTime_{};
+        virtual void onInitialize(RuntimeContext&) {};
+        virtual void onUpdate(RuntimeContext&) = 0;
+        virtual void onShutdown(RuntimeContext&) {};
     };
-} // namespace Uncarved::ApplicationSpace
+
+    std::unique_ptr<Application> createApplication();
+}

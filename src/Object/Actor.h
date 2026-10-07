@@ -46,6 +46,11 @@ namespace Uncarved::ObjectSpace
             return transform2d_;
         }
 
+        Transform2D& getTransform2d() noexcept
+        {
+            return transform2d_;
+        }
+
         ActorId getId() const noexcept
         {
             return id_;
