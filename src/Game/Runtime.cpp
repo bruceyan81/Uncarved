@@ -64,7 +64,12 @@ namespace Uncarved::GameSpace
 
         runtimeState_ = RuntimeState::Running;
 
-        ApplicationSpace::RuntimeContext runtimeContext{world_, outInputSystem_, outAppTime_};
+        ApplicationSpace::RuntimeContext runtimeContext{
+            world_,
+            camera2d_,
+            outInputSystem_,
+            outAppTime_
+        };
 
         outApplication_.onInitialize(runtimeContext);
 

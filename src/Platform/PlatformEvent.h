@@ -28,6 +28,14 @@ namespace Uncarved
      */
     enum class KeyboardScancode
     {
+        W,
+        A,
+        S,
+        D,
+        ArrowUp,
+        ArrowDown,
+        ArrowLeft,
+        ArrowRight,
         Return,
         Space,
         Count

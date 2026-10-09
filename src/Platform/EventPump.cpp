@@ -34,6 +34,22 @@ namespace Uncarved::PlatformSpace
         {
             switch (scancode)
             {
+                case SDL_SCANCODE_W:
+                    return KeyboardScancode::W;
+                case SDL_SCANCODE_A:
+                    return KeyboardScancode::A;
+                case SDL_SCANCODE_S:
+                    return KeyboardScancode::S;
+                case SDL_SCANCODE_D:
+                    return KeyboardScancode::D;
+                case SDL_SCANCODE_UP:
+                    return KeyboardScancode::ArrowUp;
+                case SDL_SCANCODE_DOWN:
+                    return KeyboardScancode::ArrowDown;
+                case SDL_SCANCODE_LEFT:
+                    return KeyboardScancode::ArrowLeft;
+                case SDL_SCANCODE_RIGHT:
+                    return KeyboardScancode::ArrowRight;
                 case SDL_SCANCODE_RETURN:
                     return KeyboardScancode::Return;
                 case SDL_SCANCODE_SPACE:
@@ -64,7 +80,8 @@ namespace Uncarved::PlatformSpace
                 case SDL_EventType::SDL_EVENT_KEY_DOWN:
                 {
                     platformEvent.keyScancode_ = translateScancode(sdlEvent.key.scancode);
-                    platformEvent.type_ = sdlEvent.key.repeat ? PlatformEventType::KeyRepeat : PlatformEventType::KeyPressed;
+                    platformEvent.type_ = sdlEvent.key.repeat ?
+                        PlatformEventType::KeyRepeat : PlatformEventType::KeyPressed;
                 }
                 break;
 

@@ -27,6 +27,22 @@ namespace Uncarved::InputSpace
 
             switch (*scancode)
             {
+                case Uncarved::KeyboardScancode::W:
+                    return Uncarved::InputSpace::Key::W;
+                case Uncarved::KeyboardScancode::A:
+                    return Uncarved::InputSpace::Key::A;
+                case Uncarved::KeyboardScancode::S:
+                    return Uncarved::InputSpace::Key::S;
+                case Uncarved::KeyboardScancode::D:
+                    return Uncarved::InputSpace::Key::D;
+                case Uncarved::KeyboardScancode::ArrowUp:
+                    return Uncarved::InputSpace::Key::ArrowUp;
+                case Uncarved::KeyboardScancode::ArrowDown:
+                    return Uncarved::InputSpace::Key::ArrowDown;
+                case Uncarved::KeyboardScancode::ArrowLeft:
+                    return Uncarved::InputSpace::Key::ArrowLeft;
+                case Uncarved::KeyboardScancode::ArrowRight:
+                    return Uncarved::InputSpace::Key::ArrowRight;
                 case Uncarved::KeyboardScancode::Space:
                     return Uncarved::InputSpace::Key::Space;
                 case Uncarved::KeyboardScancode::Return:
