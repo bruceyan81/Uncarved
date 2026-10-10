@@ -18,12 +18,21 @@ namespace Uncarved::PlatformSpace
     class TextRenderer;
     class Window;
 
+    struct SpriteRegion final
+    {
+        int x_{};
+        int y_{};
+        int width_{};
+        int height_{};
+    };
+
     struct SpriteDrawTransform
     {
-        glm::fvec2 normalizedPivotPoint_{};
-        glm::fvec2 viewportPositionPixels_{};
-        glm::fvec2 viewportSizePixels_{1.0f, 1.0f};
-        double     rotationRadians_{};
+        std::optional<SpriteRegion> spriteRegion_{};
+        glm::fvec2                  normalizedPivotPoint_{};
+        glm::fvec2                  viewportPositionPixels_{};
+        glm::fvec2                  viewportSizePixels_{1.0f, 1.0f};
+        double                      rotationRadians_{};
 
         double getRotationDegrees() const noexcept
         {

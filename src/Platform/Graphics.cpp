@@ -212,6 +212,20 @@ namespace Uncarved::PlatformSpace
             return false;
         }
 
+        SDL_FRect* srcRectPointer = nullptr;
+        SDL_FRect  srcRect{};
+
+        if (spriteDrawTransform.spriteRegion_.has_value())
+        {
+            srcRect = {
+                static_cast<float>(spriteDrawTransform.spriteRegion_->x_),
+                static_cast<float>(spriteDrawTransform.spriteRegion_->y_),
+                static_cast<float>(spriteDrawTransform.spriteRegion_->width_),
+                static_cast<float>(spriteDrawTransform.spriteRegion_->height_),
+            };
+            srcRectPointer = &srcRect;
+        }
+
         const bool bFlipHorizontal = spriteDrawTransform.viewportSizePixels_.x < 0.0f;
         const bool bFlipVertical = spriteDrawTransform.viewportSizePixels_.y < 0.0f;
 
@@ -256,7 +270,7 @@ namespace Uncarved::PlatformSpace
         return SDL_RenderTextureRotated(
             renderer_,
             texture.impl_->getTexture(),
-            nullptr,
+            srcRectPointer ? srcRectPointer : nullptr,
             &dstRect,
             -spriteDrawTransform.getRotationDegrees(),
             &rotationCenter,

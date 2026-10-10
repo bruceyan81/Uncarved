@@ -1,8 +1,38 @@
 {
   "sprites": {
-    "Character": {
+    "CharacterFront": {
       "texture": "Character",
-      "texture_pixels_per_world_unit": 32.0,
+      "source_x": 0,
+      "source_y": 0,
+      "source_width": 600,
+      "source_height": 1536,
+      "texture_pixels_per_world_unit": 128.0,
+      "normalized_pivot_x": 0.5,
+      "normalized_pivot_y": 0.5
+    },
+    "CharacterBack": {
+      "texture": "Character",
+      "source_x": 600,
+      "source_y": 0,
+      "source_width": 600,
+      "source_height": 1536,
+      "texture_pixels_per_world_unit": 128.0,
+      "normalized_pivot_x": 0.5,
+      "normalized_pivot_y": 0.5
+    },
+    "CharacterHit": {
+      "texture": "Character",
+      "source_x": 1200,
+      "source_y": 0,
+      "source_width": 600,
+      "source_height": 1536,
+      "texture_pixels_per_world_unit": 128.0,
+      "normalized_pivot_x": 0.5,
+      "normalized_pivot_y": 0.5
+    },
+    "GroundMarker": {
+      "texture": "GroundMarker",
+      "texture_pixels_per_world_unit": 128.0,
       "normalized_pivot_x": 0.5,
       "normalized_pivot_y": 0.5
     }

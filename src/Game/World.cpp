@@ -1,5 +1,7 @@
 #include "World.h"
 
+#include "View/Sprite.h"
+
 #include <cstddef>
 #include <utility>
 
@@ -78,7 +80,7 @@ namespace Uncarved::GameSpace
             definitionalActor.transform2d_,
             definitionalActor.zOrder_,
             definitionalActor.actorName_,
-            outSprite
+            ViewSpace::RuntimeSpriteVisual2D{outSprite}
         );
 
         const std::size_t actorIndex = actors_.size() - 1;

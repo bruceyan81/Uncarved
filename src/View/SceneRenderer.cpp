@@ -1,6 +1,7 @@
 #include "SceneRenderer.h"
 
 #include "Camera2D.h"
+#include "Sprite.h"
 
 #include "Game/World.h"
 #include "Platform/Renderer.h"
@@ -8,6 +9,7 @@
 #include "Platform/TextureStore.h"
 
 #include <algorithm>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -15,10 +17,10 @@ namespace Uncarved::ViewSpace
 {
     struct SceneRenderer::SpriteRecord final
     {
-        PlatformSpace::SpriteDrawTransform transform_;
-        const Texture*                     outTexture_;
-        int                                zOrder_;
-        ObjectSpace::ActorId               actorId_;
+        PlatformSpace::SpriteDrawTransform     transform_;
+        const Texture*                         outTexture_;
+        int                                    zOrder_;
+        ObjectSpace::ActorId                   actorId_;
     };
 
     SceneRenderer::SceneRenderer(PlatformSpace::Renderer& outRenderer, PlatformSpace::TextureStore& outTextureStore)
@@ -51,7 +53,8 @@ namespace Uncarved::ViewSpace
 
         for (const auto& actor : actors)
         {
-            const auto* sprite = actor.getSprite();
+            auto&       runtimeSpriteVisual2d = actor.getRuntimeSpriteVisual2d();
+            const auto* sprite = runtimeSpriteVisual2d.getSprite();
 
             if (sprite == nullptr)
             {
@@ -65,24 +68,57 @@ namespace Uncarved::ViewSpace
                 return false;
             }
 
+            int spriteWidth = texture->getWidth();
+            int spriteHeight = texture->getHeight();
+
+            float texturePixelsPerWorldUnit = sprite->getTexturePixelsPerWorldUnit();
+
+            const auto& spriteRegion = sprite->getSpriteRegion();
+            std::optional<PlatformSpace::SpriteRegion> transformSpriteRegion = std::nullopt;
+
+            if (spriteRegion.has_value())
+            {
+                if (
+                    spriteRegion->width_ <= spriteWidth && spriteRegion->height_ <= spriteHeight
+                    && (spriteRegion->x_ + spriteRegion->width_) <= spriteWidth
+                    && (spriteRegion->y_ + spriteRegion->height_) <= spriteHeight
+                    )
+                {
+                    spriteWidth = spriteRegion->width_;
+                    spriteHeight = spriteRegion->height_;
+
+                    transformSpriteRegion =
+                        {spriteRegion->x_, spriteRegion->y_, spriteRegion->width_, spriteRegion->height_};
+                }
+                else
+                {
+                    // TODO Add a one-time warning for an invalid sprite region to avoid logging every frame
+                }
+            }
+
             const auto& transform2d = actor.getTransform2d();
 
             const glm::fvec2 viewportPositionPixels =
                 outCamera2d.worldToViewport(transform2d.position_, *viewportPixels);
 
-            const float viewportSizeWidth = texture->getWidth() / actor.getSprite()->getTexturePixelsPerWorldUnit()
-                * transform2d.scale_.x * viewportPixelsPerWU;
+            const float viewportSizeWidth =
+                spriteWidth / texturePixelsPerWorldUnit
+                * transform2d.scale_.x * runtimeSpriteVisual2d.getScale().x
+                * viewportPixelsPerWU;
 
-            const float viewportSizeHeight = texture->getHeight() / actor.getSprite()->getTexturePixelsPerWorldUnit()
-                * transform2d.scale_.y * viewportPixelsPerWU;
+            const float viewportSizeHeight =
+                spriteHeight / texturePixelsPerWorldUnit
+                * transform2d.scale_.y * runtimeSpriteVisual2d.getScale().y
+                * viewportPixelsPerWU;
 
             records_.emplace_back(
                 SpriteRecord
                 {
                     PlatformSpace::SpriteDrawTransform
                     {
+                        transformSpriteRegion,
                         sprite->getNormalizedPivot(),
-                        viewportPositionPixels,
+                        viewportPositionPixels + runtimeSpriteVisual2d.getRenderOffsetPixels(),
                         glm::fvec2{viewportSizeWidth, viewportSizeHeight},
                         transform2d.rotationRadians_
                     },

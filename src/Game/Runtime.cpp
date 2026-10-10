@@ -13,6 +13,7 @@
 #include "Time/AppTime.h"
 #include "View/SceneRenderer.h"
 #include "View/Sprite.h"
+#include "View/SpriteCatalog.h"
 
 #include <string>
 #include <utility>
@@ -68,7 +69,8 @@ namespace Uncarved::GameSpace
             world_,
             camera2d_,
             outInputSystem_,
-            outAppTime_
+            outAppTime_,
+            ViewSpace::SpriteCatalog{outGameContentLoader_.getSprites()}
         };
 
         outApplication_.onInitialize(runtimeContext);
@@ -169,7 +171,9 @@ namespace Uncarved::GameSpace
 
         for (const auto& actor : actors)
         {
-            const ViewSpace::Sprite* actorSprite = actor.getSprite();
+            auto& runtimeSpriteVisual2d = actor.getRuntimeSpriteVisual2d();
+
+            const ViewSpace::Sprite* actorSprite = runtimeSpriteVisual2d.getSprite();
 
             if (actorSprite == nullptr)
             {

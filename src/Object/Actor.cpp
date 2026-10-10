@@ -8,14 +8,12 @@ namespace Uncarved::ObjectSpace
         Transform2D transform2d,
         int         zOrder,
         std::string actorName,
-
-        const ViewSpace::Sprite* outSprite
+        ViewSpace::RuntimeSpriteVisual2D runtimeSpriteVisual2d
     )
         : transform2d_(transform2d)
         , zOrder_(std::move(zOrder))
         , actorName_(std::move(actorName))
-
-        , outSprite_(outSprite)
+        , runtimeSpriteVisual2d_(runtimeSpriteVisual2d)
     {
         id_ = actorCount_++;
     }
@@ -25,8 +23,7 @@ namespace Uncarved::ObjectSpace
         , id_(std::exchange(other.id_, kInvalidId_))
         , zOrder_(std::move(other.zOrder_))
         , actorName_(std::move(other.actorName_))
-
-        , outSprite_(other.outSprite_)
+        , runtimeSpriteVisual2d_(other.runtimeSpriteVisual2d_)
     {
     }
 } // namespace Uncarved::ObjectSpace

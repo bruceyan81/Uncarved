@@ -1,7 +1,7 @@
 {
   "actors": [
     {
-      "view_sprite": "Character",
+      "view_sprite": "CharacterFront",
       "transform_scale_x": 1.0,
       "transform_scale_y": 1.0,
       "transform_rotation_radians": 0.0,

@@ -18,15 +18,17 @@ namespace Uncarved::TimeSpace
 namespace Uncarved::ViewSpace
 {
     class Camera2D;
-}
+    class SpriteCatalog;
+} // namespace Uncarved::ViewSpace
 
 namespace Uncarved::ApplicationSpace
 {
     struct RuntimeContext final
     {
-        GameSpace::World&              outWorld_;
-        ViewSpace::Camera2D&           outCamera2d_;
-        const InputSpace::InputSystem& outInputSystem_;
-        const TimeSpace::AppTime&      outAppTime_;
+        GameSpace::World&               outWorld_;
+        ViewSpace::Camera2D&            outCamera2d_;
+        const InputSpace::InputSystem&  outInputSystem_;
+        const TimeSpace::AppTime&       outAppTime_;
+        const ViewSpace::SpriteCatalog& outSpriteCatalog_;
     };
 } // namespace Uncarved::ApplicationSpace

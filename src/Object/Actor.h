@@ -26,8 +26,7 @@ namespace Uncarved::ObjectSpace
             Transform2D transform2d,
             int         zOrder,
             std::string actorName,
-
-            const ViewSpace::Sprite* outSprite
+            ViewSpace::RuntimeSpriteVisual2D runtimeSpriteVisual2d
         );
 
         Actor(const Actor&) = delete;
@@ -66,9 +65,14 @@ namespace Uncarved::ObjectSpace
             return actorName_;
         }
 
-        const ViewSpace::Sprite* getSprite() const noexcept
+        const ViewSpace::RuntimeSpriteVisual2D& getRuntimeSpriteVisual2d() const noexcept
         {
-            return outSprite_;
+            return runtimeSpriteVisual2d_;
+        }
+
+        ViewSpace::RuntimeSpriteVisual2D& getRuntimeSpriteVisual2d() noexcept
+        {
+            return runtimeSpriteVisual2d_;
         }
 
         ~Actor() = default;
@@ -77,12 +81,11 @@ namespace Uncarved::ObjectSpace
         inline static ActorId    actorCount_ = 0;
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
-        Transform2D transform2d_{};
-        ActorId     id_;
-        int         zOrder_;
-        std::string actorName_;
-
-        const ViewSpace::Sprite* outSprite_;
+        Transform2D                      transform2d_{};
+        ActorId                          id_;
+        int                              zOrder_;
+        std::string                      actorName_;
+        ViewSpace::RuntimeSpriteVisual2D runtimeSpriteVisual2d_;
 
         friend class GameSpace::World;
     };

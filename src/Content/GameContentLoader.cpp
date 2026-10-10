@@ -187,7 +187,12 @@ namespace Uncarved::ContentSpace
     {
         if (!Fs::exists(gResourceRoot) || !Fs::is_directory(gResourceRoot))
         {
-            return {FileError{"error: Resources/ missing.", FileErrorType::InvalidPath}};
+            return {
+                FileError{
+                    "FileError: Resources/ missing.",
+                    FileErrorType::InvalidPath
+                }
+            };
         }
 
         return {};
@@ -199,7 +204,12 @@ namespace Uncarved::ContentSpace
 
         if (!Fs::exists(gameConfigPath))
         {
-            return {FileError{"error: Resources/Game.config missing.", FileErrorType::InvalidPath}};
+            return {
+                FileError{
+                    "FileError: Resources/Game.config missing.",
+                    FileErrorType::InvalidPath
+                }
+            };
         }
 
         return {};
@@ -217,12 +227,22 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {ParseError{"error: Resources/Game.config has parse error.", ParseErrorType::ParseFailed}};
+            return {
+                ParseError{
+                    "ParseError: Resources/Game.config has parse error.",
+                    ParseErrorType::ParseFailed
+                }
+            };
         }
 
         if (!document.IsObject())
         {
-            return {ParseError{"error: Resources/Game.config is not object.", ParseErrorType::InvalidStructure}};
+            return {
+                ParseError{
+                    "ParseError: Resources/Game.config is not object.",
+                    ParseErrorType::InvalidStructure
+                }
+            };
         }
 
         Definition::GameConfigDefinition tempGameConfigDefinition{};
@@ -233,7 +253,12 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            return {ValidationError{"error: initial_scene unspecified.", ValidationErrorType::InvalidData}};
+            return {
+                ValidationError{
+                    "ValidationError: Initial_scene unspecified.",
+                    ValidationErrorType::InvalidData
+                }
+            };
         }
 
         if (document.HasMember("font") && document["font"].IsString())
@@ -245,7 +270,12 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            return {ValidationError{"error: font unspecified.", ValidationErrorType::InvalidData}};
+            return {
+                ValidationError{
+                    "ValidationError: Font unspecified.",
+                    ValidationErrorType::InvalidData
+                }
+            };
         }
 
         if (document.HasMember("game_title") && document["game_title"].IsString())
@@ -265,7 +295,12 @@ namespace Uncarved::ContentSpace
 
         if (!Fs::exists(renderingConfigPath))
         {
-            return {FileError{"error: Resources/Rendering.config is missing.", FileErrorType::InvalidPath}};
+            return {
+                FileError{
+                    "FileError: Resources/Rendering.config is missing.",
+                    FileErrorType::InvalidPath
+                }
+            };
         }
 
         return {};
@@ -283,12 +318,22 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {ParseError{"error: Resources/Rendering.config has parse error.", ParseErrorType::ParseFailed}};
+            return {
+                ParseError{
+                    "ParseError: Resources/Rendering.config has parse error.",
+                    ParseErrorType::ParseFailed
+                }
+            };
         }
 
         if (!document.IsObject())
         {
-            return {ParseError{"error: Resources/Rendering.config is not Object.", ParseErrorType::InvalidStructure}};
+            return {
+                ParseError{
+                    "ParseError: Resources/Rendering.config is not Object.",
+                    ParseErrorType::InvalidStructure
+                }
+            };
         }
 
         Definition::RenderingConfigDefinition tempRenderingConfigDefinition{};
@@ -299,10 +344,12 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            return {ValidationError{
-                "error: Resources/Rendering.config has invalid camera_ortho_width.",
-                ValidationErrorType::InvalidData
-            }};
+            return {
+                ValidationError{
+                    "ValidationError: Resources/Rendering.config has invalid camera_ortho_width.",
+                    ValidationErrorType::InvalidData
+                }
+            };
         }
 
         if (document.HasMember("x_resolution") && document["x_resolution"].IsInt())
@@ -349,7 +396,12 @@ namespace Uncarved::ContentSpace
 
         if (!Fs::exists(spritePath) || !Fs::is_regular_file(spritePath))
         {
-            return {FileError{"error: Resources/Sprites.sprite is missing.", FileErrorType::InvalidPath}};
+            return {
+                FileError{
+                    "FileError: Resources/Sprites.sprite is missing.",
+                    FileErrorType::InvalidPath
+                }
+            };
         }
 
         return {};
@@ -367,20 +419,32 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {ParseError{"error: Resources/Sprites.sprite has parse error.", ParseErrorType::ParseFailed}};
+            return {
+                ParseError{
+                    "ParseError: Resources/Sprites.sprite has parse error.",
+                    ParseErrorType::ParseFailed
+                }
+            };
         }
 
         if (!document.IsObject())
         {
-            return {ParseError{"error: Resources/Sprites.sprite is not Object.", ParseErrorType::InvalidStructure}};
+            return {
+                ParseError{
+                    "ParseError: Resources/Sprites.sprite is not Object.",
+                    ParseErrorType::InvalidStructure
+                }
+            };
         }
 
         if (!document.HasMember("sprites") || !document["sprites"].IsObject())
         {
-            return {ValidationError{
-                "error: Resources/Sprites.sprite has invalid sprites.",
-                ValidationErrorType::InvalidData
-            }};
+            return {
+                ValidationError{
+                    "ValidationError: Resources/Sprites.sprite has invalid sprites.",
+                    ValidationErrorType::InvalidData
+                }
+            };
         }
 
         const auto& sprites = document["sprites"];
@@ -394,24 +458,36 @@ namespace Uncarved::ContentSpace
 
             if (!sprite.IsObject())
             {
-                return {ValidationError{"error: sprite is not Object.", ValidationErrorType::InvalidData}};
+                return {
+                    ValidationError{
+                        "ValidationError: Sprite is not Object.",
+                        ValidationErrorType::InvalidData
+                    }
+                };
             }
 
             const auto textureIt = sprite.FindMember("texture");
 
             if (textureIt == sprite.MemberEnd() || !textureIt->value.IsString())
             {
-                return {ValidationError{"error: sprite's texture is not String.", ValidationErrorType::InvalidData}};
+                return {
+                    ValidationError{
+                        "ValidationError: Sprite's texture is not String.",
+                        ValidationErrorType::InvalidData
+                    }
+                };
             }
 
             const auto texturePixelsPerWUIt = sprite.FindMember("texture_pixels_per_world_unit");
 
             if (texturePixelsPerWUIt == sprite.MemberEnd() || !texturePixelsPerWUIt->value.IsNumber())
             {
-                return {ValidationError{
-                    "error: sprite's texture_pixels_per_world_unit is not number.",
-                    ValidationErrorType::InvalidData
-                }};
+                return {
+                    ValidationError{
+                        "ValidationError: Sprite's texture_pixels_per_world_unit is not number.",
+                        ValidationErrorType::InvalidData
+                    }
+                };
             }
 
             const auto normalizedPivotXIt = sprite.FindMember("normalized_pivot_x");
@@ -423,10 +499,12 @@ namespace Uncarved::ContentSpace
             {
                 if (!normalizedPivotXIt->value.IsNumber())
                 {
-                    return {ValidationError{
-                        "error: sprite's normalized_pivot_x is not number.",
-                        ValidationErrorType::InvalidData
-                    }};
+                    return {
+                        ValidationError{
+                            "ValidationError: Sprite's normalized_pivot_x is not number.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
                 }
 
                 normalizedPivotX = normalizedPivotXIt->value.GetFloat();
@@ -436,24 +514,94 @@ namespace Uncarved::ContentSpace
             {
                 if (!normalizedPivotYIt->value.IsNumber())
                 {
-                    return {ValidationError{
-                        "error: sprite's normalized_pivot_y is not number.",
-                        ValidationErrorType::InvalidData
-                    }};
+                    return {
+                        ValidationError{
+                            "ValidationError: Sprite's normalized_pivot_y is not number.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
                 }
 
                 normalizedPivotY = normalizedPivotYIt->value.GetFloat();
             }
 
-            auto spriteValue = ViewSpace::Sprite::createSprite(
-                textureIt->value.GetString(),
-                texturePixelsPerWUIt->value.GetFloat(),
-                glm::fvec2{normalizedPivotX, normalizedPivotY}
-            );
+            const auto sourceXIt = sprite.FindMember("source_x");
+            const auto sourceYIt = sprite.FindMember("source_y");
+            const auto sourceWidthIt = sprite.FindMember("source_width");
+            const auto sourceHeightIt = sprite.FindMember("source_height");
+
+            ViewSpace::SpriteRegion spriteRegion{};
+
+            bool bHasRegion = false;
+
+            if (sourceXIt != sprite.MemberEnd() && sourceYIt != sprite.MemberEnd()
+                && sourceWidthIt != sprite.MemberEnd() && sourceHeightIt != sprite.MemberEnd())
+            {
+                if (!sourceXIt->value.IsInt() || !sourceYIt->value.IsInt()
+                    || !sourceWidthIt->value.IsInt() || !sourceHeightIt->value.IsInt())
+                {
+                    return {
+                        ValidationError{
+                            "ValidationError: Sprite Region's member are not number.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+                else
+                {
+                    int x = sourceXIt->value.GetInt();
+                    int y = sourceYIt->value.GetInt();
+                    int width = sourceWidthIt->value.GetInt();
+                    int height = sourceHeightIt->value.GetInt();
+
+                    if (x < 0 || y < 0 || width <= 0 || height <= 0)
+                    {
+                        return {
+                            ValidationError{
+                                "ValidationError: Sprite Region is illegal.",
+                                ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+                    else
+                    {
+                        spriteRegion.x_ = x;
+                        spriteRegion.y_ = y;
+                        spriteRegion.width_ = width;
+                        spriteRegion.height_ = height;
+                        bHasRegion = true;
+                    }
+                }
+            }
+
+            std::optional<ViewSpace::Sprite> spriteValue;
+
+            if (bHasRegion)
+            {
+                spriteValue = ViewSpace::Sprite::createSprite(
+                    textureIt->value.GetString(),
+                    texturePixelsPerWUIt->value.GetFloat(),
+                    glm::fvec2{normalizedPivotX, normalizedPivotY},
+                    spriteRegion
+                );
+            }
+            else
+            {
+                spriteValue = ViewSpace::Sprite::createSprite(
+                    textureIt->value.GetString(),
+                    texturePixelsPerWUIt->value.GetFloat(),
+                    glm::fvec2{normalizedPivotX, normalizedPivotY}
+                );
+            }
 
             if (!spriteValue)
             {
-                return {ValidationError{"error: sprite has invalid data.", ValidationErrorType::InvalidData}};
+                return {
+                    ValidationError{
+                        "ValidationError: Sprite has invalid data.",
+                        ValidationErrorType::InvalidData
+                    }
+                };
             }
 
             tempSpritesByName.emplace(spriteIt->name.GetString(), std::move(*spriteValue));
@@ -471,7 +619,12 @@ namespace Uncarved::ContentSpace
 
         if (!Fs::exists(templatePath) || !Fs::is_regular_file(templatePath))
         {
-            return {FileError{std::format("error: template {} is missing.", actorName), FileErrorType::NotFound}};
+            return {
+                FileError{
+                    std::format("FileError: Template {} is missing.", actorName),
+                    FileErrorType::NotFound
+                }
+            };
         }
 
         return {};
@@ -491,18 +644,22 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {ParseError{
-                std::format("error: Resources/ActorTemplates/{}{} has parse error.", actorName, kTemplatePostfix),
-                ParseErrorType::ParseFailed
-            }};
+            return {
+                ParseError{
+                    std::format("ParseError: Resources/ActorTemplates/{}{} has parse error.", actorName, kTemplatePostfix),
+                    ParseErrorType::ParseFailed
+                }
+            };
         }
 
         if (!document.IsObject())
         {
-            return {ParseError{
-                std::format("error: Resources/ActorTemplates/{}{} is not Object.", actorName, kTemplatePostfix),
-                ParseErrorType::InvalidStructure
-            }};
+            return {
+                ParseError{
+                    std::format("ParseError: Resources/ActorTemplates/{}{} is not Object.", actorName, kTemplatePostfix),
+                    ParseErrorType::InvalidStructure
+                }
+            };
         }
 
         Definition::ActorDataPatch tempActorTemplatePatch = makeActorDataPatch(document);
@@ -518,7 +675,12 @@ namespace Uncarved::ContentSpace
 
         if (!Fs::exists(scenePath) || !Fs::is_regular_file(scenePath))
         {
-            return {FileError{std::format("error: scene {} is missing.", sceneName), FileErrorType::NotFound}};
+            return {
+                FileError{
+                    std::format("FileError: Scene {} is missing.", sceneName),
+                    FileErrorType::NotFound
+                }
+            };
         }
 
         return {};
@@ -538,26 +700,32 @@ namespace Uncarved::ContentSpace
 
         if (document.HasParseError())
         {
-            return {ParseError{
-                std::format("error: Resources/Scenes/{}.scene has parse error.", sceneName),
-                ParseErrorType::ParseFailed
-            }};
+            return {
+                ParseError{
+                    std::format("ParseError: Resources/Scenes/{}.scene has parse error.", sceneName),
+                    ParseErrorType::ParseFailed
+                }
+            };
         }
 
         if (!document.IsObject())
         {
-            return {ParseError{
-                std::format("error: Resources/Scenes/{}.scene is not Object.", sceneName),
-                ParseErrorType::InvalidStructure
-            }};
+            return {
+                ParseError{
+                    std::format("ParseError: Resources/Scenes/{}.scene is not Object.", sceneName),
+                    ParseErrorType::InvalidStructure
+                }
+            };
         }
 
         if (!document.HasMember("actors") || !document["actors"].IsArray())
         {
-            return {ValidationError{
-                std::format("error: Resources/Scenes/{}.scene has invalid actors.", sceneName),
-                ValidationErrorType::InvalidData
-            }};
+            return {
+                ValidationError{
+                    std::format("ValidationError: Resources/Scenes/{}.scene has invalid actors.", sceneName),
+                    ValidationErrorType::InvalidData
+                }
+            };
         }
 
         const auto& actors = document["actors"];
@@ -589,7 +757,10 @@ namespace Uncarved::ContentSpace
             if (!templateIt->value.IsString())
             {
                 return {
-                    ValidationError{"error: actor template property is not String.", ValidationErrorType::InvalidData}
+                    ValidationError{
+                        "ValidationError: Actor template property is not String.",
+                        ValidationErrorType::InvalidData
+                    }
                 };
             }
 
@@ -613,10 +784,12 @@ namespace Uncarved::ContentSpace
 
             if (templatePatchIt == actorTemplatePatchesByName_.end())
             {
-                return {ValidationError{
-                    std::format("error: template {} has no loaded data.", templateName),
-                    ValidationErrorType::InvalidData
-                }};
+                return {
+                    ValidationError{
+                        std::format("ValidationError: Template {} has no loaded data.", templateName),
+                        ValidationErrorType::InvalidData
+                    }
+                };
             }
 
             tempDefinitionalActors.emplace_back(
