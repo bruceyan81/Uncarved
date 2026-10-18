@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Collision/CollisionDefinition.h"
 #include "Object/Transform2D.h"
 
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace Uncarved::ObjectSpace
 {
@@ -13,5 +15,6 @@ namespace Uncarved::ObjectSpace
         int                        zOrder_{0};
         std::string                actorName_{};
         std::optional<std::string> viewSpriteName_{};
+        std::vector<CollisionSpace::DefinitionalCollisionShape> collisionShapes_{};
     };
 } // namespace Uncarved::ObjectSpace

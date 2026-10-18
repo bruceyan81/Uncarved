@@ -1,14 +1,14 @@
 #pragma once
 
+#include "ObjectTypes.h"
 #include "Transform2D.h"
 
+#include "Collision/CollisionShape.h"
 #include "View/Sprite.h"
 
-#include <glm/glm.hpp>
-
-#include <cstdint>
 #include <limits>
 #include <string>
+#include <vector>
 
 namespace Uncarved::GameSpace
 {
@@ -17,15 +17,13 @@ namespace Uncarved::GameSpace
 
 namespace Uncarved::ObjectSpace
 {
-    using ActorId = std::uint64_t;
-
     class Actor
     {
     public:
         Actor(
-            Transform2D transform2d,
-            int         zOrder,
-            std::string actorName,
+            Transform2D                      transform2d,
+            int                              zOrder,
+            std::string                      actorName,
             ViewSpace::RuntimeSpriteVisual2D runtimeSpriteVisual2d
         );
 
@@ -41,11 +39,6 @@ namespace Uncarved::ObjectSpace
         }
 
         const Transform2D& getTransform2d() const noexcept
-        {
-            return transform2d_;
-        }
-
-        Transform2D& getTransform2d() noexcept
         {
             return transform2d_;
         }
@@ -75,17 +68,25 @@ namespace Uncarved::ObjectSpace
             return runtimeSpriteVisual2d_;
         }
 
+        const std::vector<CollisionSpace::CollisionShape>& getCollisionShapes() const noexcept
+        {
+            return collisionShapes_;
+        }
+
         ~Actor() = default;
 
     private:
         inline static ActorId    actorCount_ = 0;
         static constexpr ActorId kInvalidId_ = std::numeric_limits<ActorId>::max();
 
-        Transform2D                      transform2d_{};
-        ActorId                          id_;
-        int                              zOrder_;
-        std::string                      actorName_;
-        ViewSpace::RuntimeSpriteVisual2D runtimeSpriteVisual2d_;
+        Transform2D                                 transform2d_{};
+        ActorId                                     id_;
+        int                                         zOrder_;
+        std::string                                 actorName_;
+        ViewSpace::RuntimeSpriteVisual2D            runtimeSpriteVisual2d_;
+        std::vector<CollisionSpace::CollisionShape> collisionShapes_{};
+
+        void addCollisionShape(CollisionSpace::CollisionShape&& collisionShape);
 
         friend class GameSpace::World;
     };

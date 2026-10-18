@@ -1,10 +1,13 @@
 #include "SandboxApplication.h"
 
 #include "Application/RuntimeContext.h"
+#include "Collision/CollisionQuery.h"
 #include "Game/World.h"
 #include "Input/InputSystem.h"
 #include "Input/Key.h"
+#include "Logging/Log.h"
 #include "Object/Actor.h"
+#include "Object/Transform2D.h"
 #include "Time/AppTime.h"
 #include "View/SpriteCatalog.h"
 
@@ -12,6 +15,7 @@
 
 #include <cmath>
 #include <memory>
+#include <vector>
 
 namespace Uncarved::ApplicationSpace
 {
@@ -44,6 +48,7 @@ namespace Sandbox
 
     void SandboxApplication::onUpdate(Uncarved::ApplicationSpace::RuntimeContext& outRuntimeContext)
     {
+        auto&       world = outRuntimeContext.outWorld_;
         const auto& inputSystem = outRuntimeContext.outInputSystem_;
 
         const bool bMoveUp = inputSystem.isKeyDown(Uncarved::InputSpace::Key::W)
@@ -90,21 +95,131 @@ namespace Sandbox
             bFacingLeft_ = false;
         }
 
-        auto& actor = *outRuntimeContext.outWorld_.getActorById(characterActorId_);
-        auto& transform2d = actor.getTransform2d();
+        auto* actorPtr = world.getActorById(characterActorId_);
+
+        if (actorPtr == nullptr)
+        {
+            UC_LOG(
+                Uncarved::gRuntime,
+                Uncarved::LogVerbosity::Error,
+                "Actor is not find. Actor id: {}",
+                characterActorId_
+            );
+            return;
+        }
+
+        auto& actor = *actorPtr;
         auto& runtimeSpriteVisual2d = actor.getRuntimeSpriteVisual2d();
 
-        const float deltaSeconds = static_cast<float>(outRuntimeContext.outAppTime_.getDeltaTime().count());
+        const float      deltaSeconds = static_cast<float>(outRuntimeContext.outAppTime_.getDeltaTime().count());
+        const glm::fvec2 movementDelta = movementIntent_ * kMovementSpeed_ * deltaSeconds;
 
-        transform2d.position_ += movementIntent_ * kMovementSpeed_ * deltaSeconds;
+        const Uncarved::ObjectSpace::Transform2D& currentTransform2d = actor.getTransform2d();
+
+        Uncarved::ObjectSpace::Transform2D  candidateTransform2d = currentTransform2d;
+        candidateTransform2d.position_ += movementDelta;
+
+        bool        bMovementBlocked = false;
+        const auto& actorShapes = actor.getCollisionShapes();
+
+        std::vector<Uncarved::CollisionSpace::CollisionQueryResult> queryResults{};
+
+        for (const auto& shape : actorShapes)
+        {
+            if (shape.getMode() != Uncarved::CollisionSpace::CollisionMode::Solid)
+            {
+                continue;
+            }
+
+            const auto candidateWorldBound =
+                shape.calculateCandidateWorldBound(candidateTransform2d.position_, candidateTransform2d.scale_);
+
+            if (!candidateWorldBound.has_value())
+            {
+                UC_LOG(
+                    Uncarved::gRuntime,
+                    Uncarved::LogVerbosity::Error,
+                    "Failed to calculate a solid collision shape candidate world bound."
+                );
+                return;
+            }
+
+            const auto query = Uncarved::CollisionSpace::CollisionQuery::createCollisionQuery(
+                *candidateWorldBound,
+                shape.getFilter(),
+                actor.getId()
+            );
+
+            if (!query.has_value())
+            {
+                UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Error, "Failed to create a solid collision query.");
+                return;
+            }
+
+            queryResults = world.queryOverlaps(*query);
+
+            for (const auto& result : queryResults)
+            {
+                if (result.mode_ == Uncarved::CollisionSpace::CollisionMode::Solid)
+                {
+                    bMovementBlocked = true;
+                    UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Info, "Collision info: Has a collision.");
+                    break;
+                }
+            }
+
+            if (bMovementBlocked)
+            {
+                break;
+            }
+        }
+
+        if (!bMovementBlocked)
+        {
+            if (!world.updateActorTransform2dById(actor.getId(), candidateTransform2d))
+            {
+                UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Error, "Failed to update the actor transform.");
+                return;
+            }
+        }
+
+        for (const auto& shape : actorShapes)
+        {
+            if (shape.getMode() != Uncarved::CollisionSpace::CollisionMode::Sensor)
+            {
+                continue;
+            }
+
+            const auto query = Uncarved::CollisionSpace::CollisionQuery::createCollisionQuery(
+                shape.getWorldBound(),
+                shape.getFilter(),
+                actor.getId()
+            );
+
+            if (!query.has_value())
+            {
+                UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Error, "Failed to create a sensor collision query.");
+                return;
+            }
+
+            queryResults = world.queryOverlaps(*query);
+
+            for (const auto& result : queryResults)
+            {
+                if (result.mode_ == Uncarved::CollisionSpace::CollisionMode::Sensor)
+                {
+                    UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Info, "Collision info: Sensor is triggered.");
+                    break;
+                }
+            }
+        }
 
         if (bIsMoving)
         {
             walkingElapsedSeconds_ += deltaSeconds;
 
             const float bounceOffsetPixels =
-                -std::abs(std::sin(walkingElapsedSeconds_ * kBounceAngularFrequency_))
-                * kBounceAmplitudePixels_;
+                -std::abs(std::sin(walkingElapsedSeconds_ * kBounceAngularFrequency_)) * kBounceAmplitudePixels_;
 
             runtimeSpriteVisual2d.setRenderOffsetPixels({0.0f, bounceOffsetPixels});
         }

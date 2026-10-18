@@ -59,7 +59,7 @@ namespace Uncarved::GameSpace
 
         if (!loadSceneResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", loadSceneResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", loadSceneResult.getErrorMessage());
             return 1;
         }
 
@@ -98,6 +98,7 @@ namespace Uncarved::GameSpace
                     case PlatformEventType::KeyRepeat:
                         outInputSystem_.processPlatformEvent(platformEvent);
                         break;
+
                     default:
                         break;
                 }
@@ -144,10 +145,12 @@ namespace Uncarved::GameSpace
 
         if (!nextWorld.has_value())
         {
-            return {ContentSpace::ResourceError{
-                "error: failed to resolve actor sprites.",
-                ContentSpace::ResourceErrorType::LoadFailed
-            }};
+            return {
+                ContentSpace::ResourceError{
+                    "error: failed to create runtime world.",
+                    ContentSpace::ResourceErrorType::LoadFailed
+                }
+            };
         }
 
         const auto loadWorldTexturesResult = loadWorldTextures(*nextWorld);

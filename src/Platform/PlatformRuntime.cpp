@@ -28,7 +28,7 @@ namespace Uncarved::PlatformSpace
 
             if (!bIsSDLInitialized_)
             {
-                UC_LOG(gLogPlatform, LogVerbosity::Error, "SDL_Init failed: {}", SDL_GetError());
+                UC_LOG(gPlatform, LogVerbosity::Error, "SDL_Init failed: {}", SDL_GetError());
                 shutdown();
                 return false;
             }

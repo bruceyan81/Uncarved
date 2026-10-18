@@ -113,7 +113,7 @@ namespace Uncarved::PlatformSpace
 
             if (windowPtr_ == nullptr)
             {
-                UC_LOG(gLogPlatform, LogVerbosity::Error, "SDL_CreateWindow failed: {}", SDL_GetError());
+                UC_LOG(gPlatform, LogVerbosity::Error, "SDL_CreateWindow failed: {}", SDL_GetError());
                 return false;
             }
 
@@ -165,13 +165,13 @@ namespace Uncarved::PlatformSpace
 
         if (renderer_ == nullptr)
         {
-            UC_LOG(gLogRender, LogVerbosity::Error, "SDL_CreateRenderer failed: {}", SDL_GetError());
+            UC_LOG(gRender, LogVerbosity::Error, "SDL_CreateRenderer failed: {}", SDL_GetError());
             return false;
         }
 
         if (!SDL_SetRenderVSync(renderer_, 1))
         {
-            UC_LOG(gLogRender, LogVerbosity::Error, "SDL_SetRenderVSync failed: {}", SDL_GetError());
+            UC_LOG(gRender, LogVerbosity::Error, "SDL_SetRenderVSync failed: {}", SDL_GetError());
             SDL_DestroyRenderer(renderer_);
             renderer_ = nullptr;
             return false;

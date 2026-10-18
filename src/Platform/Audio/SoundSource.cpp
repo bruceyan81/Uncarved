@@ -36,7 +36,7 @@ namespace Uncarved::PlatformSpace
 
                 if (mixTrack_ == nullptr)
                 {
-                    UC_LOG(gLogAudio, LogVerbosity::Error, "MIX_Track failed: {}", SDL_GetError());
+                    UC_LOG(gAudio, LogVerbosity::Error, "MIX_Track failed: {}", SDL_GetError());
                     MIX_DestroyTrack(mixTrack_);
                     return false;
                 }
@@ -47,7 +47,7 @@ namespace Uncarved::PlatformSpace
             }
             else
             {
-                UC_LOG(gLogAudio, LogVerbosity::Error, "Mixer is nullptr.");
+                UC_LOG(gAudio, LogVerbosity::Error, "Mixer is nullptr.");
                 return false;
             }
         }

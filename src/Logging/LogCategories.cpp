@@ -6,11 +6,13 @@ namespace Uncarved
 
     const LogCategory gApplicationCore{"ApplicationCore", LogVerbosity::Trace};
 
-    const LogCategory gLogPlatform{"LogPlatform", LogVerbosity::Trace};
+    const LogCategory gPlatform{"Platform", LogVerbosity::Trace};
 
-    const LogCategory gLogContent{"LogContent", LogVerbosity::Trace};
+    const LogCategory gContent{"Content", LogVerbosity::Trace};
 
-    const LogCategory gLogRender{"LogRender", LogVerbosity::Trace};
+    const LogCategory gRuntime{"Runtime", LogVerbosity::Trace};
 
-    const LogCategory gLogAudio{"LogAudio", LogVerbosity::Trace};
+    const LogCategory gRender{"Render", LogVerbosity::Trace};
+
+    const LogCategory gAudio{"Audio", LogVerbosity::Trace};
 } // namespace Uncarved

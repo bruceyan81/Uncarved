@@ -75,12 +75,18 @@ target_compile_features(UncarvedPlatform PUBLIC cxx_std_20)
 add_library(UncarvedCore STATIC
     src/Application/ApplicationCore.cpp
     src/Application/EntryPoint.cpp
+    src/Collision/CollisionGeometry.cpp
+    src/Collision/CollisionProxy.cpp
+    src/Collision/CollisionQuery.cpp
+    src/Collision/CollisionShape.cpp
+    src/Collision/CollisionWorld.cpp
     src/Content/GameContentLoader.cpp
     src/Game/CommandBuffer.cpp
     src/Game/Runtime.cpp
     src/Game/World.cpp
     src/Input/InputSystem.cpp
     src/Object/Actor.cpp
+    src/Object/Transform2D.cpp
     src/Time/AppTime.cpp
     src/Time/WorldTime.cpp
     src/View/Camera2D.cpp

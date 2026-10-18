@@ -2,12 +2,75 @@
   "actors": [
     {
       "view_sprite": "CharacterFront",
-      "transform_scale_x": 1.0,
-      "transform_scale_y": 1.0,
+      "transform_scale_x": 0.3,
+      "transform_scale_y": 0.3,
       "transform_rotation_radians": 0.0,
       "name": "Character",
       "x": 0,
-      "y": 0
+      "y": 0,
+      "z_order": 0,
+      "collision_shapes": [
+        {
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "width": 0.9,
+          "height": 0.9,
+          "mode": "solid",
+          "category": "character",
+          "mask": [ "world_solid" ]
+        },
+        {
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "width": 1.0,
+          "height": 1.0,
+          "mode": "sensor",
+          "category": "character",
+          "mask": [ "interactable" ]
+        }
+      ]
+    },
+    {
+      "view_sprite": "GroundMarker",
+      "transform_scale_x": 0.3,
+      "transform_scale_y": 0.3,
+      "transform_rotation_radians": 0.0,
+      "name": "GroundMarker",
+      "x": 0,
+      "y": 0,
+      "z_order": -1,
+      "collision_shapes": [
+        {
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "width": 0.9,
+          "height": 0.9,
+          "mode": "sensor",
+          "category": "interactable",
+          "mask": [ "character" ]
+        }
+      ]
+    },
+    {
+      "view_sprite": "Haystack",
+      "transform_scale_x": 0.3,
+      "transform_scale_y": 0.3,
+      "transform_rotation_radians": 0.0,
+      "name": "Haystack",
+      "x": 100,
+      "y": 100,
+      "z_order": 0,
+      "collision_shapes": [
+        {
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "width": 0.9,
+          "height": 0.9,
+          "mode": "solid",
+          "category": "world_solid",
+          "mask": [ "character" ]
+        }
+      ]
     }
   ]
 }

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Collision/CollisionDefinition.h"
 #include "Object/Transform2D.h"
 
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace Uncarved::ContentSpace::Definition
 {
@@ -22,6 +24,8 @@ namespace Uncarved::ContentSpace::Definition
         std::optional<int>         zOrder_;
         std::optional<std::string> actorName_;
         std::optional<std::string> viewSpriteName_;
+
+        std::vector<CollisionSpace::DefinitionalCollisionShape> collisionShapes_{};
     };
 
     struct GameConfigDefinition final

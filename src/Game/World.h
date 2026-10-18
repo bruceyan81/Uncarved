@@ -1,16 +1,26 @@
 #pragma once
 
+#include "Collision/CollisionWorld.h"
 #include "Object/Actor.h"
 #include "Object/DefinitionalActor.h"
+#include "Object/ObjectTypes.h"
 #include "Time/WorldTime.h"
-
-#include <glm/glm.hpp>
 
 #include <optional>
 #include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+namespace Uncarved::CollisionSpace
+{
+    struct CollisionQuery;
+}
+
+namespace Uncarved::ObjectSpace
+{
+    struct Transform2D;
+}
 
 namespace Uncarved::GameSpace
 {
@@ -38,7 +48,7 @@ namespace Uncarved::GameSpace
         std::optional<World> createReplacement(
             std::span<const ObjectSpace::DefinitionalActor>           definitionalActors,
             const std::unordered_map<std::string, ViewSpace::Sprite>& spritesByName
-        ) const;
+        );
 
         void updateTime(TimeSpace::Duration deltaTime) noexcept;
 
@@ -47,11 +57,19 @@ namespace Uncarved::GameSpace
             return worldTime_;
         }
 
+        bool updateActorTransform2dById(ObjectSpace::ActorId actorId, const ObjectSpace::Transform2D& candidateTransform2d);
+
+        std::vector<CollisionSpace::CollisionQueryResult> queryOverlaps(
+            const CollisionSpace::CollisionQuery& query
+        ) const;
+
     private:
         std::vector<ObjectSpace::Actor>                       actors_{};
         std::unordered_map<ObjectSpace::ActorId, std::size_t> actorIndexById_{};
+        CollisionSpace::CollisionWorld                        collisionWorld_{};
 
-        void addActor(const ObjectSpace::DefinitionalActor& definitionalActor, const ViewSpace::Sprite* outSprite);
+        bool addActor(const ObjectSpace::DefinitionalActor& definitionalActor, const ViewSpace::Sprite* outSprite);
+        bool registerShapes();
 
         TimeSpace::WorldTime worldTime_{};
     };

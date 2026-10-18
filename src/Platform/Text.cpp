@@ -154,7 +154,7 @@ namespace Uncarved::PlatformSpace
 
             if (textEngine_ == nullptr)
             {
-                UC_LOG(gLogRender, LogVerbosity::Error, "TTF_CreateRendererTextEngine failed: {}", SDL_GetError());
+                UC_LOG(gRender, LogVerbosity::Error, "TTF_CreateRendererTextEngine failed: {}", SDL_GetError());
                 return false;
             }
 
@@ -173,13 +173,13 @@ namespace Uncarved::PlatformSpace
 
             if (text_ == nullptr)
             {
-                UC_LOG(gLogRender, LogVerbosity::Error, "TTF_CreateText failed: {}", SDL_GetError());
+                UC_LOG(gRender, LogVerbosity::Error, "TTF_CreateText failed: {}", SDL_GetError());
                 return false;
             }
 
             if (!TTF_SetTextColor(text_, 0, 0, 0, 255))
             {
-                UC_LOG(gLogRender, LogVerbosity::Error, "TTF_SetTextColor failed: {}", SDL_GetError());
+                UC_LOG(gRender, LogVerbosity::Error, "TTF_SetTextColor failed: {}", SDL_GetError());
                 TTF_DestroyText(text_);
                 text_ = nullptr;
                 return false;

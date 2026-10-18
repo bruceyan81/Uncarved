@@ -35,6 +35,12 @@
       "texture_pixels_per_world_unit": 128.0,
       "normalized_pivot_x": 0.5,
       "normalized_pivot_y": 0.5
+    },
+    "Haystack": {
+      "texture": "Haystack",
+      "texture_pixels_per_world_unit": 128.0,
+      "normalized_pivot_x": 0.5,
+      "normalized_pivot_y": 0.5
     }
   }
 }

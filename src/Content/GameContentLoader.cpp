@@ -9,43 +9,270 @@
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include <cmath>
+#include <cstddef>
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <optional>
+#include <string_view>
 #include <utility>
 
 namespace Uncarved
 {
     namespace
     {
-        ContentSpace::Definition::ActorDataPatch makeActorDataPatch(const rapidjson::Value& rawActor)
+        ContentSpace::ContentResult loadActorCollisionShapes(
+            const rapidjson::Value&                                  outRawActor,
+            std::vector<CollisionSpace::DefinitionalCollisionShape>& outCollisionShapes
+        )
+        {
+            if (const auto it = outRawActor.FindMember("collision_shapes"); it != outRawActor.MemberEnd())
+            {
+                if (!it->value.IsArray())
+                {
+                    return {
+                        ContentSpace::ValidationError{
+                            "ValidationError: Collision shapes is invalid data.",
+                            ContentSpace::ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+
+                auto transformCollisionMode = [](std::string_view modeName) {
+                    std::optional<CollisionSpace::CollisionMode> result = std::nullopt;
+                    if (modeName == "solid")
+                    {
+                        result = CollisionSpace::CollisionMode::Solid;
+                    }
+                    else if (modeName == "sensor")
+                    {
+                        result = CollisionSpace::CollisionMode::Sensor;
+                    }
+                    return result;
+                };
+
+                auto transformCollisionCategory = [](std::string_view categoryName) {
+                    std::optional<CollisionSpace::CollisionCategory> result = std::nullopt;
+                    if (categoryName == "character")
+                    {
+                        result = CollisionSpace::CollisionCategory::Character;
+                    }
+                    else if (categoryName == "world_solid")
+                    {
+                        result = CollisionSpace::CollisionCategory::WorldSolid;
+                    }
+                    else if (categoryName == "interactable")
+                    {
+                        result = CollisionSpace::CollisionCategory::Interactable;
+                    }
+                    return result;
+                };
+
+                const auto& rawCollisionShapes = it->value;
+                outCollisionShapes.reserve(outCollisionShapes.size() + rawCollisionShapes.Size());
+                std::size_t shapeIndex = 0;
+
+                for (const auto& rawCollisionShape : rawCollisionShapes.GetArray())
+                {
+                    if (!rawCollisionShape.IsObject())
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format("ValidationError: collision_shapes[{}] is not Object.", shapeIndex),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    const auto localXIt = rawCollisionShape.FindMember("local_x");
+                    const auto localYIt = rawCollisionShape.FindMember("local_y");
+                    const auto widthIt = rawCollisionShape.FindMember("width");
+                    const auto heightIt = rawCollisionShape.FindMember("height");
+
+                    if (
+                        localXIt == rawCollisionShape.MemberEnd() || localYIt == rawCollisionShape.MemberEnd()
+                        || widthIt == rawCollisionShape.MemberEnd() || heightIt == rawCollisionShape.MemberEnd()
+                        || !localXIt->value.IsNumber() || !localYIt->value.IsNumber()
+                        || !widthIt->value.IsNumber() || !heightIt->value.IsNumber()
+                        )
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format(
+                                    "ValidationError: collision_shapes[{}] has invalid local position or size.",
+                                    shapeIndex
+                                ),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    const float localX = localXIt->value.GetFloat();
+                    const float localY = localYIt->value.GetFloat();
+                    const float width = widthIt->value.GetFloat();
+                    const float height = heightIt->value.GetFloat();
+
+                    if (
+                        !std::isfinite(localX) || !std::isfinite(localY)
+                        || !std::isfinite(width) || !std::isfinite(height)
+                        || width <= 0.0f || height <= 0.0f
+                        )
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format(
+                                    "ValidationError: collision_shapes[{}] has illegal local position or size.",
+                                    shapeIndex
+                                ),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    const auto modeIt = rawCollisionShape.FindMember("mode");
+
+                    if (modeIt == rawCollisionShape.MemberEnd() || !modeIt->value.IsString())
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format("ValidationError: collision_shapes[{}] has invalid collision mode.", shapeIndex),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    const auto collisionMode = transformCollisionMode(modeIt->value.GetString());
+
+                    if (!collisionMode.has_value())
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format("ValidationError: collision_shapes[{}] has unknown collision mode.", shapeIndex),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    const auto categoryIt = rawCollisionShape.FindMember("category");
+
+                    if (categoryIt == rawCollisionShape.MemberEnd() || !categoryIt->value.IsString())
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format("ValidationError: collision_shapes[{}] has invalid collision category.", shapeIndex),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    const auto collisionCategory = transformCollisionCategory(categoryIt->value.GetString());
+
+                    if (!collisionCategory.has_value())
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format("ValidationError: collision_shapes[{}] has unknown collision category.", shapeIndex),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    const auto maskIt = rawCollisionShape.FindMember("mask");
+
+                    if (maskIt == rawCollisionShape.MemberEnd() || !maskIt->value.IsArray())
+                    {
+                        return {
+                            ContentSpace::ValidationError{
+                                std::format("ValidationError: collision_shapes[{}] has invalid mask.", shapeIndex),
+                                ContentSpace::ValidationErrorType::InvalidData
+                            }
+                        };
+                    }
+
+                    CollisionSpace::CollisionMask mask = 0;
+
+                    for (const auto& rawMaskCategory : maskIt->value.GetArray())
+                    {
+                        if (!rawMaskCategory.IsString())
+                        {
+                            return {
+                                ContentSpace::ValidationError{
+                                    std::format(
+                                        "ValidationError: collision_shapes[{}] has invalid mask category.",
+                                        shapeIndex
+                                    ),
+                                    ContentSpace::ValidationErrorType::InvalidData
+                                }
+                            };
+                        }
+
+                        const auto maskCategory = transformCollisionCategory(rawMaskCategory.GetString());
+
+                        if (!maskCategory.has_value())
+                        {
+                            return {
+                                ContentSpace::ValidationError{
+                                    std::format(
+                                        "ValidationError: collision_shapes[{}] has unknown mask category.",
+                                        shapeIndex
+                                    ),
+                                    ContentSpace::ValidationErrorType::InvalidData
+                                }
+                            };
+                        }
+
+                        mask |= CollisionSpace::makeCollisionMask(*maskCategory);
+                    }
+
+                    outCollisionShapes.emplace_back(
+                        CollisionSpace::DefinitionalCollisionShape{
+                            glm::fvec2{localX, localY},
+                            glm::fvec2{width, height},
+                            *collisionMode,
+                            CollisionSpace::CollisionFilter{*collisionCategory, mask}
+                        }
+                    );
+
+                    ++shapeIndex;
+                }
+
+                return {};
+            }
+            else
+            {
+                return {};
+            }
+        }
+
+        ContentSpace::Definition::ActorDataPatch makeActorDataPatch(const rapidjson::Value& outRawActor)
         {
             ContentSpace::Definition::Transform2DPatch transform2dPatch{};
 
-            if (const auto it = rawActor.FindMember("x"); it != rawActor.MemberEnd() && it->value.IsNumber())
+            if (const auto it = outRawActor.FindMember("x"); it != outRawActor.MemberEnd() && it->value.IsNumber())
             {
                 transform2dPatch.positionX_ = it->value.GetFloat();
             }
 
-            if (const auto it = rawActor.FindMember("y"); it != rawActor.MemberEnd() && it->value.IsNumber())
+            if (const auto it = outRawActor.FindMember("y"); it != outRawActor.MemberEnd() && it->value.IsNumber())
             {
                 transform2dPatch.positionY_ = it->value.GetFloat();
             }
 
-            if (const auto it = rawActor.FindMember("transform_rotation_radians");
-                it != rawActor.MemberEnd() && it->value.IsNumber())
+            if (const auto it = outRawActor.FindMember("transform_rotation_radians");
+                it != outRawActor.MemberEnd() && it->value.IsNumber())
             {
                 transform2dPatch.rotationRadians_ = it->value.GetFloat();
             }
 
-            if (const auto it = rawActor.FindMember("transform_scale_x");
-                it != rawActor.MemberEnd() && it->value.IsNumber())
+            if (const auto it = outRawActor.FindMember("transform_scale_x");
+                it != outRawActor.MemberEnd() && it->value.IsNumber())
             {
                 transform2dPatch.scaleX_ = it->value.GetFloat();
             }
 
-            if (const auto it = rawActor.FindMember("transform_scale_y");
-                it != rawActor.MemberEnd() && it->value.IsNumber())
+            if (const auto it = outRawActor.FindMember("transform_scale_y");
+                it != outRawActor.MemberEnd() && it->value.IsNumber())
             {
                 transform2dPatch.scaleY_ = it->value.GetFloat();
             }
@@ -54,17 +281,17 @@ namespace Uncarved
 
             actorPatch.transform2dPatch_ = transform2dPatch;
 
-            if (const auto it = rawActor.FindMember("z_order"); it != rawActor.MemberEnd() && it->value.IsInt())
+            if (const auto it = outRawActor.FindMember("z_order"); it != outRawActor.MemberEnd() && it->value.IsInt())
             {
                 actorPatch.zOrder_ = it->value.GetInt();
             }
 
-            if (const auto it = rawActor.FindMember("name"); it != rawActor.MemberEnd() && it->value.IsString())
+            if (const auto it = outRawActor.FindMember("name"); it != outRawActor.MemberEnd() && it->value.IsString())
             {
                 actorPatch.actorName_ = it->value.GetString();
             }
 
-            if (const auto it = rawActor.FindMember("view_sprite"); it != rawActor.MemberEnd() && it->value.IsString())
+            if (const auto it = outRawActor.FindMember("view_sprite"); it != outRawActor.MemberEnd() && it->value.IsString())
             {
                 actorPatch.viewSpriteName_ = it->value.GetString();
             }
@@ -74,32 +301,32 @@ namespace Uncarved
 
         void applyTransform2DPatch(
             ObjectSpace::Transform2D&                         outTransform2d,
-            const ContentSpace::Definition::Transform2DPatch& patch
+            const ContentSpace::Definition::Transform2DPatch& outPatch
         )
         {
-            if (patch.positionX_.has_value())
+            if (outPatch.positionX_.has_value())
             {
-                outTransform2d.position_.x = *(patch.positionX_);
+                outTransform2d.position_.x = *(outPatch.positionX_);
             }
 
-            if (patch.positionY_.has_value())
+            if (outPatch.positionY_.has_value())
             {
-                outTransform2d.position_.y = *(patch.positionY_);
+                outTransform2d.position_.y = *(outPatch.positionY_);
             }
 
-            if (patch.rotationRadians_.has_value())
+            if (outPatch.rotationRadians_.has_value())
             {
-                outTransform2d.rotationRadians_ = *patch.rotationRadians_;
+                outTransform2d.rotationRadians_ = *outPatch.rotationRadians_;
             }
 
-            if (patch.scaleX_.has_value())
+            if (outPatch.scaleX_.has_value())
             {
-                outTransform2d.scale_.x = *(patch.scaleX_);
+                outTransform2d.scale_.x = *(outPatch.scaleX_);
             }
 
-            if (patch.scaleY_.has_value())
+            if (outPatch.scaleY_.has_value())
             {
-                outTransform2d.scale_.y = *(patch.scaleY_);
+                outTransform2d.scale_.y = *(outPatch.scaleY_);
             }
         }
 
@@ -109,6 +336,13 @@ namespace Uncarved
         )
         {
             applyTransform2DPatch(outDefinition.transform2d_, outPatch.transform2dPatch_);
+
+            // TODO テンプレートとシーンの Collision Shape 結合仕様を上書きとクリアの扱いを含めて再検討する予定
+            outDefinition.collisionShapes_.insert(
+                outDefinition.collisionShapes_.end(),
+                outPatch.collisionShapes_.begin(),
+                outPatch.collisionShapes_.end()
+            );
 
             if (outPatch.zOrder_.has_value())
             {
@@ -134,14 +368,14 @@ namespace Uncarved
         }
 
         ObjectSpace::DefinitionalActor resolveDefinitionalActor(
-            const ContentSpace::Definition::ActorDataPatch& templatePatch,
-            const ContentSpace::Definition::ActorDataPatch& patch
+            const ContentSpace::Definition::ActorDataPatch& outTemplatePatch,
+            const ContentSpace::Definition::ActorDataPatch& outPatch
         )
         {
             ObjectSpace::DefinitionalActor definition{};
 
-            applyActorDataPatch(definition, templatePatch);
-            applyActorDataPatch(definition, patch);
+            applyActorDataPatch(definition, outTemplatePatch);
+            applyActorDataPatch(definition, outPatch);
 
             return definition;
         }
@@ -358,7 +592,7 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            UC_LOG(gLogContent, LogVerbosity::Info, "Resources/Rendering.config has not x_resolution.");
+            UC_LOG(gContent, LogVerbosity::Info, "Resources/Rendering.config has not x_resolution.");
         }
 
         if (document.HasMember("y_resolution") && document["y_resolution"].IsInt())
@@ -367,7 +601,7 @@ namespace Uncarved::ContentSpace
         }
         else
         {
-            UC_LOG(gLogContent, LogVerbosity::Info, "Resources/Rendering.config has not y_resolution.");
+            UC_LOG(gContent, LogVerbosity::Info, "Resources/Rendering.config has not y_resolution.");
         }
 
         if (document.HasMember("clear_color_r") && document["clear_color_r"].IsInt())
@@ -664,6 +898,13 @@ namespace Uncarved::ContentSpace
 
         Definition::ActorDataPatch tempActorTemplatePatch = makeActorDataPatch(document);
 
+        const auto collisionShapesResult = loadActorCollisionShapes(document, tempActorTemplatePatch.collisionShapes_);
+
+        if (!collisionShapesResult.isSucceeded())
+        {
+            return collisionShapesResult;
+        }
+
         actorTemplatePatchesByName_.insert_or_assign(std::string{actorName}, std::move(tempActorTemplatePatch));
 
         return {};
@@ -743,7 +984,15 @@ namespace Uncarved::ContentSpace
                 continue;
             }
 
-            tempRawActors.emplace_back(makeActorDataPatch(rawActor));
+            auto actorPatch = makeActorDataPatch(rawActor);
+            const auto collisionShapesResult = loadActorCollisionShapes(rawActor, actorPatch.collisionShapes_);
+
+            if (!collisionShapesResult.isSucceeded())
+            {
+                return collisionShapesResult;
+            }
+
+            tempRawActors.emplace_back(actorPatch);
 
             const auto templateIt = rawActor.FindMember("template");
 

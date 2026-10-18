@@ -32,4 +32,6 @@ namespace Uncarved::ObjectSpace
         glm::fvec2 scale_{1.0f, 1.0f};
         float      rotationRadians_{0};
     };
+
+    bool isValidTransform2D(const Transform2D& transform2d) noexcept;
 } // namespace Uncarved::ObjectSpace

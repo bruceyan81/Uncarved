@@ -34,7 +34,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!resourceDirectoryResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", resourceDirectoryResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", resourceDirectoryResult.getErrorMessage());
             return 1;
         }
 
@@ -42,7 +42,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!gameConfigCheckResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", gameConfigCheckResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", gameConfigCheckResult.getErrorMessage());
             return 1;
         }
 
@@ -50,7 +50,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!gameConfigLoadResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", gameConfigLoadResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", gameConfigLoadResult.getErrorMessage());
             return 1;
         }
 
@@ -58,7 +58,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!renderingConfigCheckResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", renderingConfigCheckResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", renderingConfigCheckResult.getErrorMessage());
             return 1;
         }
 
@@ -66,7 +66,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!renderingConfigLoadResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", renderingConfigLoadResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", renderingConfigLoadResult.getErrorMessage());
             return 1;
         }
 
@@ -74,7 +74,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!spritesCheckResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", spritesCheckResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", spritesCheckResult.getErrorMessage());
             return 1;
         }
 
@@ -82,7 +82,7 @@ namespace Uncarved::ApplicationSpace
 
         if (!spritesLoadResult.isSucceeded())
         {
-            UC_LOG(gLogContent, LogVerbosity::Error, "{}", spritesLoadResult.getErrorMessage());
+            UC_LOG(gContent, LogVerbosity::Error, "{}", spritesLoadResult.getErrorMessage());
             return 1;
         }
 

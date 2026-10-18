@@ -18,7 +18,7 @@ namespace Uncarved::PlatformSpace
         {
             if (!MIX_Init())
             {
-                UC_LOG(gLogAudio, LogVerbosity::Error, "MIX_Init failed: {}", SDL_GetError());
+                UC_LOG(gAudio, LogVerbosity::Error, "MIX_Init failed: {}", SDL_GetError());
                 return false;
             }
             else

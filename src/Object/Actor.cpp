@@ -5,9 +5,9 @@
 namespace Uncarved::ObjectSpace
 {
     Actor::Actor(
-        Transform2D transform2d,
-        int         zOrder,
-        std::string actorName,
+        Transform2D                      transform2d,
+        int                              zOrder,
+        std::string                      actorName,
         ViewSpace::RuntimeSpriteVisual2D runtimeSpriteVisual2d
     )
         : transform2d_(transform2d)
@@ -24,6 +24,12 @@ namespace Uncarved::ObjectSpace
         , zOrder_(std::move(other.zOrder_))
         , actorName_(std::move(other.actorName_))
         , runtimeSpriteVisual2d_(other.runtimeSpriteVisual2d_)
+        , collisionShapes_(std::move(other.collisionShapes_))
     {
+    }
+
+    void Actor::addCollisionShape(CollisionSpace::CollisionShape&& collisionShape)
+    {
+        collisionShapes_.push_back(std::move(collisionShape));
     }
 } // namespace Uncarved::ObjectSpace
