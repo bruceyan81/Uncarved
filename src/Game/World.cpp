@@ -112,8 +112,7 @@ namespace Uncarved::GameSpace
 
         for (const auto& shape : collisionShapes)
         {
-            const auto candidateWorldBound =
-                shape.calculateCandidateWorldBound(candidateTransform2d.position_, candidateTransform2d.scale_);
+            const auto candidateWorldBound = shape.calculateCandidateWorldBound(candidateTransform2d);
 
             if (!candidateWorldBound.has_value())
             {
@@ -174,8 +173,7 @@ namespace Uncarved::GameSpace
                 actor.getId(),
                 definitionalCollisionShape.localCenter_,
                 definitionalCollisionShape.size_,
-                actor.getTransform2d().position_,
-                actor.getTransform2d().scale_,
+                actor.getTransform2d(),
                 definitionalCollisionShape.filter_,
                 CollisionSpace::CollisionShapeType::AxisAlignedBox,
                 definitionalCollisionShape.mode_
@@ -198,7 +196,15 @@ namespace Uncarved::GameSpace
 
     bool GameSpace::World::registerShapes()
     {
-        collisionWorld_.proxiesByShapeId_.reserve(actors_.size() * 2);
+        std::size_t shapeCount = 0;
+
+        for (const auto& actor : actors_)
+        {
+            const auto& collisionShapes = actor.getCollisionShapes();
+            shapeCount += collisionShapes.size();
+        }
+
+        collisionWorld_.reserveShapeCapacity(shapeCount);
 
         for (const auto& actor : actors_)
         {

@@ -2,23 +2,22 @@
 
 #include "CollisionGeometry.h"
 
+#include "Object/Transform2D.h"
+
 #include <cmath>
 #include <utility>
 
 namespace Uncarved::CollisionSpace
 {
-    std::optional<AxisAlignedBox> CollisionShape::calculateCandidateWorldBound(
-        const glm::fvec2& actorPosition,
-        const glm::fvec2& actorScale
-    ) const noexcept
+    std::optional<AxisAlignedBox>
+    CollisionShape::calculateCandidateWorldBound(const ObjectSpace::Transform2D& actorTransform2d) const noexcept
     {
-        if (!CollisionSpace::isValidCollisionTransform(actorPosition, actorScale))
+        if (!ObjectSpace::isValidTransform2D(actorTransform2d) || actorTransform2d.rotationRadians_ != 0.0f)
         {
             return std::nullopt;
         }
 
-        const AxisAlignedBox worldBound =
-            CollisionShape::calculateWorldBound(localCenter_, size_, actorPosition, actorScale);
+        const AxisAlignedBox worldBound = CollisionShape::calculateWorldBound(localCenter_, size_, actorTransform2d);
 
         if (!isValidAxisAlignedBox(worldBound))
         {
@@ -49,25 +48,27 @@ namespace Uncarved::CollisionSpace
     }
 
     std::optional<CollisionShape> CollisionShape::createCollisionShape(
-        ObjectSpace::ActorId   ownerActorId,
-        const glm::fvec2&      localCenter,
-        const glm::fvec2&      size,
-        const glm::fvec2&      actorPosition,
-        const glm::fvec2&      actorScale,
-        const CollisionFilter& filter,
-        CollisionShapeType     type,
-        CollisionMode          mode
+        ObjectSpace::ActorId            ownerActorId,
+        const glm::fvec2&               localCenter,
+        const glm::fvec2&               size,
+        const ObjectSpace::Transform2D& actorTransform2d,
+        const CollisionFilter&          filter,
+        CollisionShapeType              type,
+        CollisionMode                   mode
     )
     {
 
-        if (!std::isfinite(localCenter.x) || !std::isfinite(localCenter.y) || !std::isfinite(size.x)
-            || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f
-            || !isValidCollisionTransform(actorPosition, actorScale) || filter.category_ == CollisionCategory::None)
+        if (!std::isfinite(localCenter.x) || !std::isfinite(localCenter.y)
+            || !std::isfinite(size.x) || !std::isfinite(size.y)
+            || size.x <= 0.0f || size.y <= 0.0f
+            || !ObjectSpace::isValidTransform2D(actorTransform2d)
+            || actorTransform2d.rotationRadians_ != 0.0f
+            || filter.category_ == CollisionCategory::None)
         {
             return std::nullopt;
         }
 
-        const auto worldBound = calculateWorldBound(localCenter, size, actorPosition, actorScale);
+        const auto worldBound = calculateWorldBound(localCenter, size, actorTransform2d);
 
         if (!isValidAxisAlignedBox(worldBound))
         {
@@ -75,6 +76,23 @@ namespace Uncarved::CollisionSpace
         }
 
         return CollisionShape(ownerActorId, localCenter, size, worldBound, filter, type, mode);
+    }
+
+    AxisAlignedBox CollisionShape::calculateWorldBound(
+        const glm::fvec2&               localCenter,
+        const glm::fvec2&               size,
+        const ObjectSpace::Transform2D& actorTransform2d
+    ) noexcept
+    {
+        const glm::fvec2 worldCenter = actorTransform2d.position_ + localCenter * actorTransform2d.scale_;
+        const glm::fvec2 scaledSize{
+            size.x * std::abs(actorTransform2d.scale_.x),
+            size.y * std::abs(actorTransform2d.scale_.y)
+        };
+        const glm::fvec2 min{worldCenter.x - scaledSize.x / 2, worldCenter.y - scaledSize.y / 2};
+        const glm::fvec2 max{worldCenter.x + scaledSize.x / 2, worldCenter.y + scaledSize.y / 2};
+
+        return AxisAlignedBox{min, max};
     }
 
     CollisionShape::CollisionShape(CollisionShape&& other) noexcept

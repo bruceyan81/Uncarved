@@ -80,6 +80,7 @@ add_library(UncarvedCore STATIC
     src/Collision/CollisionQuery.cpp
     src/Collision/CollisionShape.cpp
     src/Collision/CollisionWorld.cpp
+    src/Collision/SpatialHashGrid.cpp
     src/Content/GameContentLoader.cpp
     src/Game/CommandBuffer.cpp
     src/Game/Runtime.cpp

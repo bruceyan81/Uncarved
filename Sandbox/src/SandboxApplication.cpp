@@ -131,8 +131,7 @@ namespace Sandbox
                 continue;
             }
 
-            const auto candidateWorldBound =
-                shape.calculateCandidateWorldBound(candidateTransform2d.position_, candidateTransform2d.scale_);
+            const auto candidateWorldBound = shape.calculateCandidateWorldBound(candidateTransform2d);
 
             if (!candidateWorldBound.has_value())
             {

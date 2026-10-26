@@ -12,13 +12,6 @@ namespace Uncarved::CollisionSpace
             && (left.max_.y > right.min_.y && left.min_.y < right.max_.y);
     }
 
-    bool isValidCollisionTransform(const glm::fvec2& position, const glm::fvec2& scale) noexcept
-    {
-        return std::isfinite(position.x) && std::isfinite(position.y)
-            && std::isfinite(scale.x) && std::isfinite(scale.y)
-            && scale.x != 0.0f && scale.y != 0.0f;
-    }
-
     bool isValidAxisAlignedBox(const AxisAlignedBox& box) noexcept
     {
         return std::isfinite(box.max_.x) && std::isfinite(box.max_.y)

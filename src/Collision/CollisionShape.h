@@ -4,7 +4,6 @@
 
 #include "Object/ObjectTypes.h"
 
-#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -14,20 +13,62 @@ namespace Uncarved::GameSpace
     class World;
 }
 
+namespace Uncarved::ObjectSpace
+{
+    struct Transform2D;
+}
+
 namespace Uncarved::CollisionSpace
 {
     class CollisionShape final
     {
     public:
+        /**
+         * @brief
+         * Creates a Collision Shape owned by the specified Actor.
+         *
+         * @details
+         * The Collision Shape's local geometry is defined in the owning Actor's Local Space.
+         * Its initial World AABB is derived from the local geometry and the Actor's Transform2D.
+         * Creating a Collision Shape does not register it with Collision World.
+         *
+         * @param ownerActorId
+         * Identity of the owning Actor. The existence of the Actor is not verified.
+         *
+         * @param localCenter
+         * Center of the collision geometry in Actor Local Space, expressed in WU.
+         *
+         * @param size
+         * Width and height of the local collision geometry, expressed in WU.
+         * Both components must be finite and strictly positive.
+         *
+         * @param actorTransform2d
+         * Transform from Actor Local Space to World Space.
+         * The current collision implementation supports only zero Actor rotation.
+         *
+         * @param filter
+         * Collision filtering configuration.
+         * The category must not be CollisionCategory::None.
+         *
+         * @param type
+         * Collision geometry type.
+         *
+         * @param mode
+         * Collision mode.
+         *
+         * @return
+         * The created Collision Shape on success.
+         * std::nullopt if the input is invalid, the transform is unsupported,
+         * or the computed World AABB is invalid.
+         */
         static std::optional<CollisionShape> createCollisionShape(
-            ObjectSpace::ActorId   ownerActorId,
-            const glm::fvec2&      localCenter,
-            const glm::fvec2&      size,
-            const glm::fvec2&      actorPosition,
-            const glm::fvec2&      actorScale,
-            const CollisionFilter& filter,
-            CollisionShapeType     type,
-            CollisionMode          mode
+            ObjectSpace::ActorId            ownerActorId,
+            const glm::fvec2&               localCenter,
+            const glm::fvec2&               size,
+            const ObjectSpace::Transform2D& actorTransform2d,
+            const CollisionFilter&          filter,
+            CollisionShapeType              type,
+            CollisionMode                   mode
         );
 
         CollisionShape(const CollisionShape&) = delete;
@@ -76,10 +117,8 @@ namespace Uncarved::CollisionSpace
             return mode_;
         }
 
-        std::optional<AxisAlignedBox> calculateCandidateWorldBound(
-            const glm::fvec2& actorPosition,
-            const glm::fvec2& actorScale
-        ) const noexcept;
+        std::optional<AxisAlignedBox>
+        calculateCandidateWorldBound(const ObjectSpace::Transform2D& actorTransform2d) const noexcept;
 
     private:
         inline static std::uint64_t    collisionShapeCount_ = 0;
@@ -106,20 +145,36 @@ namespace Uncarved::CollisionSpace
             CollisionMode          mode
         );
 
+        /**
+         * @brief
+         * Computes the World AABB from Actor-local collision geometry and the owning Actor's Transform2D.
+         *
+         * @details
+         * This function performs no input or result validation
+         * and does not modify committed collision state.
+         *
+         * @param localCenter
+         * Center of the collision geometry in Actor Local Space, expressed in WU.
+         *
+         * @param size
+         * Width and height of the local collision geometry, expressed in WU.
+         *
+         * @param actorTransform2d
+         * Transform from Actor Local Space to World Space.
+         *
+         * @pre
+         * The local center must have finite components.
+         * Both size components must be finite and strictly positive.
+         * The Actor's Transform2D must be valid and have zero rotation.
+         *
+         * @return
+         * The computed World AABB, whose validity must be verified by the caller.
+         */
         static AxisAlignedBox calculateWorldBound(
-            const glm::fvec2& localCenter,
-            const glm::fvec2& size,
-            const glm::fvec2& actorPosition,
-            const glm::fvec2& actorScale
-        ) noexcept
-        {
-            glm::fvec2 worldCenter = actorPosition + localCenter * actorScale;
-            glm::fvec2 scaledSize{size.x * std::abs(actorScale.x), size.y * std::abs(actorScale.y)};
-            glm::fvec2 min{worldCenter.x - scaledSize.x / 2, worldCenter.y - scaledSize.y / 2};
-            glm::fvec2 max{worldCenter.x + scaledSize.x / 2, worldCenter.y + scaledSize.y / 2};
-
-            return AxisAlignedBox{min, max};
-        }
+            const glm::fvec2&               localCenter,
+            const glm::fvec2&               size,
+            const ObjectSpace::Transform2D& actorTransform2d
+        ) noexcept;
 
         void commitWorldBound(const AxisAlignedBox& worldBound) noexcept;
 

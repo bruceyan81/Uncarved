@@ -44,6 +44,11 @@ namespace Uncarved::CollisionSpace
         return proxiesByShapeId_.erase(shapeId) == 1;
     }
 
+    void CollisionWorld::reserveShapeCapacity(std::size_t shapeCapacity)
+    {
+        proxiesByShapeId_.reserve(shapeCapacity);
+    }
+
     std::vector<CollisionQueryResult> CollisionWorld::queryOverlaps(const CollisionQuery& query) const
     {
         std::vector<CollisionQueryResult> queryResult{};

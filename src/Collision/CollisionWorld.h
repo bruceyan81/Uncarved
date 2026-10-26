@@ -3,7 +3,9 @@
 #include "CollisionProxy.h"
 #include "CollisionQuery.h"
 #include "CollisionTypes.h"
+#include "SpatialHashGrid.h"
 
+#include <cstddef>
 #include <unordered_map>
 #include <vector>
 
@@ -31,11 +33,13 @@ namespace Uncarved::CollisionSpace
 
     private:
         std::unordered_map<CollisionShapeId, CollisionProxy> proxiesByShapeId_;
+        SpatialHashGrid                                      spatialHashGrid_;
 
         bool registerShape(const CollisionShape& shape);
         bool hasShape(CollisionShapeId shapeId) const noexcept;
         bool updateShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound) noexcept;
         bool removeShape(CollisionShapeId shapeId);
+        void reserveShapeCapacity(std::size_t shapeCapacity);
 
         friend GameSpace::World;
     };
