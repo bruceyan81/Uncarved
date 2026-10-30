@@ -37,7 +37,7 @@ namespace Uncarved::CollisionSpace
 
         bool registerShape(const CollisionShape& shape);
         bool hasShape(CollisionShapeId shapeId) const noexcept;
-        bool updateShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound) noexcept;
+        bool updateShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound);
         bool removeShape(CollisionShapeId shapeId);
         void reserveShapeCapacity(std::size_t shapeCapacity);
 

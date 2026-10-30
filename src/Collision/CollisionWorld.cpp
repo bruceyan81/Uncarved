@@ -9,7 +9,7 @@ namespace Uncarved::CollisionSpace
 {
     bool CollisionWorld::registerShape(const CollisionShape& shape)
     {
-        auto [it, inserted] = proxiesByShapeId_.try_emplace(
+        auto [it, bProxyInserted] = proxiesByShapeId_.try_emplace(
             shape.getCollisionShapeId(),
             CollisionProxy{
                 shape.getWorldBound(),
@@ -20,16 +20,27 @@ namespace Uncarved::CollisionSpace
                 shape.getType()
             }
         );
-        return inserted;
+
+        if (!bProxyInserted)
+        {
+            return bProxyInserted;
+        }
+
+        return spatialHashGrid_.insert(it->first, it->second.worldBound_);
     }
 
     bool CollisionWorld::hasShape(CollisionShapeId shapeId) const noexcept
     {
-        return proxiesByShapeId_.contains(shapeId);
+        return proxiesByShapeId_.contains(shapeId) && spatialHashGrid_.hasShapeById(shapeId);
     }
 
-    bool CollisionWorld::updateShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound) noexcept
+    bool CollisionWorld::updateShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound)
     {
+        if (!spatialHashGrid_.hasShapeById(shapeId) || !spatialHashGrid_.update(shapeId, worldBound))
+        {
+            return false;
+        }
+
         if (const auto it = proxiesByShapeId_.find(shapeId); it != proxiesByShapeId_.end())
         {
             it->second.commitWorldBound(worldBound);
@@ -39,8 +50,14 @@ namespace Uncarved::CollisionSpace
         return false;
     }
 
+    // TODO Add World-level runtime Actor and CollisionShape removal lifecycle support
     bool CollisionWorld::removeShape(CollisionShapeId shapeId)
     {
+        if (!spatialHashGrid_.remove(shapeId))
+        {
+            return false;
+        }
+
         return proxiesByShapeId_.erase(shapeId) == 1;
     }
 

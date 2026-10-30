@@ -13,6 +13,11 @@ namespace Uncarved::CollisionSpace
     class SpatialHashGrid final
     {
     public:
+        bool hasShapeById(const CollisionShapeId shapeId) const noexcept
+        {
+            return indexedWorldBoundsByShapeId_.contains(shapeId);
+        };
+
         bool insert(CollisionShapeId shapeId, const AxisAlignedBox& worldBound);
         bool update(CollisionShapeId shapeId, const AxisAlignedBox& newWorldBound);
         bool remove(CollisionShapeId shapeId);
