@@ -12,7 +12,7 @@ namespace Uncarved::ApplicationSpace
         virtual ~Application() = default;
 
         virtual void onInitialize(RuntimeContext&) {};
-        virtual void onUpdate(RuntimeContext&) = 0;
+        virtual bool onUpdate(RuntimeContext&) = 0;
         virtual void onShutdown(RuntimeContext&) {};
     };
 

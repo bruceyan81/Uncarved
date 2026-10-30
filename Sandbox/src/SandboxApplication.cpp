@@ -46,7 +46,7 @@ namespace Sandbox
         bFacingLeft_ = false;
     }
 
-    void SandboxApplication::onUpdate(Uncarved::ApplicationSpace::RuntimeContext& outRuntimeContext)
+    bool SandboxApplication::onUpdate(Uncarved::ApplicationSpace::RuntimeContext& outRuntimeContext)
     {
         auto&       world = outRuntimeContext.outWorld_;
         const auto& inputSystem = outRuntimeContext.outInputSystem_;
@@ -105,7 +105,7 @@ namespace Sandbox
                 "Actor is not find. Actor id: {}",
                 characterActorId_
             );
-            return;
+            return false;
         }
 
         auto& actor = *actorPtr;
@@ -140,7 +140,7 @@ namespace Sandbox
                     Uncarved::LogVerbosity::Error,
                     "Failed to calculate a solid collision shape candidate world bound."
                 );
-                return;
+                return false;
             }
 
             const auto query = Uncarved::CollisionSpace::CollisionQuery::createCollisionQuery(
@@ -152,7 +152,7 @@ namespace Sandbox
             if (!query.has_value())
             {
                 UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Error, "Failed to create a solid collision query.");
-                return;
+                return false;
             }
 
             queryResults = world.queryOverlaps(*query);
@@ -178,7 +178,7 @@ namespace Sandbox
             if (!world.updateActorTransform2dById(actor.getId(), candidateTransform2d))
             {
                 UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Error, "Failed to update the actor transform.");
-                return;
+                return false;
             }
         }
 
@@ -198,7 +198,7 @@ namespace Sandbox
             if (!query.has_value())
             {
                 UC_LOG(Uncarved::gRuntime, Uncarved::LogVerbosity::Error, "Failed to create a sensor collision query.");
-                return;
+                return false;
             }
 
             queryResults = world.queryOverlaps(*query);
@@ -252,6 +252,8 @@ namespace Sandbox
         {
             runtimeSpriteVisual2d.setScale({1, 1});
         }
+
+        return true;
     }
 
     void SandboxApplication::onShutdown(Uncarved::ApplicationSpace::RuntimeContext&)

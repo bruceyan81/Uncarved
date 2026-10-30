@@ -111,7 +111,12 @@ namespace Uncarved::GameSpace
                 break;
             }
 
-            outApplication_.onUpdate(runtimeContext);
+            // TODO Replace the Boolean update result with an error result that distinguishes recoverable and fatal failures
+            if (!outApplication_.onUpdate(runtimeContext))
+            {
+                UC_LOG(gRuntime, LogVerbosity::Error, "Application update failed.");
+                return 1;
+            }
 
             if (!outRenderer_.clear() || !outSceneRenderer_.render(world_, camera2d_) || !outRenderer_.present())
             {

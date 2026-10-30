@@ -12,7 +12,7 @@ namespace Sandbox
     {
     public:
         void onInitialize(Uncarved::ApplicationSpace::RuntimeContext& outRuntimeContext) override;
-        void onUpdate(Uncarved::ApplicationSpace::RuntimeContext& outRuntimeContext) override;
+        bool onUpdate(Uncarved::ApplicationSpace::RuntimeContext& outRuntimeContext) override;
         void onShutdown(Uncarved::ApplicationSpace::RuntimeContext&) override;
 
     private:
