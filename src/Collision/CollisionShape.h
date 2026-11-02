@@ -118,7 +118,7 @@ namespace Uncarved::CollisionSpace
         }
 
         std::optional<AxisAlignedBox>
-        calculateCandidateWorldBound(const ObjectSpace::Transform2D& actorTransform2d) const noexcept;
+        tryCalculateWorldBound(const ObjectSpace::Transform2D& actorTransform2d) const noexcept;
 
     private:
         inline static std::uint64_t    collisionShapeCount_ = 0;

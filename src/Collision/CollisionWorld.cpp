@@ -7,9 +7,10 @@
 
 namespace Uncarved::CollisionSpace
 {
+    // TODO Decide whether Uncarved supports C++ exceptions and define the project-wide exception handling policy
     bool CollisionWorld::registerShape(const CollisionShape& shape)
     {
-        auto [it, bProxyInserted] = proxiesByShapeId_.try_emplace(
+        auto [proxyIt, bProxyInserted] = proxiesByShapeId_.try_emplace(
             shape.getCollisionShapeId(),
             CollisionProxy{
                 shape.getWorldBound(),
@@ -26,7 +27,13 @@ namespace Uncarved::CollisionSpace
             return bProxyInserted;
         }
 
-        return spatialHashGrid_.insert(it->first, it->second.worldBound_);
+        if (!spatialHashGrid_.insert(proxyIt->first, proxyIt->second.worldBound_))
+        {
+            proxiesByShapeId_.erase(proxyIt);
+            return false;
+        }
+
+        return true;
     }
 
     bool CollisionWorld::hasShape(CollisionShapeId shapeId) const noexcept
@@ -34,20 +41,28 @@ namespace Uncarved::CollisionSpace
         return proxiesByShapeId_.contains(shapeId) && spatialHashGrid_.hasShapeById(shapeId);
     }
 
-    bool CollisionWorld::updateShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound)
+    bool CollisionWorld::tryUpdateRegisteredShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound)
     {
-        if (!spatialHashGrid_.hasShapeById(shapeId) || !spatialHashGrid_.update(shapeId, worldBound))
+        const auto proxyIt = proxiesByShapeId_.find(shapeId);
+
+        if (proxyIt == proxiesByShapeId_.end())
         {
             return false;
         }
 
-        if (const auto it = proxiesByShapeId_.find(shapeId); it != proxiesByShapeId_.end())
+        if (!spatialHashGrid_.hasShapeById(shapeId))
         {
-            it->second.commitWorldBound(worldBound);
-            return true;
+            return false;
         }
 
-        return false;
+        if (!spatialHashGrid_.update(shapeId, worldBound))
+        {
+            return false;
+        }
+
+        proxyIt->second.commitWorldBound(worldBound);
+
+        return true;
     }
 
     // TODO Add World-level runtime Actor and CollisionShape removal lifecycle support
@@ -69,27 +84,25 @@ namespace Uncarved::CollisionSpace
     std::vector<CollisionQueryResult> CollisionWorld::queryOverlaps(const CollisionQuery& query) const
     {
         std::vector<CollisionQueryResult> queryResult{};
-
-        for (auto& [shapeId, proxy] : proxiesByShapeId_)
-        {
+        const auto appendOverlapResult = [&query, &queryResult](CollisionShapeId shapeId, const CollisionProxy& proxy) {
             if (query.getIgnoredActorId() == proxy.getOwnerActorId())
             {
-                continue;
+                return;
             }
 
             if (query.getIgnoredShapeId() == shapeId)
             {
-                continue;
+                return;
             }
 
             if (!canFiltersInteract(query.getFilter(), proxy.getFilter()))
             {
-                continue;
+                return;
             }
 
             if (!overlapsAxisAlignedBoxes(query.getWorldBound(), proxy.getWorldBound()))
             {
-                continue;
+                return;
             }
 
             queryResult.emplace_back(
@@ -100,8 +113,32 @@ namespace Uncarved::CollisionSpace
                 proxy.getMode(),
                 proxy.getShapeType()
             );
-        }
+        };
 
+        const auto candidateShapeIds = spatialHashGrid_.queryCandidates(query.getWorldBound());
+
+        if (candidateShapeIds.has_value())
+        {
+            for (const auto& shapeId : *candidateShapeIds)
+            {
+                auto proxyIt = proxiesByShapeId_.find(shapeId);
+
+                if (proxyIt == proxiesByShapeId_.end())
+                {
+                    continue;
+                }
+
+                appendOverlapResult(shapeId, proxyIt->second);
+            }
+            return queryResult;
+        }
+        else
+        {
+            for (auto& [shapeId, proxy] : proxiesByShapeId_)
+            {
+                appendOverlapResult(shapeId, proxy);
+            }
+        }
         return queryResult;
     }
 } // namespace Uncarved::CollisionSpace

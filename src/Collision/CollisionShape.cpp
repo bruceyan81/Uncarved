@@ -10,7 +10,7 @@
 namespace Uncarved::CollisionSpace
 {
     std::optional<AxisAlignedBox>
-    CollisionShape::calculateCandidateWorldBound(const ObjectSpace::Transform2D& actorTransform2d) const noexcept
+    CollisionShape::tryCalculateWorldBound(const ObjectSpace::Transform2D& actorTransform2d) const noexcept
     {
         if (!ObjectSpace::isValidTransform2D(actorTransform2d) || actorTransform2d.rotationRadians_ != 0.0f)
         {

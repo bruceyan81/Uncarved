@@ -107,12 +107,13 @@ namespace Uncarved::GameSpace
             return true;
         }
 
+        // Calculate and validate every candidate Shape World Bound
         std::vector<CollisionSpace::AxisAlignedBox> candidateWorldBounds{};
         candidateWorldBounds.reserve(collisionShapes.size());
 
         for (const auto& shape : collisionShapes)
         {
-            const auto candidateWorldBound = shape.calculateCandidateWorldBound(candidateTransform2d);
+            const auto candidateWorldBound = shape.tryCalculateWorldBound(candidateTransform2d);
 
             if (!candidateWorldBound.has_value())
             {
@@ -127,17 +128,47 @@ namespace Uncarved::GameSpace
             candidateWorldBounds.push_back(*candidateWorldBound);
         }
 
+        // Update registered collision state while preserving Actor-owned Shape Bounds for rollback
         for (std::size_t index = 0; index < collisionShapes.size(); ++index)
         {
             auto&       shape = collisionShapes[index];
             const auto& candidateWorldBound = candidateWorldBounds[index];
 
-            if (!collisionWorld_.updateShapeWorldBound(shape.getCollisionShapeId(), candidateWorldBound))
+            if (!collisionWorld_.tryUpdateRegisteredShapeWorldBound(shape.getCollisionShapeId(), candidateWorldBound))
             {
+                bool bRollbackSucceeded = true;
+
+                // Restore previously updated Proxy and Grid state from the uncommitted Shape Bounds
+                for (std::size_t rollbackIndex = index; rollbackIndex > 0; --rollbackIndex)
+                {
+                    const auto& lastUpdatedShape = collisionShapes[rollbackIndex - 1];
+                    if (!collisionWorld_.tryUpdateRegisteredShapeWorldBound(
+                            lastUpdatedShape.getCollisionShapeId(),
+                            lastUpdatedShape.getWorldBound()
+                        )
+                    )
+                    {
+                        bRollbackSucceeded = false;
+                    }
+                }
+
+                if (!bRollbackSucceeded)
+                {
+                    UC_LOG(
+                        gRuntime,
+                        LogVerbosity::Critical,
+                        "Failed to roll back an actor collision transform update."
+                    );
+                }
+
                 return false;
             }
+        }
 
-            shape.commitWorldBound(candidateWorldBound);
+        // Commit Actor-owned Shape Bounds after every registered update succeeds
+        for (std::size_t index = 0; index < collisionShapes.size(); ++index)
+        {
+            collisionShapes[index].commitWorldBound(candidateWorldBounds[index]);
         }
 
         actor->transform2d_ = candidateTransform2d;

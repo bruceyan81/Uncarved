@@ -29,6 +29,7 @@ namespace Uncarved::CollisionSpace
         CollisionWorld(CollisionWorld&&) noexcept = default;
         CollisionWorld& operator=(CollisionWorld&&) noexcept = default;
 
+        // TODO Add automated regression tests for Spatial Hash overlap queries and indexed state synchronization
         std::vector<CollisionQueryResult> queryOverlaps(const CollisionQuery& query) const;
 
     private:
@@ -37,7 +38,7 @@ namespace Uncarved::CollisionSpace
 
         bool registerShape(const CollisionShape& shape);
         bool hasShape(CollisionShapeId shapeId) const noexcept;
-        bool updateShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound);
+        bool tryUpdateRegisteredShapeWorldBound(CollisionShapeId shapeId, const AxisAlignedBox& worldBound);
         bool removeShape(CollisionShapeId shapeId);
         void reserveShapeCapacity(std::size_t shapeCapacity);
 
