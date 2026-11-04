@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 
+#include <bit>
 #include <cstdint>
 
 namespace Uncarved::CollisionSpace
@@ -9,12 +10,13 @@ namespace Uncarved::CollisionSpace
     using CollisionShapeId = std::uint64_t;
     using CollisionMask = std::uint32_t;
 
-    enum class CollisionCategory : CollisionMask
+    /**
+     * @brief Strong type for a single collision category bit
+     * This type keeps a single category distinct from a multi-bit CollisionMask
+     */
+    struct CollisionCategory final
     {
-        None = 0,
-        Character = 1u << 0,
-        WorldSolid = 1u << 1,
-        Interactable = 1u << 2
+        CollisionMask bit_{};
     };
 
     enum class CollisionMode
@@ -25,7 +27,7 @@ namespace Uncarved::CollisionSpace
 
     struct CollisionFilter final
     {
-        CollisionCategory category_{CollisionCategory::None};
+        CollisionCategory category_{};
         CollisionMask     mask_{};
     };
 
@@ -42,7 +44,12 @@ namespace Uncarved::CollisionSpace
 
     constexpr CollisionMask makeCollisionMask(CollisionCategory category) noexcept
     {
-        return static_cast<CollisionMask>(category);
+        return static_cast<CollisionMask>(category.bit_);
+    }
+
+    constexpr bool isValidCollisionCategory(CollisionCategory category) noexcept
+    {
+        return std::has_single_bit(category.bit_);
     }
 
     constexpr bool canFiltersInteract(const CollisionFilter& leftFilter, const CollisionFilter& rightFilter) noexcept

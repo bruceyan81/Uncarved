@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -23,13 +24,14 @@ namespace Uncarved
     namespace
     {
         ContentSpace::ContentResult loadActorCollisionShapes(
-            const rapidjson::Value&                                  outRawActor,
-            std::vector<CollisionSpace::DefinitionalCollisionShape>& outCollisionShapes
+            const rapidjson::Value&                                                   rawActor,
+            std::vector<CollisionSpace::DefinitionalCollisionShape>&                  outCollisionShapes,
+            const std::unordered_map<std::string, CollisionSpace::CollisionCategory>& collisionCategoriesByName
         )
         {
-            if (const auto it = outRawActor.FindMember("collision_shapes"); it != outRawActor.MemberEnd())
+            if (const auto collisionShapesIt = rawActor.FindMember("collision_shapes"); collisionShapesIt != rawActor.MemberEnd())
             {
-                if (!it->value.IsArray())
+                if (!collisionShapesIt->value.IsArray())
                 {
                     return {
                         ContentSpace::ValidationError{
@@ -52,24 +54,7 @@ namespace Uncarved
                     return result;
                 };
 
-                auto transformCollisionCategory = [](std::string_view categoryName) {
-                    std::optional<CollisionSpace::CollisionCategory> result = std::nullopt;
-                    if (categoryName == "character")
-                    {
-                        result = CollisionSpace::CollisionCategory::Character;
-                    }
-                    else if (categoryName == "world_solid")
-                    {
-                        result = CollisionSpace::CollisionCategory::WorldSolid;
-                    }
-                    else if (categoryName == "interactable")
-                    {
-                        result = CollisionSpace::CollisionCategory::Interactable;
-                    }
-                    return result;
-                };
-
-                const auto& rawCollisionShapes = it->value;
+                const auto& rawCollisionShapes = collisionShapesIt->value;
                 outCollisionShapes.reserve(outCollisionShapes.size() + rawCollisionShapes.Size());
                 std::size_t shapeIndex = 0;
 
@@ -166,17 +151,22 @@ namespace Uncarved
                         };
                     }
 
-                    const auto collisionCategory = transformCollisionCategory(categoryIt->value.GetString());
+                    auto collisionCategoryIt = collisionCategoriesByName.find(categoryIt->value.GetString());
 
-                    if (!collisionCategory.has_value())
+                    if (collisionCategoryIt == collisionCategoriesByName.end())
                     {
                         return {
                             ContentSpace::ValidationError{
-                                std::format("ValidationError: collision_shapes[{}] has unknown collision category.", shapeIndex),
+                                std::format(
+                                    "ValidationError: collision_shapes[{}] has unknown collision category.",
+                                    shapeIndex
+                                ),
                                 ContentSpace::ValidationErrorType::InvalidData
                             }
                         };
                     }
+
+                    const auto collisionCategory = collisionCategoryIt->second;
 
                     const auto maskIt = rawCollisionShape.FindMember("mask");
 
@@ -207,9 +197,9 @@ namespace Uncarved
                             };
                         }
 
-                        const auto maskCategory = transformCollisionCategory(rawMaskCategory.GetString());
+                        auto maskCategoryIt = collisionCategoriesByName.find(rawMaskCategory.GetString());
 
-                        if (!maskCategory.has_value())
+                        if (maskCategoryIt == collisionCategoriesByName.end())
                         {
                             return {
                                 ContentSpace::ValidationError{
@@ -222,7 +212,9 @@ namespace Uncarved
                             };
                         }
 
-                        mask |= CollisionSpace::makeCollisionMask(*maskCategory);
+                        const auto maskCategory = maskCategoryIt->second;
+
+                        mask |= CollisionSpace::makeCollisionMask(maskCategory);
                     }
 
                     outCollisionShapes.emplace_back(
@@ -230,7 +222,7 @@ namespace Uncarved
                             glm::fvec2{localX, localY},
                             glm::fvec2{width, height},
                             *collisionMode,
-                            CollisionSpace::CollisionFilter{*collisionCategory, mask}
+                            CollisionSpace::CollisionFilter{collisionCategory, mask}
                         }
                     );
 
@@ -481,6 +473,103 @@ namespace Uncarved::ContentSpace
 
         Definition::GameConfigDefinition tempGameConfigDefinition{};
 
+        CollisionSpace::CollisionMask                                      occupiedSlots = 0;
+        std::unordered_map<std::string, CollisionSpace::CollisionCategory> tempCollisionCategoriesByName{};
+
+        if (const auto collisionChannelsIt = document.FindMember("collision_channels");
+            collisionChannelsIt != document.MemberEnd())
+        {
+            if (!collisionChannelsIt->value.IsArray())
+            {
+                return {
+                    ValidationError{
+                        "ValidationError: Collision_channels is not Array.",
+                        ValidationErrorType::InvalidData
+                    }
+                };
+            }
+
+            for (const auto& rawCollisionChannel : collisionChannelsIt->value.GetArray())
+            {
+                if (!rawCollisionChannel.IsObject())
+                {
+                    return {
+                        ValidationError{
+                            "ValidationError: Collision channel is not Object.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+
+                const auto nameIt = rawCollisionChannel.FindMember("name");
+
+                if (nameIt == rawCollisionChannel.MemberEnd() || !nameIt->value.IsString() || nameIt->value.GetStringLength() == 0)
+                {
+                    return {
+                        ValidationError{
+                            "ValidationError: Collision channel has invalid name.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+
+                const auto slotIt = rawCollisionChannel.FindMember("slot");
+
+                if (slotIt == rawCollisionChannel.MemberEnd() || !slotIt->value.IsInt64())
+                {
+                    return {
+                        ValidationError{
+                            "ValidationError: Collision channel has invalid slot.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+
+                const std::int64_t rawSlot = slotIt->value.GetInt64();
+
+                if (rawSlot < 0 || rawSlot > 31)
+                {
+                    return {
+                        ValidationError{
+                            "ValidationError: Collision channel slot is outside the valid range.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+
+                const auto slot = static_cast<std::uint32_t>(rawSlot);
+                const CollisionSpace::CollisionMask categoryBit = CollisionSpace::CollisionMask{1} << slot;
+
+                if ((occupiedSlots & categoryBit) != 0)
+                {
+                    return {
+                        ValidationError{
+                            "ValidationError: Collision channel slot is duplicated.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+
+                const auto category = CollisionSpace::CollisionCategory(categoryBit);
+                const auto emplaceResult = tempCollisionCategoriesByName.try_emplace(
+                    nameIt->value.GetString(),
+                    category
+                );
+
+                if (!emplaceResult.second)
+                {
+                    return {
+                        ValidationError{
+                            "ValidationError: Collision channel name is duplicated.",
+                            ValidationErrorType::InvalidData
+                        }
+                    };
+                }
+
+                occupiedSlots |= categoryBit;
+            }
+        }
+
         if (document.HasMember("initial_scene") && document["initial_scene"].IsString())
         {
             tempGameConfigDefinition.initialSceneName_ = std::move(document["initial_scene"].GetString());
@@ -518,6 +607,7 @@ namespace Uncarved::ContentSpace
         }
 
         gameConfigDefinition_ = std::move(tempGameConfigDefinition);
+        collisionCategoriesByName_ = std::move(tempCollisionCategoriesByName);
 
         return {};
     }
@@ -898,7 +988,8 @@ namespace Uncarved::ContentSpace
 
         Definition::ActorDataPatch tempActorTemplatePatch = makeActorDataPatch(document);
 
-        const auto collisionShapesResult = loadActorCollisionShapes(document, tempActorTemplatePatch.collisionShapes_);
+        const auto collisionShapesResult =
+            loadActorCollisionShapes(document, tempActorTemplatePatch.collisionShapes_, collisionCategoriesByName_);
 
         if (!collisionShapesResult.isSucceeded())
         {
@@ -985,7 +1076,8 @@ namespace Uncarved::ContentSpace
             }
 
             auto actorPatch = makeActorDataPatch(rawActor);
-            const auto collisionShapesResult = loadActorCollisionShapes(rawActor, actorPatch.collisionShapes_);
+            const auto collisionShapesResult =
+                loadActorCollisionShapes(rawActor, actorPatch.collisionShapes_, collisionCategoriesByName_);
 
             if (!collisionShapesResult.isSucceeded())
             {

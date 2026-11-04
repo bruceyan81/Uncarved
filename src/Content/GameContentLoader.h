@@ -2,6 +2,7 @@
 
 #include "DataDefinition.h"
 
+#include "Collision/CollisionTypes.h"
 #include "Object/DefinitionalActor.h"
 #include "View/Sprite.h"
 
@@ -79,13 +80,13 @@ namespace Uncarved::ContentSpace
         }
 
     private:
-        Definition::GameConfigDefinition      gameConfigDefinition_;
-        Definition::RenderingConfigDefinition renderingConfigDefinition_;
+        Definition::GameConfigDefinition            gameConfigDefinition_;
+        Definition::RenderingConfigDefinition       renderingConfigDefinition_;
         std::vector<Definition::ActorDataPatch>     rawActors_;
         std::vector<ObjectSpace::DefinitionalActor> definitionalActors_;
 
-        std::unordered_map<std::string, ViewSpace::Sprite>          sprites_;
-
-        std::unordered_map<std::string, Definition::ActorDataPatch> actorTemplatePatchesByName_;
+        std::unordered_map<std::string, ViewSpace::Sprite>                 sprites_;
+        std::unordered_map<std::string, Definition::ActorDataPatch>        actorTemplatePatchesByName_;
+        std::unordered_map<std::string, CollisionSpace::CollisionCategory> collisionCategoriesByName_;
     };
 } // namespace Uncarved::ContentSpace

@@ -63,7 +63,7 @@ namespace Uncarved::CollisionSpace
             || size.x <= 0.0f || size.y <= 0.0f
             || !ObjectSpace::isValidTransform2D(actorTransform2d)
             || actorTransform2d.rotationRadians_ != 0.0f
-            || filter.category_ == CollisionCategory::None)
+            || !isValidCollisionCategory(filter.category_))
         {
             return std::nullopt;
         }

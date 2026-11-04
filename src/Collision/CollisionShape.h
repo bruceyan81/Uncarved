@@ -48,7 +48,7 @@ namespace Uncarved::CollisionSpace
          *
          * @param filter
          * Collision filtering configuration.
-         * The category must not be CollisionCategory::None.
+         * Category must contain exactly one non-zero bit.
          *
          * @param type
          * Collision geometry type.

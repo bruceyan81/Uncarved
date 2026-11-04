@@ -11,7 +11,7 @@ namespace Uncarved::CollisionSpace
         std::optional<CollisionShapeId>     ignoredShapeId
     )
     {
-        if (!isValidAxisAlignedBox(bounds) || filter.category_ == CollisionCategory::None)
+        if (!isValidAxisAlignedBox(bounds) || !isValidCollisionCategory(filter.category_))
         {
             return std::nullopt;
         }
