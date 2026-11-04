@@ -115,6 +115,7 @@ namespace Uncarved::GameSpace
             if (!outApplication_.onUpdate(runtimeContext))
             {
                 UC_LOG(gRuntime, LogVerbosity::Error, "Application update failed.");
+                outApplication_.onShutdown(runtimeContext);
                 return 1;
             }
 
